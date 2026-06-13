@@ -20,6 +20,8 @@ Early development.
 
 **Phase 5a (user management)** — admin account management (`/admin/users`: create/edit/reset-password/delete with self-delete and last-admin guards); per-book membership management for managers (grant existing users by username, or create a new scoped account — never an admin); self-service password change. `create-admin` is only the first admin; the rest are made in the UI.
 
+**Phase 5b (import)** — vCard (.vcf) import into a book (manager only): parses concatenated cards with per-card error isolation, extracts embedded photos, and runs upload → dry-run preview → transactional commit with UID/email de-duplication (skip or import-as-new). CSV import is a planned follow-up.
+
 See [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) for the full specification and roadmap, and [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md) for conventions.
 
 ## Requirements
