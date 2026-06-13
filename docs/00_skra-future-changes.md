@@ -4,7 +4,7 @@ Candidate changes beyond the baseline specification (`skra-baseline-spec.md`).
 Unlike the baseline, these are **options with recommendations**, not fixed
 decisions. Topics: password-hash salting/peppering, allowing a contact
 to exist in multiple address books, full-text contact search,
-dependency-update tooling, and contact de-duplication.
+dependency-update tooling, contact de-duplication, and CSV import.
 
 ---
 
@@ -237,7 +237,21 @@ Shape:
 
 This pairs naturally with the rich-contact-fields work (a merge needs the full multi-value field model to union correctly) and with the multi-book change in §2 (cross-book de-duplication becomes "link the same contact into multiple books" rather than copy). Effort/risk: medium — detection heuristics plus a careful merge transaction; no schema change for the within-book case.
 
-## 6. Consistency with baseline constraints
+## 6. CSV import
+
+Phase 5b shipped vCard import; CSV is the natural follow-up (baseline spec §8). The staging/preview/commit pipeline is already format-agnostic — `import_uploads.format` exists, and `Analyze`/`ImportContacts` work on normalized records — so CSV only needs a parser that yields the same records.
+
+Shape:
+
+- **Header detection:** recognize the common exporters by their header signature — Google Contacts (`Name`, `Given Name`, `E-mail 1 - Value`, …), Outlook (`First Name`, `Last Name`, `E-mail Address`, …), and a generic fallback. Map known headers to the rich `vcardio.Details` fields (multiple emails/phones become multiple typed values).
+- **Column mapping:** for an unrecognized header row, present a mapping step (each CSV column → a Skrá field or "ignore") before the preview. The mapping is part of the staged upload so the commit re-applies it.
+- **Encoding:** handle UTF-8 + BOM, and Latin-1; detect the delimiter (comma/semicolon/tab).
+- **Injection safety:** values are read as literal text; the export sanitizer (leading `= + - @`) already protects round-trips.
+- **De-duplication:** reuse the existing UID/email matching and the skip / import-as-new actions.
+
+Effort/risk: medium — the parser and header maps plus a mapping UI; no schema change (the staging table and commit path already exist).
+
+## 7. Consistency with baseline constraints
 
 When implementing either topic, keep the baseline's non-negotiables intact:
 
@@ -249,7 +263,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 ---
 
-## 7. Summary
+## 8. Summary
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
@@ -260,3 +274,4 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Full-text search via FTS5 (§3) | new virtual table + triggers | low–medium | Add when `LIKE` search becomes a limitation |
 | Dependabot → Renovate (§4) | config only (no app code) | low | Do it to also track the vendored htmx/font versions |
 | Contact de-duplication (§5) | none (within-book) | medium | Add after rich fields; pairs with the multi-book change |
+| CSV import (§6) | none (staging exists) | medium | Follow-up to the vCard import; needs a parser + mapping UI |
