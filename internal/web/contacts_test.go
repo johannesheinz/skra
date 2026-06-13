@@ -34,9 +34,11 @@ func TestContactCRUDFlow(t *testing.T) {
 	_, token, csrf := authedGet(t, router, session, bookURL+"/contacts/new")
 	createRec := authedPostForm(router, session, csrf, bookURL+"/contacts", url.Values{
 		auth.CSRFFormField: {token},
-		"full_name":        {"Jane Doe"},
+		"given_name":       {"Jane"},
+		"family_name":      {"Doe"},
 		"org":              {"Acme"},
-		"primary_email":    {"jane@acme.test"},
+		"email_type":       {"work"},
+		"email_value":      {"jane@acme.test"},
 	})
 	if createRec.Code != http.StatusSeeOther {
 		t.Fatalf("create contact = %d, want 303", createRec.Code)
@@ -75,7 +77,8 @@ func TestContactCRUDFlow(t *testing.T) {
 	_, editToken, editCSRF := authedGet(t, router, session, "/contacts/"+publicID+"/edit")
 	editRec := authedPostForm(router, session, editCSRF, "/contacts/"+publicID+"/edit", url.Values{
 		auth.CSRFFormField: {editToken},
-		"full_name":        {"Jane Smith"},
+		"given_name":       {"Jane"},
+		"family_name":      {"Smith"},
 	})
 	if editRec.Code != http.StatusSeeOther {
 		t.Fatalf("edit contact = %d, want 303", editRec.Code)

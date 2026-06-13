@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -13,6 +14,8 @@ import (
 	"github.com/johannesheinz/skra/internal/images"
 	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/rbac"
+	"github.com/johannesheinz/skra/internal/vcardio"
+	"github.com/johannesheinz/skra/internal/web/templates"
 )
 
 const contactsPageSize = 25
@@ -59,11 +62,10 @@ func (h *Handlers) ContactNew(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	h.render(w, r, http.StatusOK, "contact_form.html", map[string]any{
-		"Heading":    "New contact",
-		"FormAction": "/books/" + book.PublicID + "/contacts",
-		"CancelURL":  "/books/" + book.PublicID,
-	})
+	// Seed one blank email and phone row so the form shows a field to fill.
+	h.renderContactForm(w, r, http.StatusOK, "New contact",
+		"/books/"+book.PublicID+"/contacts", "/books/"+book.PublicID,
+		vcardio.Details{Emails: []vcardio.Typed{{}}, Phones: []vcardio.Typed{{}}}, "")
 }
 
 // ContactCreate creates a contact (POST /books/{publicID}/contacts).
@@ -79,7 +81,7 @@ func (h *Handlers) ContactCreate(w http.ResponseWriter, r *http.Request) {
 	contact, err := models.CreateContact(r.Context(), h.DB, book.ID, in)
 	if err != nil {
 		h.renderContactForm(w, r, http.StatusUnprocessableEntity, "New contact",
-			"/books/"+book.PublicID+"/contacts", "/books/"+book.PublicID, in, "Full name is required.")
+			"/books/"+book.PublicID+"/contacts", "/books/"+book.PublicID, in.Details(), "A first or last name is required.")
 		return
 	}
 	http.Redirect(w, r, "/contacts/"+contact.PublicID, http.StatusSeeOther)
@@ -91,6 +93,12 @@ func (h *Handlers) ContactShow(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	_, details, err := models.GetContactDetails(r.Context(), h.DB, contact.PublicID)
+	if err != nil {
+		h.Logger.Error("load contact details failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 	canManage, err := rbac.Can(r.Context(), h.DB, user, contact.AddressBookID, rbac.Write)
 	if err != nil {
 		h.Logger.Error("authorize contact manage failed", "err", err)
@@ -99,6 +107,7 @@ func (h *Handlers) ContactShow(w http.ResponseWriter, r *http.Request) {
 	}
 	h.render(w, r, http.StatusOK, "contact_show.html", map[string]any{
 		"Contact":   contact,
+		"Details":   details,
 		"Book":      book,
 		"CanManage": canManage.Allow,
 	})
@@ -110,12 +119,14 @@ func (h *Handlers) ContactEdit(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	_, details, err := models.GetContactDetails(r.Context(), h.DB, contact.PublicID)
+	if err != nil {
+		h.Logger.Error("load contact details failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 	h.renderContactForm(w, r, http.StatusOK, "Edit contact",
-		"/contacts/"+contact.PublicID+"/edit", "/contacts/"+contact.PublicID,
-		models.ContactInput{
-			FullName: contact.FullName, Org: contact.Org,
-			PrimaryEmail: contact.PrimaryEmail, PrimaryPhone: contact.PrimaryPhone,
-		}, "")
+		"/contacts/"+contact.PublicID+"/edit", "/contacts/"+contact.PublicID, details, "")
 }
 
 // ContactUpdate applies an edit (POST /contacts/{publicID}/edit).
@@ -130,7 +141,7 @@ func (h *Handlers) ContactUpdate(w http.ResponseWriter, r *http.Request) {
 	in := contactInputFromForm(r)
 	if err := models.UpdateContact(r.Context(), h.DB, contact, in); err != nil {
 		h.renderContactForm(w, r, http.StatusUnprocessableEntity, "Edit contact",
-			"/contacts/"+contact.PublicID+"/edit", "/contacts/"+contact.PublicID, in, "Full name is required.")
+			"/contacts/"+contact.PublicID+"/edit", "/contacts/"+contact.PublicID, in.Details(), "A first or last name is required.")
 		return
 	}
 	http.Redirect(w, r, "/contacts/"+contact.PublicID, http.StatusSeeOther)
@@ -218,8 +229,15 @@ func (h *Handlers) ContactPhotoDelete(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) renderContactWithError(w http.ResponseWriter, r *http.Request, contact models.Contact, book models.AddressBook, user models.User, errMsg string) {
 	canManage, _ := rbac.Can(r.Context(), h.DB, user, contact.AddressBookID, rbac.Write)
+	_, details, err := models.GetContactDetails(r.Context(), h.DB, contact.PublicID)
+	if err != nil {
+		h.Logger.Error("load contact details failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 	h.render(w, r, http.StatusUnprocessableEntity, "contact_show.html", map[string]any{
 		"Contact":   contact,
+		"Details":   details,
 		"Book":      book,
 		"CanManage": canManage.Allow,
 		"Error":     errMsg,
@@ -270,24 +288,114 @@ func (h *Handlers) authorizeContact(w http.ResponseWriter, r *http.Request, acti
 
 func contactInputFromForm(r *http.Request) models.ContactInput {
 	return models.ContactInput{
-		FullName:     r.PostFormValue("full_name"),
-		Org:          r.PostFormValue("org"),
-		PrimaryEmail: r.PostFormValue("primary_email"),
-		PrimaryPhone: r.PostFormValue("primary_phone"),
+		GivenName:  r.PostFormValue("given_name"),
+		FamilyName: r.PostFormValue("family_name"),
+		Org:        r.PostFormValue("org"),
+		Title:      r.PostFormValue("title"),
+		Birthday:   r.PostFormValue("birthday"),
+		Note:       r.PostFormValue("note"),
+		Emails:     typedFromForm(r.PostForm["email_type"], r.PostForm["email_value"]),
+		Phones:     typedFromForm(r.PostForm["phone_type"], r.PostForm["phone_value"]),
+		Addresses:  addressesFromForm(r),
+		URLs:       nonEmptyValues(r.PostForm["url_value"]),
 	}
 }
 
-func (h *Handlers) renderContactForm(w http.ResponseWriter, r *http.Request, status int, heading, action, cancelURL string, in models.ContactInput, errMsg string) {
+// typedFromForm pairs parallel type/value arrays into typed values, dropping
+// rows whose value is blank.
+func typedFromForm(types, values []string) []vcardio.Typed {
+	var out []vcardio.Typed
+	for i, v := range values {
+		if strings.TrimSpace(v) == "" {
+			continue
+		}
+		t := ""
+		if i < len(types) {
+			t = types[i]
+		}
+		out = append(out, vcardio.Typed{Type: t, Value: strings.TrimSpace(v)})
+	}
+	return out
+}
+
+// addressesFromForm assembles addresses from the parallel adr_* arrays, dropping
+// empty rows.
+func addressesFromForm(r *http.Request) []vcardio.Address {
+	streets := r.PostForm["adr_street"]
+	cities := r.PostForm["adr_city"]
+	regions := r.PostForm["adr_region"]
+	postals := r.PostForm["adr_postal"]
+	countries := r.PostForm["adr_country"]
+	types := r.PostForm["adr_type"]
+
+	n := len(streets)
+	for _, s := range [][]string{cities, regions, postals, countries} {
+		if len(s) > n {
+			n = len(s)
+		}
+	}
+	at := func(s []string, i int) string {
+		if i < len(s) {
+			return strings.TrimSpace(s[i])
+		}
+		return ""
+	}
+
+	var out []vcardio.Address
+	for i := 0; i < n; i++ {
+		a := vcardio.Address{
+			Type: at(types, i), Street: at(streets, i), City: at(cities, i),
+			Region: at(regions, i), PostalCode: at(postals, i), Country: at(countries, i),
+		}
+		if !a.Empty() {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+func nonEmptyValues(values []string) []string {
+	var out []string
+	for _, v := range values {
+		if strings.TrimSpace(v) != "" {
+			out = append(out, strings.TrimSpace(v))
+		}
+	}
+	return out
+}
+
+func (h *Handlers) renderContactForm(w http.ResponseWriter, r *http.Request, status int, heading, action, cancelURL string, details vcardio.Details, errMsg string) {
 	h.render(w, r, status, "contact_form.html", map[string]any{
-		"Heading":      heading,
-		"FormAction":   action,
-		"CancelURL":    cancelURL,
-		"FullName":     in.FullName,
-		"Org":          in.Org,
-		"PrimaryEmail": in.PrimaryEmail,
-		"PrimaryPhone": in.PrimaryPhone,
-		"Error":        errMsg,
+		"Heading":    heading,
+		"FormAction": action,
+		"CancelURL":  cancelURL,
+		"D":          details,
+		"Error":      errMsg,
 	})
+}
+
+// ContactRowFragment returns a single blank form row for htmx to append
+// (GET /ui/rows/{kind}). Auth is required but no specific resource.
+func (h *Handlers) ContactRowFragment(w http.ResponseWriter, r *http.Request) {
+	var tmpl string
+	var data any
+	switch chi.URLParam(r, "kind") {
+	case "email":
+		tmpl, data = "email_row", vcardio.Typed{}
+	case "phone":
+		tmpl, data = "phone_row", vcardio.Typed{}
+	case "address":
+		tmpl, data = "address_row", vcardio.Address{}
+	case "url":
+		tmpl, data = "url_row", ""
+	default:
+		http.NotFound(w, r)
+		return
+	}
+	if err := templates.RenderFragment(w, tmpl, data); err != nil {
+		h.Logger.Error("render row fragment failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+	}
 }
 
 // parsePage parses a 1-based page number, defaulting to 1 on any bad value.

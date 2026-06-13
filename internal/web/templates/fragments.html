@@ -1,0 +1,38 @@
+{{define "type_options" -}}
+<option value=""{{if eq . ""}} selected{{end}}>—</option>
+<option value="home"{{if eq . "home"}} selected{{end}}>home</option>
+<option value="work"{{if eq . "work"}} selected{{end}}>work</option>
+<option value="mobile"{{if eq . "mobile"}} selected{{end}}>mobile</option>
+<option value="other"{{if eq . "other"}} selected{{end}}>other</option>
+{{- end}}
+
+{{define "email_row"}}
+<div class="field-row">
+  <select name="email_type" aria-label="Email type">{{template "type_options" .Type}}</select>
+  <input type="email" name="email_value" value="{{.Value}}" placeholder="email@example.com">
+</div>
+{{end}}
+
+{{define "phone_row"}}
+<div class="field-row">
+  <select name="phone_type" aria-label="Phone type">{{template "type_options" .Type}}</select>
+  <input type="tel" name="phone_value" value="{{.Value}}" placeholder="+1 555 000 0000">
+</div>
+{{end}}
+
+{{define "url_row"}}
+<div class="field-row">
+  <input type="url" name="url_value" value="{{.}}" placeholder="https://">
+</div>
+{{end}}
+
+{{define "address_row"}}
+<fieldset class="field-row address-row">
+  <select name="adr_type" aria-label="Address type">{{template "type_options" .Type}}</select>
+  <input name="adr_street" value="{{.Street}}" placeholder="Street">
+  <input name="adr_city" value="{{.City}}" placeholder="City">
+  <input name="adr_region" value="{{.Region}}" placeholder="Region">
+  <input name="adr_postal" value="{{.PostalCode}}" placeholder="Postal code">
+  <input name="adr_country" value="{{.Country}}" placeholder="Country">
+</fieldset>
+{{end}}

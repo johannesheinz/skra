@@ -4,18 +4,39 @@
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 <form class="stack" method="post" action="{{.FormAction}}">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <label>Full name
-    <input type="text" name="full_name" value="{{.FullName}}" required autofocus>
-  </label>
-  <label>Organization
-    <input type="text" name="org" value="{{.Org}}">
-  </label>
-  <label>Email
-    <input type="email" name="primary_email" value="{{.PrimaryEmail}}">
-  </label>
-  <label>Phone
-    <input type="tel" name="primary_phone" value="{{.PrimaryPhone}}">
-  </label>
+
+  <label>First name <input name="given_name" value="{{.D.GivenName}}" autofocus></label>
+  <label>Last name <input name="family_name" value="{{.D.FamilyName}}"></label>
+
+  <fieldset>
+    <legend>Emails</legend>
+    <div id="emails">{{range .D.Emails}}{{template "email_row" .}}{{end}}</div>
+    <button type="button" class="btn-secondary" hx-get="/ui/rows/email" hx-target="#emails" hx-swap="beforeend">Add email</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Phones</legend>
+    <div id="phones">{{range .D.Phones}}{{template "phone_row" .}}{{end}}</div>
+    <button type="button" class="btn-secondary" hx-get="/ui/rows/phone" hx-target="#phones" hx-swap="beforeend">Add phone</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Addresses</legend>
+    <div id="addresses">{{range .D.Addresses}}{{template "address_row" .}}{{end}}</div>
+    <button type="button" class="btn-secondary" hx-get="/ui/rows/address" hx-target="#addresses" hx-swap="beforeend">Add address</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Links</legend>
+    <div id="urls">{{range .D.URLs}}{{template "url_row" .}}{{end}}</div>
+    <button type="button" class="btn-secondary" hx-get="/ui/rows/url" hx-target="#urls" hx-swap="beforeend">Add link</button>
+  </fieldset>
+
+  <label>Organization <input name="org" value="{{.D.Org}}"></label>
+  <label>Title <input name="title" value="{{.D.Title}}"></label>
+  <label>Birthday <input type="date" name="birthday" value="{{.D.Birthday}}"></label>
+  <label>Note <textarea name="note" rows="3">{{.D.Note}}</textarea></label>
+
   <div class="actions">
     <button type="submit">Save</button>
     <a class="btn btn-secondary" href="{{.CancelURL}}">Cancel</a>

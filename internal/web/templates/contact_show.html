@@ -8,10 +8,26 @@
 <img class="avatar" src="/contacts/{{.Contact.PublicID}}/photo" alt="" width="160" height="160">
 {{end}}
 
+{{if or .Details.Title .Details.Org}}
+<p class="muted">{{.Details.Title}}{{if and .Details.Title .Details.Org}} · {{end}}{{.Details.Org}}</p>
+{{end}}
+
 <dl class="details">
-  {{if .Contact.Org}}<dt>Organization</dt><dd>{{.Contact.Org}}</dd>{{end}}
-  {{if .Contact.PrimaryEmail}}<dt>Email</dt><dd><a href="mailto:{{.Contact.PrimaryEmail}}">{{.Contact.PrimaryEmail}}</a></dd>{{end}}
-  {{if .Contact.PrimaryPhone}}<dt>Phone</dt><dd><a href="tel:{{.Contact.PrimaryPhone}}">{{.Contact.PrimaryPhone}}</a></dd>{{end}}
+  {{range .Details.Emails}}
+  <dt>Email{{if .Type}} ({{.Type}}){{end}}</dt><dd><a href="mailto:{{.Value}}">{{.Value}}</a></dd>
+  {{end}}
+  {{range .Details.Phones}}
+  <dt>Phone{{if .Type}} ({{.Type}}){{end}}</dt><dd><a href="tel:{{.Value}}">{{.Value}}</a></dd>
+  {{end}}
+  {{range .Details.Addresses}}
+  <dt>Address{{if .Type}} ({{.Type}}){{end}}</dt>
+  <dd>{{with .Street}}{{.}}<br>{{end}}{{.City}}{{if .Region}}, {{.Region}}{{end}} {{.PostalCode}}{{with .Country}}<br>{{.}}{{end}}</dd>
+  {{end}}
+  {{range .Details.URLs}}
+  <dt>Link</dt><dd><a href="{{.}}" rel="noopener noreferrer">{{.}}</a></dd>
+  {{end}}
+  {{with .Details.Birthday}}<dt>Birthday</dt><dd>{{.}}</dd>{{end}}
+  {{with .Details.Note}}<dt>Note</dt><dd>{{.}}</dd>{{end}}
 </dl>
 
 <p><a href="/contacts/{{.Contact.PublicID}}/export.vcf">Download vCard</a></p>

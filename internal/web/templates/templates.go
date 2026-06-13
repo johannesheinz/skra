@@ -61,10 +61,27 @@ func mustParse() map[string]*template.Template {
 	set := make(map[string]*template.Template, len(pageFiles))
 	for _, page := range pageFiles {
 		t := template.New(page).Funcs(funcs)
-		template.Must(t.ParseFS(files, "base.html", "partials.html", page))
+		template.Must(t.ParseFS(files, "base.html", "partials.html", "fragments.html", page))
 		set[page] = t
 	}
 	return set
+}
+
+// fragments holds standalone snippets (form rows) rendered without the layout,
+// e.g. for htmx to append.
+var fragments = template.Must(template.New("fragments").Funcs(funcs).ParseFS(files, "fragments.html"))
+
+// RenderFragment writes a single named fragment (no base layout), buffering so a
+// template error yields a clean 500.
+func RenderFragment(w http.ResponseWriter, name string, data any) error {
+	var buf bytes.Buffer
+	if err := fragments.ExecuteTemplate(&buf, name, data); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return fmt.Errorf("templates: render fragment %q: %w", name, err)
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, err := buf.WriteTo(w)
+	return err
 }
 
 // Render executes a page (composed with the base layout) into a buffer first, so

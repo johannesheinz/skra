@@ -73,6 +73,8 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Get("/account/password", h.AccountPasswordForm)
 		r.Post("/account/password", h.AccountPasswordUpdate)
 
+		r.Get("/ui/rows/{kind}", h.ContactRowFragment)
+
 		r.Get("/books", h.BooksList)
 		r.Get("/books/new", h.BookNew)
 		r.Post("/books", h.BookCreate)
