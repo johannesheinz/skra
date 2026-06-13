@@ -54,6 +54,35 @@ func migrate(db *sql.DB) error {
 	return nil
 }
 
+// hasPendingMigrations reports whether an existing database has embedded
+// migrations not yet recorded in schema_migrations. If schema_migrations does
+// not exist yet, there is nothing to snapshot (the runner will create it), so it
+// returns false.
+func hasPendingMigrations(db *sql.DB) (bool, error) {
+	var exists int
+	if err := db.QueryRow(
+		`SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='schema_migrations'`).Scan(&exists); err != nil {
+		return false, fmt.Errorf("check schema_migrations: %w", err)
+	}
+	if exists == 0 {
+		return false, nil
+	}
+	applied, err := appliedVersions(db)
+	if err != nil {
+		return false, err
+	}
+	migrations, err := loadMigrations()
+	if err != nil {
+		return false, err
+	}
+	for _, m := range migrations {
+		if !applied[m.version] {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func appliedVersions(db *sql.DB) (map[int]bool, error) {
 	rows, err := db.Query("SELECT version FROM schema_migrations")
 	if err != nil {

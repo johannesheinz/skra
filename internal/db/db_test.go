@@ -166,6 +166,42 @@ func TestConcurrentWritesAreSerialized(t *testing.T) {
 	}
 }
 
+func TestSnapshot(t *testing.T) {
+	database, _ := openTestDB(t)
+	ctx := context.Background()
+
+	// Seed a row so we can confirm it survives into the snapshot.
+	if _, err := database.ExecWrite(ctx,
+		`INSERT INTO users (public_id, username, email, password_hash, role)
+		 VALUES ('p', 'alice', 'a@e.com', 'h', 'admin')`); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	out := filepath.Join(t.TempDir(), "backup.db")
+	if err := database.Snapshot(ctx, out); err != nil {
+		t.Fatalf("Snapshot: %v", err)
+	}
+
+	// The snapshot opens as a valid database with the row present.
+	snap, err := sql.Open("sqlite", "file:"+out)
+	if err != nil {
+		t.Fatalf("open snapshot: %v", err)
+	}
+	defer snap.Close()
+	var n int
+	if err := snap.QueryRow("SELECT COUNT(*) FROM users WHERE username='alice'").Scan(&n); err != nil {
+		t.Fatalf("query snapshot: %v", err)
+	}
+	if n != 1 {
+		t.Errorf("snapshot user count = %d, want 1", n)
+	}
+
+	// Refuses to overwrite an existing file.
+	if err := database.Snapshot(ctx, out); err == nil {
+		t.Error("Snapshot should refuse to overwrite an existing file")
+	}
+}
+
 func TestForeignKeysEnforced(t *testing.T) {
 	database, _ := openTestDB(t)
 

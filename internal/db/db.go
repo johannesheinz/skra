@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -66,6 +68,9 @@ func Open(path string) (*DB, error) {
 			pool.Close()
 			return nil, err
 		}
+	} else if err := snapshotBeforeMigrations(pool, path); err != nil {
+		pool.Close()
+		return nil, err
 	}
 
 	if err := migrate(pool); err != nil {
@@ -74,6 +79,44 @@ func Open(path string) (*DB, error) {
 	}
 
 	return &DB{DB: pool}, nil
+}
+
+// Snapshot writes a consistent, compacted copy of the database to outPath using
+// VACUUM INTO (safe on a live WAL database). It refuses to overwrite an existing
+// file.
+func (d *DB) Snapshot(ctx context.Context, outPath string) error {
+	if _, err := os.Stat(outPath); err == nil {
+		return fmt.Errorf("db: refusing to overwrite existing backup %q", outPath)
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("db: stat backup path: %w", err)
+	}
+	d.writeMu.Lock()
+	defer d.writeMu.Unlock()
+	if _, err := d.DB.ExecContext(ctx, vacuumIntoSQL(outPath)); err != nil {
+		return fmt.Errorf("db: snapshot: %w", err)
+	}
+	return nil
+}
+
+// snapshotBeforeMigrations takes a one-off backup beside the database when an
+// existing database has migrations to apply, so a failed/regretted migration is
+// always recoverable. No-op when nothing is pending.
+func snapshotBeforeMigrations(pool *sql.DB, path string) error {
+	pending, err := hasPendingMigrations(pool)
+	if err != nil || !pending {
+		return err
+	}
+	out := fmt.Sprintf("%s.pre-migrate-%d.bak", path, time.Now().Unix())
+	if _, err := pool.Exec(vacuumIntoSQL(out)); err != nil {
+		return fmt.Errorf("db: pre-migration snapshot: %w", err)
+	}
+	return nil
+}
+
+// vacuumIntoSQL builds a VACUUM INTO statement with a safely single-quoted path
+// (the path is not user input, but quoting keeps it robust).
+func vacuumIntoSQL(path string) string {
+	return "VACUUM INTO '" + strings.ReplaceAll(path, "'", "''") + "'"
 }
 
 // Write runs fn inside a serialized write transaction. The mutex guarantees a
