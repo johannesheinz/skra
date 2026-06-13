@@ -22,6 +22,8 @@ Early development.
 
 **Phase 5b (import)** — vCard (.vcf) import into a book (manager only): parses concatenated cards with per-card error isolation, extracts embedded photos, and runs upload → dry-run preview → transactional commit with UID/email de-duplication (skip or import-as-new). CSV import is a planned follow-up.
 
+**Rich contact fields** — contacts hold first/last name, multiple typed emails/phones, multiple postal addresses, links, organization, title, birthday, and note. The edit form has repeatable rows (htmx); everything round-trips through `vcard_raw` (the source of truth) with the structured columns kept as a listing/search cache, so editing no longer drops imported multi-value data.
+
 See [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) for the full specification and roadmap, and [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md) for conventions.
 
 ## Requirements
