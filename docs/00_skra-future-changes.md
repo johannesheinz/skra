@@ -3,8 +3,8 @@
 Candidate changes beyond the baseline specification (`skra-baseline-spec.md`).
 Unlike the baseline, these are **options with recommendations**, not fixed
 decisions. Topics: password-hash salting/peppering, allowing a contact
-to exist in multiple address books, full-text contact search, and
-dependency-update tooling.
+to exist in multiple address books, full-text contact search,
+dependency-update tooling, and contact de-duplication.
 
 ---
 
@@ -225,7 +225,19 @@ Renovate closes that gap: its **custom/regex manager** plus **custom datasources
 
 Replace `.github/dependabot.yml` with `renovate.json` (or run the Renovate GitHub App / a self-hosted `renovate` action). Effort/risk: low — configuration only, no application code.
 
-## 5. Consistency with baseline constraints
+## 5. Contact de-duplication
+
+Import already de-duplicates at ingest time (by UID, then email), but duplicates still accumulate from manual entry, merges of address books, and imports run with the "import everything as new" option. A maintenance feature would find and merge existing duplicates within a book (and, once contacts can span books, across the books a user manages).
+
+Shape:
+
+- **Detection:** group candidates by strong keys first (exact email, exact normalized phone, exact `UID`), then optionally surface weaker matches (case/diacritic-normalized full name, or name + organization). Present candidate groups for review rather than auto-merging.
+- **Merge UI:** for a chosen group, pick the surviving contact and combine fields — union the emails/phones/addresses/URLs, keep one photo, preserve the longest/most-complete `NOTE` — then rewrite the survivor's `vcard_raw` + denormalized columns, bump its `etag`, move or revoke the losers' share links, and delete the losers.
+- **Safety:** dry-run preview of what merges into what; everything in one transaction; never merge across address books the user cannot manage.
+
+This pairs naturally with the rich-contact-fields work (a merge needs the full multi-value field model to union correctly) and with the multi-book change in §2 (cross-book de-duplication becomes "link the same contact into multiple books" rather than copy). Effort/risk: medium — detection heuristics plus a careful merge transaction; no schema change for the within-book case.
+
+## 6. Consistency with baseline constraints
 
 When implementing either topic, keep the baseline's non-negotiables intact:
 
@@ -237,7 +249,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 ---
 
-## 6. Summary
+## 7. Summary
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
@@ -247,3 +259,4 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Multi-book via M:N join (B) | join table + contacts rebuild | medium | Choose for true shared contacts; do it early |
 | Full-text search via FTS5 (§3) | new virtual table + triggers | low–medium | Add when `LIKE` search becomes a limitation |
 | Dependabot → Renovate (§4) | config only (no app code) | low | Do it to also track the vendored htmx/font versions |
+| Contact de-duplication (§5) | none (within-book) | medium | Add after rich fields; pairs with the multi-book change |
