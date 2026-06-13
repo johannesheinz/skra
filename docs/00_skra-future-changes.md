@@ -6,8 +6,8 @@ decisions. Topics: password-hash salting/peppering, allowing a contact
 to exist in multiple address books, full-text contact search,
 dependency-update tooling, contact de-duplication, CSV import,
 OpenStreetMap links for addresses, a responsive/mobile layout,
-upcoming birthdays on the landing page, light/dark theming, and richer
-user profile pages.
+upcoming birthdays on the landing page, light/dark theming, richer
+user profile pages, accessibility, and internationalization.
 
 ---
 
@@ -315,7 +315,36 @@ Self-service today is limited to changing your own password (`/account/password`
 
 Effort/risk: low–medium — a memberships query plus a small profile form and page; no schema change (the `email` column already exists). Pairs naturally with the per-user theme preference (§10) if profile settings grow.
 
-## 12. Consistency with baseline constraints
+## 12. Accessibility (a11y)
+
+The server-rendered HTML is a good starting point — semantic elements, `<label>`-wrapped inputs, `role="alert"` on errors, `role="search"`, landmark `header`/`main`/`nav`, `lang="en"`, and visible focus outlines — but there has been no deliberate accessibility pass.
+
+Work:
+
+- **Labels & descriptions:** confirm every control has a programmatic label; associate validation messages with their field via `aria-describedby` rather than only a separate alert paragraph.
+- **Keyboard & focus:** ensure a logical tab order, that the htmx "Add row" buttons and all actions are keyboard-operable, and add a "skip to content" link.
+- **Dynamic updates:** when an htmx row is appended, move focus to the new input (and/or announce via an `aria-live` region) so it is not silently inserted.
+- **Images:** give contact photos meaningful `alt` (the contact's name) instead of empty alt where the image is the only representation.
+- **Contrast:** verify the light and dark token palettes meet WCAG AA contrast — naturally paired with the theming/design work (§10).
+- **Verify:** run axe/Lighthouse and a screen-reader smoke test; keep it regression-checked.
+
+Effort/risk: low–medium — mostly template and CSS refinements; no new dependency.
+
+## 13. Internationalization (i18n / l10n)
+
+Every user-facing string is currently hardcoded English in templates and handlers, dates are rendered in a fixed format, and `lang` is always `en`. Making Skrá translatable is a cross-cutting but mechanical change.
+
+Work:
+
+- **Externalize strings:** extract UI text into per-locale message catalogs and look them up by key in templates/handlers (a translation function exposed to `html/template`).
+- **Locale selection:** detect from `Accept-Language`, overridable by a user/cookie preference (pairs with the profile/theming settings); set `<html lang>` accordingly.
+- **Plurals & formatting:** handle plural rules and localized date/number formatting — `golang.org/x/text` (official) provides catalogs, plural selection, and formatting; weigh it against a small hand-rolled catalog to keep the dependency surface minimal.
+- **RTL:** support right-to-left locales via `dir="rtl"`; the CSS already leans on logical properties (`margin-inline`, etc.), which helps. 
+- **Scope note:** contact data is user content and is not translated; this covers the chrome (labels, buttons, messages, validation, emails).
+
+Effort/risk: medium–high — it touches every template and adds locale plumbing; best done before the string surface grows much larger.
+
+## 14. Consistency with baseline constraints
 
 When implementing either topic, keep the baseline's non-negotiables intact:
 
@@ -327,7 +356,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 ---
 
-## 13. Summary
+## 15. Summary
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
@@ -344,3 +373,5 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Upcoming birthdays on landing (§9) | denormalized birthday column + backfill | medium | Needs a queryable birthday; then a small dashboard widget |
 | Theming light/dark (§10) | none (cookie) or 1 column (per-user) | low | Tokens exist; server-set data-theme, no flash, CSP-safe |
 | Richer user profiles (§11) | none | low–medium | Show memberships + let users edit their own email |
+| Accessibility (§12) | none (templates/CSS) | low–medium | a11y pass: labels, focus, aria-live, contrast; verify with axe |
+| Internationalization (§13) | none (catalogs + locale) | medium–high | Externalize strings, locale select, plurals/dates, RTL |
