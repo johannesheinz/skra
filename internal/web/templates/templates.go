@@ -22,7 +22,13 @@ var funcs = template.FuncMap{
 }
 
 // pageFiles are the content templates; each is composed with base.html.
-var pageFiles = []string{"login.html", "home.html"}
+var pageFiles = []string{
+	"login.html",
+	"home.html",
+	"books_list.html",
+	"book_form.html",
+	"book_show.html",
+}
 
 var pages = mustParse()
 

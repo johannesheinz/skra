@@ -10,6 +10,19 @@
   <script src="{{static "js/htmx-v2.0.9.min.js"}}" defer></script>
 </head>
 <body>
+  <header class="appbar">
+    <a class="brand" href="/">Skrá</a>
+    {{with .User}}
+    <nav class="appnav">
+      <a href="/books">Address books</a>
+      <span class="muted">{{.Username}}</span>
+      <form method="post" action="/logout">
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+        <button class="btn-secondary" type="submit">Sign out</button>
+      </form>
+    </nav>
+    {{end}}
+  </header>
   <main class="container stack">
     {{block "content" .}}{{end}}
   </main>

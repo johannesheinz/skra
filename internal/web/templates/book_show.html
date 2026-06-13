@@ -1,0 +1,18 @@
+{{define "title"}}{{.Book.Name}} · Skrá{{end}}
+{{define "content"}}
+<h1>{{.Book.Name}}</h1>
+{{if .Book.Description}}<p class="muted">{{.Book.Description}}</p>{{end}}
+
+{{if .CanManage}}
+<div class="actions">
+  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/edit">Edit</a>
+  <form method="post" action="/books/{{.Book.PublicID}}/delete">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <button class="btn-danger" type="submit">Delete</button>
+  </form>
+</div>
+{{end}}
+
+<h2>Contacts</h2>
+<p class="muted">Contact management arrives next.</p>
+{{end}}

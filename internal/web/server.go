@@ -69,6 +69,15 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	r.Group(func(r chi.Router) {
 		r.Use(authenticator.RequireAuth)
 		r.Get("/", h.Home)
+
+		r.Get("/books", h.BooksList)
+		r.Get("/books/new", h.BookNew)
+		r.Post("/books", h.BookCreate)
+		r.Get("/books/{publicID}", h.BookShow)
+		r.Get("/books/{publicID}/edit", h.BookEdit)
+		r.Post("/books/{publicID}/edit", h.BookUpdate)
+		r.Post("/books/{publicID}/delete", h.BookDelete)
+
 		r.Get("/contacts/{publicID}/photo", h.ContactPhoto)
 	})
 

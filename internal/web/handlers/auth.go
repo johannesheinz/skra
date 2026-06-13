@@ -6,7 +6,6 @@ import (
 
 	"github.com/johannesheinz/skra/internal/auth"
 	"github.com/johannesheinz/skra/internal/models"
-	"github.com/johannesheinz/skra/internal/web/templates"
 )
 
 const invalidCredentials = "Invalid username or password."
@@ -18,7 +17,7 @@ func (h *Handlers) LoginForm(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	h.renderLogin(w, http.StatusOK, "", "")
+	h.renderLogin(w, r, http.StatusOK, "", "")
 }
 
 // Login authenticates a username/password submission (POST /login).
@@ -42,12 +41,12 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		if !errors.Is(err, models.ErrUserNotFound) {
 			h.Logger.Error("login user lookup failed", "err", err)
 		}
-		h.renderLogin(w, http.StatusUnauthorized, username, invalidCredentials)
+		h.renderLogin(w, r, http.StatusUnauthorized, username, invalidCredentials)
 		return
 	}
 
 	if err := auth.VerifyPassword(user.PasswordHash, password); err != nil {
-		h.renderLogin(w, http.StatusUnauthorized, username, invalidCredentials)
+		h.renderLogin(w, r, http.StatusUnauthorized, username, invalidCredentials)
 		return
 	}
 
@@ -82,24 +81,13 @@ func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-// Home is the minimal authenticated landing page (GET /).
+// Home is the authenticated landing page (GET /).
 func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
-	user, ok := auth.UserFromContext(r.Context())
-	if !ok {
+	if _, ok := auth.UserFromContext(r.Context()); !ok {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	token, err := auth.IssueCSRF(w, h.CookieSecure)
-	if err != nil {
-		h.Logger.Error("issue csrf failed", "err", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-	_ = templates.Render(w, http.StatusOK, "home.html", map[string]any{
-		"Username":  user.Username,
-		"Role":      user.Role,
-		"CSRFToken": token,
-	})
+	h.render(w, r, http.StatusOK, "home.html", nil)
 }
 
 func (h *Handlers) rehashIfNeeded(r *http.Request, user models.User, password string) {
@@ -117,16 +105,9 @@ func (h *Handlers) rehashIfNeeded(r *http.Request, user models.User, password st
 	}
 }
 
-func (h *Handlers) renderLogin(w http.ResponseWriter, status int, username, errMsg string) {
-	token, err := auth.IssueCSRF(w, h.CookieSecure)
-	if err != nil {
-		h.Logger.Error("issue csrf failed", "err", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-	_ = templates.Render(w, status, "login.html", map[string]any{
-		"CSRFToken": token,
-		"Username":  username,
-		"Error":     errMsg,
+func (h *Handlers) renderLogin(w http.ResponseWriter, r *http.Request, status int, username, errMsg string) {
+	h.render(w, r, status, "login.html", map[string]any{
+		"Username": username,
+		"Error":    errMsg,
 	})
 }

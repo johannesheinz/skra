@@ -1,9 +1,6 @@
 {{define "title"}}Skrá{{end}}
 {{define "content"}}
-<h1 class="brand">Skrá</h1>
-<p>Signed in as <strong>{{.Username}}</strong> ({{.Role}}).</p>
-<form method="post" action="/logout">
-  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <button class="btn-secondary" type="submit">Sign out</button>
-</form>
+<h1>Welcome</h1>
+<p class="muted">Signed in as {{.User.Username}} ({{.User.Role}}).</p>
+<p><a class="btn" href="/books">Go to address books</a></p>
 {{end}}
