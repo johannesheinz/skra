@@ -5,8 +5,9 @@ Unlike the baseline, these are **options with recommendations**, not fixed
 decisions. Topics: password-hash salting/peppering, allowing a contact
 to exist in multiple address books, full-text contact search,
 dependency-update tooling, contact de-duplication, CSV import,
-OpenStreetMap links for addresses, a responsive/mobile layout, and
-upcoming birthdays on the landing page.
+OpenStreetMap links for addresses, a responsive/mobile layout,
+upcoming birthdays on the landing page, light/dark theming, and richer
+user profile pages.
 
 ---
 
@@ -293,7 +294,28 @@ Details to handle:
 
 Effort/risk: medium — a migration plus denormalization (and a backfill of existing rows from `vcard_raw`), one scoped query, and a small home-page widget. No new dependency.
 
-## 10. Consistency with baseline constraints
+## 10. Theming (light / dark)
+
+The stylesheet already defines both palettes via design tokens and switches on `prefers-color-scheme`, so the app follows the OS today. The addition is an explicit user choice — light / dark / system — that overrides the OS setting.
+
+Approach that keeps the self-only CSP and avoids a flash of the wrong theme:
+
+- Store the preference in a cookie and have the server stamp `data-theme="light|dark"` on the `<html>` element when rendering; the CSS keys off `[data-theme="dark"]` in addition to the existing media query. No JavaScript and no flash, because the correct theme is in the first byte of HTML.
+- The toggle is a small control that POSTs to set the cookie (or, for instant switching without a reload, a tiny self-hosted `theme.js` — never inline, to keep `script-src 'self'`).
+- Decide cookie-only vs per-user: a cookie is zero-schema and per-device; persisting on the account (a small `theme` column / preference) makes it follow the user across devices but needs a migration. Cookie-first is the low-effort start.
+
+Effort/risk: low. Tokens exist; it's a cookie, a server-set attribute, a couple of CSS rules, and a toggle.
+
+## 11. Richer user profile pages
+
+Self-service today is limited to changing your own password (`/account/password`). Two gaps:
+
+- **Show memberships/roles.** A user's profile should list the address books they belong to and at what access level (viewer/manager), so people can see what they can reach. The same memberships view belongs on the admin's user-edit page (`/admin/users/{id}/edit`) — answering "what does this user manage?" at a glance. This needs a per-user "books + my access level" query (the data is in `address_book_members`; today only the admin global role and the per-book Members page expose it).
+- **Edit more than the password.** Let a user edit their own editable profile info — at least email — on an account page, not only their password. Username stays immutable and role stays admin-only (a user must not promote themselves); admins continue to manage roles via `/admin/users`.
+
+Effort/risk: low–medium — a memberships query plus a small profile form and page; no schema change (the `email` column already exists). Pairs naturally with the per-user theme preference (§10) if profile settings grow.
+
+## 12. Consistency with baseline constraints
 
 When implementing either topic, keep the baseline's non-negotiables intact:
 
@@ -305,7 +327,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 ---
 
-## 11. Summary
+## 13. Summary
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
@@ -320,3 +342,5 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | OpenStreetMap address links (§7) | none | very low | Link out (don't embed) to keep the self-only CSP intact |
 | Responsive / mobile layout (§8) | none (CSS + minor templates) | low–medium | Deliberate small-screen pass; pairs with the design/colors pass |
 | Upcoming birthdays on landing (§9) | denormalized birthday column + backfill | medium | Needs a queryable birthday; then a small dashboard widget |
+| Theming light/dark (§10) | none (cookie) or 1 column (per-user) | low | Tokens exist; server-set data-theme, no flash, CSP-safe |
+| Richer user profiles (§11) | none | low–medium | Show memberships + let users edit their own email |
