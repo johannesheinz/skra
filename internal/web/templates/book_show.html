@@ -6,6 +6,7 @@
 {{if .CanManage}}
 <div class="actions">
   <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/edit">Edit book</a>
+  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/members">Members</a>
   <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/shares">Manage sharing</a>
   <form method="post" action="/books/{{.Book.PublicID}}/delete">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
