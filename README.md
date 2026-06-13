@@ -14,6 +14,8 @@ Early development.
 
 **Phase 2 (contact management)** — self-hosted asset foundation (embedded, content-hashed CSS/JS/fonts, semantic component CSS, self-only CSP); address book CRUD with per-book authorization; contact list (search + pagination), detail, and CRUD via the hybrid write path (structured columns + regenerated `vcard_raw` + bumped `etag`); and a photo ingest pipeline (EXIF orientation, metadata stripping, downscale, JPEG re-encode).
 
+**Phase 3 (presentation & export)** — a permission-gated contact directory (card grid, structured for reuse by public sharing); vCard export (whole book or single contact, embedding base64 photos) and CSV export with formula-injection sanitization.
+
 See [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) for the full specification and roadmap, and [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md) for conventions.
 
 ## Requirements
