@@ -5,7 +5,8 @@ Unlike the baseline, these are **options with recommendations**, not fixed
 decisions. Topics: password-hash salting/peppering, allowing a contact
 to exist in multiple address books, full-text contact search,
 dependency-update tooling, contact de-duplication, CSV import,
-OpenStreetMap links for addresses, and a responsive/mobile layout.
+OpenStreetMap links for addresses, a responsive/mobile layout, and
+upcoming birthdays on the landing page.
 
 ---
 
@@ -277,7 +278,22 @@ Work:
 
 This is pure CSS plus minor template structure (e.g. wrapping wide tables); no Go, no schema, no new dependency. Effort/risk: low–medium, mostly iteration against real screens. A good companion to the eventual design/colors pass.
 
-## 9. Consistency with baseline constraints
+## 9. Upcoming birthdays on the landing page
+
+The landing page (`/`) is currently a near-empty welcome. It could show the next ~5 contacts with an upcoming birthday, with each person's age, across the books the signed-in user can see — a small, friendly dashboard.
+
+Data-access wrinkle: birthdays live in `vcard_raw` (BDAY), not a structured column, so "soonest birthday across all my contacts" can't be queried efficiently today. Add a denormalized `birthday` column to `contacts` (populated from `Details` on create/update/import, like `primary_email`), ideally with a stored month-day for ordering, so the dashboard query is a simple indexed scan over the user's accessible books rather than parsing every card.
+
+Details to handle:
+
+- **Next occurrence:** order by the next time each birthday falls on/after today (this year, else next year); take the top 5. Optionally bound to a window (e.g. next 30 days) and show nothing when empty.
+- **Age:** vCard birthdays may omit the year (`--MMDD`). Show the age only when a year is present; otherwise show just the date / "turning —".
+- **Authorization:** include only contacts in books the user may read; reuse the existing access scoping.
+- **Leap day:** decide a rule for Feb 29 in non-leap years (treat as Mar 1 or Feb 28).
+
+Effort/risk: medium — a migration plus denormalization (and a backfill of existing rows from `vcard_raw`), one scoped query, and a small home-page widget. No new dependency.
+
+## 10. Consistency with baseline constraints
 
 When implementing either topic, keep the baseline's non-negotiables intact:
 
@@ -289,7 +305,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 ---
 
-## 10. Summary
+## 11. Summary
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
@@ -303,3 +319,4 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | CSV import (§6) | none (staging exists) | medium | Follow-up to the vCard import; needs a parser + mapping UI |
 | OpenStreetMap address links (§7) | none | very low | Link out (don't embed) to keep the self-only CSP intact |
 | Responsive / mobile layout (§8) | none (CSS + minor templates) | low–medium | Deliberate small-screen pass; pairs with the design/colors pass |
+| Upcoming birthdays on landing (§9) | denormalized birthday column + backfill | medium | Needs a queryable birthday; then a small dashboard widget |
