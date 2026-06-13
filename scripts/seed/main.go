@@ -17,11 +17,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"hash/fnv"
 	"image"
 	"image/color"
 	"image/png"
 	"os"
 	"strings"
+
+	"golang.org/x/image/draw"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/math/fixed"
 
 	"github.com/johannesheinz/skra/internal/auth"
 	"github.com/johannesheinz/skra/internal/db"
@@ -41,9 +47,13 @@ func main() {
 
 func run() error {
 	dbPath := flag.String("db", "skra-demo.db", "SQLite database path to seed")
-	extra := flag.Int("extra", 150, "number of generated contacts to add across the books")
+	count := flag.Int("extra", 150, "number of generated contacts to create across the books")
 	force := flag.Bool("force", false, "seed even if the database already has users")
 	flag.Parse()
+
+	if max := len(firstNames) * len(lastNames); *count > max {
+		fmt.Fprintf(os.Stderr, "seed: note: %d contacts exceeds %d unique name pairs; names wrap with a numeric suffix\n", *count, max)
+	}
 
 	database, err := db.Open(*dbPath)
 	if err != nil {
@@ -52,22 +62,18 @@ func run() error {
 	defer database.Close()
 	ctx := context.Background()
 
-	count, err := models.CountUsers(ctx, database)
+	existing, err := models.CountUsers(ctx, database)
 	if err != nil {
 		return err
 	}
-	if count > 0 && !*force {
-		return fmt.Errorf("database already has %d user(s); pass --force to seed anyway", count)
+	if existing > 0 && !*force {
+		return fmt.Errorf("database already has %d user(s); pass --force to seed anyway", existing)
 	}
 
-	// Users.
 	users := map[string]models.User{}
 	for _, u := range []struct{ name, role string }{
-		{"admin", models.RoleAdmin},
-		{"alice", models.RoleUser},
-		{"bob", models.RoleUser},
-		{"carol", models.RoleUser},
-		{"dave", models.RoleUser},
+		{"admin", models.RoleAdmin}, {"alice", models.RoleUser}, {"bob", models.RoleUser},
+		{"carol", models.RoleUser}, {"dave", models.RoleUser},
 	} {
 		created, err := createUser(ctx, database, u.name, u.name+"@demo.test", u.role)
 		if err != nil {
@@ -76,10 +82,9 @@ func run() error {
 		users[u.name] = created
 	}
 
-	// Books with cross-user grants (owner already gets a manager grant).
 	type bookSpec struct {
 		name, owner, desc string
-		grants            map[string]string // username -> level
+		grants            map[string]string
 	}
 	specs := []bookSpec{
 		{"Work", "admin", "Colleagues and clients", map[string]string{"alice": models.AccessManager, "bob": models.AccessViewer}},
@@ -101,31 +106,33 @@ func run() error {
 		books = append(books, book)
 	}
 
-	// Curated, recognizable contacts go in the first book for flavor.
-	if err := seedContacts(ctx, database, books[0].ID, curatedContacts); err != nil {
-		return err
-	}
-
-	// Generated contacts spread round-robin across all books.
-	for i := 0; i < *extra; i++ {
+	for i := 0; i < *count; i++ {
 		book := books[i%len(books)]
-		if err := seedContacts(ctx, database, book.ID, []demoContact{generateContact(i)}); err != nil {
-			return err
+		in, avatar := generateContact(i)
+		contact, err := models.CreateContact(ctx, database, book.ID, in)
+		if err != nil {
+			return fmt.Errorf("create contact %d: %w", i, err)
+		}
+		jpeg, err := images.Process(avatar)
+		if err != nil {
+			return fmt.Errorf("process avatar %d: %w", i, err)
+		}
+		if err := models.SetContactPhoto(ctx, database, contact.ID, jpeg); err != nil {
+			return fmt.Errorf("set photo %d: %w", i, err)
 		}
 	}
 
-	total := len(curatedContacts) + *extra
 	fmt.Printf(`seeded %s
 
   users:    admin, alice, bob, carol, dave   (password: %s)
   books:    %d (Work, Friends, Family, Clients) with cross-user grants
-  contacts: %d total (%d curated + %d generated)
+  contacts: %d, each with a unique name and an initials avatar
 
 run it:
   SKRA_LISTEN=127.0.0.1:3000 SKRA_DB_PATH=%s \
     SKRA_COOKIE_SECURE=false SKRA_EXTERNAL_URL=http://127.0.0.1:3000 \
     SKRA_SESSION_KEY=dev-only-session-key-not-secret-000 ./skra serve
-`, *dbPath, demoPassword, len(books), total, len(curatedContacts), *extra, *dbPath)
+`, *dbPath, demoPassword, len(books), *count, *dbPath)
 	return nil
 }
 
@@ -137,35 +144,17 @@ func createUser(ctx context.Context, d *db.DB, username, email, role string) (mo
 	return models.CreateUser(ctx, d, username, email, hash, role)
 }
 
-type demoContact struct {
-	in    models.ContactInput
-	color *color.RGBA // optional avatar color
-}
-
-func seedContacts(ctx context.Context, d *db.DB, bookID int64, contacts []demoContact) error {
-	for _, c := range contacts {
-		contact, err := models.CreateContact(ctx, d, bookID, c.in)
-		if err != nil {
-			return fmt.Errorf("create contact %q: %w", c.in.GivenName, err)
-		}
-		if c.color != nil {
-			jpeg, err := images.Process(avatarPNG(*c.color))
-			if err != nil {
-				return fmt.Errorf("process avatar: %w", err)
-			}
-			if err := models.SetContactPhoto(ctx, d, contact.ID, jpeg); err != nil {
-				return fmt.Errorf("set photo: %w", err)
-			}
-		}
-	}
-	return nil
-}
-
-// generateContact deterministically builds a varied rich contact from an index,
-// so emails are unique and runs are reproducible.
-func generateContact(i int) demoContact {
+// generateContact deterministically builds a unique, varied rich contact from an
+// index, returning the input and a rendered avatar PNG. Name pairs are unique up
+// to len(firstNames)*len(lastNames); beyond that a numeric suffix keeps them so.
+func generateContact(i int) (models.ContactInput, []byte) {
+	// Latin-square pairing (pools are equal length): both the first and last
+	// name advance each step, and every pair is unique within one full cycle.
 	first := firstNames[i%len(firstNames)]
-	last := lastNames[(i*7)%len(lastNames)]
+	last := lastNames[(i/len(firstNames)+i)%len(lastNames)]
+	if wrap := i / (len(firstNames) * len(lastNames)); wrap > 0 {
+		last = fmt.Sprintf("%s-%d", last, wrap+1)
+	}
 	slug := strings.ToLower(first) + "." + strings.ToLower(last) + fmt.Sprint(i+1)
 
 	in := models.ContactInput{
@@ -177,14 +166,15 @@ func generateContact(i int) demoContact {
 	if i%2 == 0 {
 		in.Org = orgs[i%len(orgs)]
 		in.Title = titles[i%len(titles)]
-		in.Emails = append(in.Emails, vcardio.Typed{Type: "work", Value: strings.ToLower(first) + "@" + strings.ToLower(strings.ReplaceAll(in.Org, " ", "")) + ".demo"})
+		in.Emails = append(in.Emails, vcardio.Typed{Type: "work", Value: slug + "@" + strings.ToLower(strings.ReplaceAll(in.Org, " ", "")) + ".demo"})
 	}
 	if i%3 == 0 {
 		in.Phones = append(in.Phones, vcardio.Typed{Type: "work", Value: fmt.Sprintf("+1 555 %04d", 9000+i)})
 	}
 	if i%4 == 0 {
-		city := cities[i%len(cities)]
-		in.Addresses = []vcardio.Address{{Type: "home", Street: fmt.Sprintf("%d %s St", 10+i, last), City: city, Region: regions[i%len(regions)], PostalCode: fmt.Sprintf("%05d", 10000+i*7%89999), Country: "USA"}}
+		in.Addresses = []vcardio.Address{{Type: "home",
+			Street: fmt.Sprintf("%d %s St", 10+i, last), City: cities[i%len(cities)],
+			Region: regions[i%len(regions)], PostalCode: fmt.Sprintf("%05d", 10000+i*37%89999), Country: "USA"}}
 	}
 	if i%5 == 0 {
 		in.Birthday = fmt.Sprintf("19%02d-%02d-%02d", 60+i%39, 1+i%12, 1+i%28)
@@ -196,29 +186,86 @@ func generateContact(i int) demoContact {
 		in.URLs = []string{"https://demo.test/" + slug}
 	}
 
-	var col *color.RGBA
-	if i%3 == 0 {
-		c := palette[i%len(palette)]
-		col = &c
-	}
-	return demoContact{in: in, color: col}
+	initials := strings.ToUpper(first[:1] + last[:1])
+	return in, avatarPNG(initials, avatarColor(slug))
 }
 
-// avatarPNG returns a solid-color square PNG to stand in for a contact photo.
-func avatarPNG(c color.RGBA) []byte {
-	img := image.NewRGBA(image.Rect(0, 0, 256, 256))
-	for y := 0; y < 256; y++ {
-		for x := 0; x < 256; x++ {
-			img.SetRGBA(x, y, c)
-		}
+// avatarPNG draws the initials in white, centered on a solid background.
+func avatarPNG(initials string, bg color.RGBA) []byte {
+	const size = 256
+	img := image.NewRGBA(image.Rect(0, 0, size, size))
+	draw.Draw(img, img.Bounds(), image.NewUniform(bg), image.Point{}, draw.Src)
+
+	// Render the initials small with the bitmap face, then scale up to fill.
+	face := basicfont.Face7x13
+	tw := font.MeasureString(face, initials).Ceil()
+	if tw < 1 {
+		tw = 7
 	}
+	th := face.Metrics().Ascent.Ceil() + face.Metrics().Descent.Ceil()
+	text := image.NewRGBA(image.Rect(0, 0, tw, th))
+	(&font.Drawer{
+		Dst:  text,
+		Src:  image.NewUniform(color.White),
+		Face: face,
+		Dot:  fixed.Point26_6{X: 0, Y: face.Metrics().Ascent},
+	}).DrawString(initials)
+
+	scale := float64(size) * 0.55 / float64(max(tw, th))
+	dw, dh := int(float64(tw)*scale), int(float64(th)*scale)
+	dst := image.Rect((size-dw)/2, (size-dh)/2, (size-dw)/2+dw, (size-dh)/2+dh)
+	draw.NearestNeighbor.Scale(img, dst, text, text.Bounds(), draw.Over, nil)
+
 	var buf bytes.Buffer
 	_ = png.Encode(&buf, img)
 	return buf.Bytes()
 }
 
-func email(t, v string) vcardio.Typed { return vcardio.Typed{Type: t, Value: v} }
-func phone(t, v string) vcardio.Typed { return vcardio.Typed{Type: t, Value: v} }
+// avatarColor derives a stable, mid-tone background color from a seed string so
+// each contact gets a distinct, readable avatar.
+func avatarColor(seed string) color.RGBA {
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(seed))
+	hue := float64(h.Sum32() % 360)
+	return hsv(hue, 0.55, 0.60)
+}
+
+func hsv(h, s, v float64) color.RGBA {
+	c := v * s
+	x := c * (1 - abs(mod(h/60, 2)-1))
+	m := v - c
+	var r, g, b float64
+	switch {
+	case h < 60:
+		r, g, b = c, x, 0
+	case h < 120:
+		r, g, b = x, c, 0
+	case h < 180:
+		r, g, b = 0, c, x
+	case h < 240:
+		r, g, b = 0, x, c
+	case h < 300:
+		r, g, b = x, 0, c
+	default:
+		r, g, b = c, 0, x
+	}
+	return color.RGBA{uint8((r + m) * 255), uint8((g + m) * 255), uint8((b + m) * 255), 255}
+}
+
+func abs(f float64) float64 {
+	if f < 0 {
+		return -f
+	}
+	return f
+}
+
+func mod(a, b float64) float64 {
+	r := a - b*float64(int(a/b))
+	if r < 0 {
+		r += b
+	}
+	return r
+}
 
 var (
 	firstNames = []string{"Grace", "Alan", "Ada", "Katherine", "Dennis", "Jamie", "Priya", "Tom", "Mei", "Omar", "Sofia", "Liam", "Noor", "Hiro", "Elena", "Kwame", "Ingrid", "Diego", "Yuki", "Fatima"}
@@ -227,34 +274,4 @@ var (
 	titles     = []string{"Engineer", "Designer", "Manager", "Analyst", "Director", "Consultant", "Researcher", "Coordinator"}
 	cities     = []string{"Portland", "Austin", "Denver", "Seattle", "Boston", "Atlanta", "Chicago", "Madison"}
 	regions    = []string{"OR", "TX", "CO", "WA", "MA", "GA", "IL", "WI"}
-	palette    = []color.RGBA{{47, 93, 80, 255}, {120, 80, 160, 255}, {180, 90, 60, 255}, {60, 120, 180, 255}, {150, 120, 50, 255}, {90, 100, 110, 255}}
 )
-
-var curatedContacts = []demoContact{
-	{
-		in: models.ContactInput{
-			GivenName: "Grace", FamilyName: "Hopper", Org: "Navy", Title: "Rear Admiral",
-			Emails:    []vcardio.Typed{email("work", "grace@navy.demo"), email("home", "grace@home.demo")},
-			Phones:    []vcardio.Typed{phone("work", "+1 202 555 0100")},
-			Addresses: []vcardio.Address{{Type: "work", Street: "1 Navy Yard", City: "Washington", Region: "DC", PostalCode: "20374", Country: "USA"}},
-			Birthday:  "1906-12-09", Note: "Coined the term 'debugging'.",
-			URLs: []string{"https://en.wikipedia.org/wiki/Grace_Hopper"},
-		},
-		color: &color.RGBA{47, 93, 80, 255},
-	},
-	{
-		in: models.ContactInput{
-			GivenName: "Alan", FamilyName: "Turing", Org: "GC&CS", Title: "Cryptanalyst",
-			Emails: []vcardio.Typed{email("work", "alan@bletchley.demo")},
-			Phones: []vcardio.Typed{phone("mobile", "+44 7700 900111")},
-		},
-		color: &color.RGBA{120, 80, 160, 255},
-	},
-	{
-		in: models.ContactInput{
-			GivenName: "Ada", FamilyName: "Lovelace", Org: "Analytical Engine Co.",
-			Emails: []vcardio.Typed{email("home", "ada@analytical.demo")},
-			URLs:   []string{"https://example.demo/ada"},
-		},
-	},
-}
