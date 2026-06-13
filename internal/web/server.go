@@ -61,6 +61,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	r.Use(authenticator.LoadUser)
 
 	r.Get("/healthz", handlers.Health)
+	r.Get("/readyz", h.Readyz)
 	r.Handle("/static/*", static.Handler())
 	r.Get("/login", h.LoginForm)
 	r.Post("/login", h.Login)

@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -35,6 +36,8 @@ func run(args []string) error {
 		return serve()
 	case "create-admin":
 		return createAdmin()
+	case "backup":
+		return backup(args[2:])
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", args[1], usage())
 	}
@@ -43,7 +46,8 @@ func run(args []string) error {
 func usage() string {
 	return "usage: skra <command>\n\ncommands:\n" +
 		"  serve          run the HTTP server\n" +
-		"  create-admin   create the initial admin account (first-run bootstrap)"
+		"  create-admin   create the initial admin account (first-run bootstrap)\n" +
+		"  backup         write a consistent snapshot: skra backup --out <path>"
 }
 
 func usageError() error {
@@ -74,6 +78,35 @@ func serve() error {
 	defer stop()
 
 	return server.Run(ctx)
+}
+
+// backup writes a consistent VACUUM INTO snapshot of the database. It needs only
+// SKRA_DB_PATH and a --out destination.
+func backup(args []string) error {
+	fs := flag.NewFlagSet("backup", flag.ContinueOnError)
+	out := fs.String("out", "", "destination path for the snapshot")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if strings.TrimSpace(*out) == "" {
+		return fmt.Errorf("backup requires --out <path>")
+	}
+	dbPath := strings.TrimSpace(os.Getenv("SKRA_DB_PATH"))
+	if dbPath == "" {
+		return fmt.Errorf("backup requires SKRA_DB_PATH")
+	}
+
+	database, err := db.Open(dbPath)
+	if err != nil {
+		return err
+	}
+	defer database.Close()
+
+	if err := database.Snapshot(context.Background(), *out); err != nil {
+		return err
+	}
+	fmt.Printf("wrote backup to %s\n", *out)
+	return nil
 }
 
 // createAdmin bootstraps the first admin account. It reads credentials from the

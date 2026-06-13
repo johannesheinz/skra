@@ -77,6 +77,15 @@ func TestHealthz(t *testing.T) {
 	}
 }
 
+func TestReadyz(t *testing.T) {
+	router := testRouter(t, testutil.NewDB(t))
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "ready") {
+		t.Errorf("/readyz = %d body %q, want 200 ready", rec.Code, rec.Body.String())
+	}
+}
+
 func TestUnknownRouteIs404(t *testing.T) {
 	router := testRouter(t, testutil.NewDB(t))
 	rec := httptest.NewRecorder()
