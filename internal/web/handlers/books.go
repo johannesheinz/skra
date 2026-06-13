@@ -54,7 +54,8 @@ func (h *Handlers) BookCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/books/"+book.PublicID, http.StatusSeeOther)
 }
 
-// BookShow renders a book's detail (GET /books/{publicID}).
+// BookShow renders a book's detail with its contacts (GET /books/{publicID}),
+// supporting a search query (?q=) and pagination (?page=).
 func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 	book, user, ok := h.authorizeBook(w, r, rbac.Read)
 	if !ok {
@@ -66,10 +67,32 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	h.render(w, r, http.StatusOK, "book_show.html", map[string]any{
+
+	query := r.URL.Query().Get("q")
+	page := parsePage(r.URL.Query().Get("page"))
+	contacts, total, err := models.ListContacts(r.Context(), h.DB, book.ID, query, contactsPageSize, (page-1)*contactsPageSize)
+	if err != nil {
+		h.Logger.Error("list contacts failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	totalPages := (total + contactsPageSize - 1) / contactsPageSize
+
+	data := map[string]any{
 		"Book":      book,
 		"CanManage": canManage.Allow,
-	})
+		"Contacts":  contacts,
+		"Query":     query,
+		"Total":     total,
+		"Page":      page,
+	}
+	if page > 1 {
+		data["PrevURL"] = bookContactsURL(book.PublicID, query, page-1)
+	}
+	if page < totalPages {
+		data["NextURL"] = bookContactsURL(book.PublicID, query, page+1)
+	}
+	h.render(w, r, http.StatusOK, "book_show.html", data)
 }
 
 // BookEdit renders the edit form (GET /books/{publicID}/edit).

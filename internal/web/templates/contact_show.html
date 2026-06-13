@@ -1,0 +1,25 @@
+{{define "title"}}{{.Contact.FullName}} · Skrá{{end}}
+{{define "content"}}
+<p><a href="/books/{{.Book.PublicID}}">← {{.Book.Name}}</a></p>
+<h1>{{.Contact.FullName}}</h1>
+
+{{if .Contact.HasPhoto}}
+<img class="avatar" src="/contacts/{{.Contact.PublicID}}/photo" alt="" width="160" height="160">
+{{end}}
+
+<dl class="details">
+  {{if .Contact.Org}}<dt>Organization</dt><dd>{{.Contact.Org}}</dd>{{end}}
+  {{if .Contact.PrimaryEmail}}<dt>Email</dt><dd><a href="mailto:{{.Contact.PrimaryEmail}}">{{.Contact.PrimaryEmail}}</a></dd>{{end}}
+  {{if .Contact.PrimaryPhone}}<dt>Phone</dt><dd><a href="tel:{{.Contact.PrimaryPhone}}">{{.Contact.PrimaryPhone}}</a></dd>{{end}}
+</dl>
+
+{{if .CanManage}}
+<div class="actions">
+  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/edit">Edit</a>
+  <form method="post" action="/contacts/{{.Contact.PublicID}}/delete">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <button class="btn-danger" type="submit">Delete</button>
+  </form>
+</div>
+{{end}}
+{{end}}

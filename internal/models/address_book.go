@@ -86,6 +86,23 @@ func GetAddressBookByPublicID(ctx context.Context, d *db.DB, publicID string) (A
 	return b, nil
 }
 
+// GetAddressBookByID resolves a book by its internal id.
+func GetAddressBookByID(ctx context.Context, d *db.DB, id int64) (AddressBook, error) {
+	var b AddressBook
+	var description sql.NullString
+	err := d.QueryRowContext(ctx,
+		`SELECT id, public_id, name, description, owner_id FROM address_books WHERE id = ?`,
+		id).Scan(&b.ID, &b.PublicID, &b.Name, &description, &b.OwnerID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return AddressBook{}, ErrAddressBookNotFound
+	}
+	if err != nil {
+		return AddressBook{}, fmt.Errorf("models: get address book by id: %w", err)
+	}
+	b.Description = description.String
+	return b, nil
+}
+
 // UpdateAddressBook updates a book's name and description and bumps updated_at.
 func UpdateAddressBook(ctx context.Context, d *db.DB, id int64, name, description string) error {
 	name = strings.TrimSpace(name)

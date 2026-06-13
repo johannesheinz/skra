@@ -1,13 +1,231 @@
 package models
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
+
+	"github.com/emersion/go-vcard"
 
 	"github.com/johannesheinz/skra/internal/db"
+	"github.com/johannesheinz/skra/internal/ids"
 )
+
+// ErrContactNotFound is returned when a contact lookup matches no row.
+var ErrContactNotFound = errors.New("models: contact not found")
+
+// Contact is a person/organization entry. The structured columns drive listing
+// and search; vcard_raw holds the canonical full record (the hybrid model).
+type Contact struct {
+	ID            int64
+	PublicID      string
+	AddressBookID int64
+	FullName      string
+	Org           string
+	PrimaryEmail  string
+	PrimaryPhone  string
+	HasPhoto      bool
+	UID           string
+	ETag          string
+}
+
+// ContactInput carries the editable fields of a contact.
+type ContactInput struct {
+	FullName     string
+	Org          string
+	PrimaryEmail string
+	PrimaryPhone string
+}
+
+func (in ContactInput) normalized() ContactInput {
+	return ContactInput{
+		FullName:     strings.TrimSpace(in.FullName),
+		Org:          strings.TrimSpace(in.Org),
+		PrimaryEmail: strings.TrimSpace(in.PrimaryEmail),
+		PrimaryPhone: strings.TrimSpace(in.PrimaryPhone),
+	}
+}
+
+// CreateContact inserts a contact into a book using the hybrid write path: it
+// stores the structured columns and a freshly generated vcard_raw, with a stable
+// uid and a new etag.
+func CreateContact(ctx context.Context, d *db.DB, addressBookID int64, in ContactInput) (Contact, error) {
+	in = in.normalized()
+	if in.FullName == "" {
+		return Contact{}, fmt.Errorf("models: contact full name must not be empty")
+	}
+	publicID, err := ids.NewPublicID()
+	if err != nil {
+		return Contact{}, err
+	}
+	uid, err := ids.Random(16)
+	if err != nil {
+		return Contact{}, err
+	}
+	etag, err := ids.Random(16)
+	if err != nil {
+		return Contact{}, err
+	}
+	vcardRaw, err := buildVCard(in, uid)
+	if err != nil {
+		return Contact{}, err
+	}
+
+	res, err := d.ExecWrite(ctx,
+		`INSERT INTO contacts
+		   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag)
+		 VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+		publicID, addressBookID, in.FullName, nullString(in.Org), nullString(in.PrimaryEmail),
+		nullString(in.PrimaryPhone), vcardRaw, uid, etag)
+	if err != nil {
+		return Contact{}, fmt.Errorf("models: insert contact: %w", err)
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return Contact{}, err
+	}
+
+	return Contact{
+		ID: id, PublicID: publicID, AddressBookID: addressBookID,
+		FullName: in.FullName, Org: in.Org, PrimaryEmail: in.PrimaryEmail, PrimaryPhone: in.PrimaryPhone,
+		UID: uid, ETag: etag,
+	}, nil
+}
+
+// UpdateContact rewrites a contact's fields, regenerating vcard_raw and bumping
+// the etag while preserving the stable uid.
+func UpdateContact(ctx context.Context, d *db.DB, contact Contact, in ContactInput) error {
+	in = in.normalized()
+	if in.FullName == "" {
+		return fmt.Errorf("models: contact full name must not be empty")
+	}
+	etag, err := ids.Random(16)
+	if err != nil {
+		return err
+	}
+	vcardRaw, err := buildVCard(in, contact.UID)
+	if err != nil {
+		return err
+	}
+	_, err = d.ExecWrite(ctx,
+		`UPDATE contacts
+		    SET full_name = ?, org = ?, primary_email = ?, primary_phone = ?,
+		        vcard_raw = ?, etag = ?, updated_at = datetime('now')
+		  WHERE id = ?`,
+		in.FullName, nullString(in.Org), nullString(in.PrimaryEmail), nullString(in.PrimaryPhone),
+		vcardRaw, etag, contact.ID)
+	if err != nil {
+		return fmt.Errorf("models: update contact: %w", err)
+	}
+	return nil
+}
+
+// DeleteContact removes a contact; its photo cascades.
+func DeleteContact(ctx context.Context, d *db.DB, contactID int64) error {
+	if _, err := d.ExecWrite(ctx, `DELETE FROM contacts WHERE id = ?`, contactID); err != nil {
+		return fmt.Errorf("models: delete contact: %w", err)
+	}
+	return nil
+}
+
+// GetContactByPublicID resolves a contact by its public id.
+func GetContactByPublicID(ctx context.Context, d *db.DB, publicID string) (Contact, error) {
+	c, err := scanContact(d.QueryRowContext(ctx,
+		`SELECT id, public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, uid, etag
+		 FROM contacts WHERE public_id = ?`, publicID))
+	if errors.Is(err, sql.ErrNoRows) {
+		return Contact{}, ErrContactNotFound
+	}
+	return c, err
+}
+
+// ListContacts returns a page of contacts in a book, optionally filtered by a
+// case-insensitive substring across the structured columns, plus the total
+// matching count for pagination.
+func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query string, limit, offset int) ([]Contact, int, error) {
+	where := "address_book_id = ?"
+	args := []any{addressBookID}
+	if q := strings.TrimSpace(query); q != "" {
+		like := "%" + q + "%"
+		where += " AND (full_name LIKE ? OR org LIKE ? OR primary_email LIKE ? OR primary_phone LIKE ?)"
+		args = append(args, like, like, like, like)
+	}
+
+	var total int
+	if err := d.QueryRowContext(ctx, "SELECT COUNT(*) FROM contacts WHERE "+where, args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("models: count contacts: %w", err)
+	}
+
+	pageArgs := append(append([]any{}, args...), limit, offset)
+	rows, err := d.QueryContext(ctx,
+		`SELECT id, public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, uid, etag
+		 FROM contacts WHERE `+where+`
+		 ORDER BY full_name COLLATE NOCASE LIMIT ? OFFSET ?`, pageArgs...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("models: list contacts: %w", err)
+	}
+	defer rows.Close()
+
+	var contacts []Contact
+	for rows.Next() {
+		c, err := scanContact(rows)
+		if err != nil {
+			return nil, 0, err
+		}
+		contacts = append(contacts, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("models: iterate contacts: %w", err)
+	}
+	return contacts, total, nil
+}
+
+type rowScanner interface {
+	Scan(dest ...any) error
+}
+
+func scanContact(row rowScanner) (Contact, error) {
+	var c Contact
+	var org, email, phone sql.NullString
+	var hasPhoto int64
+	if err := row.Scan(&c.ID, &c.PublicID, &c.AddressBookID, &c.FullName,
+		&org, &email, &phone, &hasPhoto, &c.UID, &c.ETag); err != nil {
+		return Contact{}, fmt.Errorf("models: scan contact: %w", err)
+	}
+	c.Org = org.String
+	c.PrimaryEmail = email.String
+	c.PrimaryPhone = phone.String
+	c.HasPhoto = hasPhoto != 0
+	return c, nil
+}
+
+// buildVCard renders the structured fields into a canonical vCard 4.0 string.
+func buildVCard(in ContactInput, uid string) (string, error) {
+	card := vcard.Card{}
+	card.SetValue(vcard.FieldFormattedName, in.FullName)
+	if in.Org != "" {
+		card.SetValue(vcard.FieldOrganization, in.Org)
+	}
+	if in.PrimaryEmail != "" {
+		card.SetValue(vcard.FieldEmail, in.PrimaryEmail)
+	}
+	if in.PrimaryPhone != "" {
+		card.SetValue(vcard.FieldTelephone, in.PrimaryPhone)
+	}
+	card.SetValue(vcard.FieldUID, uid)
+	vcard.ToV4(card)
+
+	var buf bytes.Buffer
+	if err := vcard.NewEncoder(&buf).Encode(card); err != nil {
+		return "", fmt.Errorf("models: encode vcard: %w", err)
+	}
+	return buf.String(), nil
+}
+
+// --- Photo metadata/bytes (used by the photo-serving endpoint) ---
 
 // PhotoMeta is the lightweight metadata needed to authorize and conditionally
 // serve a contact photo without loading the BLOB.

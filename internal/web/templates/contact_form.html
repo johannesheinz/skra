@@ -1,0 +1,24 @@
+{{define "title"}}{{.Heading}} · Skrá{{end}}
+{{define "content"}}
+<h1>{{.Heading}}</h1>
+{{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
+<form class="stack" method="post" action="{{.FormAction}}">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <label>Full name
+    <input type="text" name="full_name" value="{{.FullName}}" required autofocus>
+  </label>
+  <label>Organization
+    <input type="text" name="org" value="{{.Org}}">
+  </label>
+  <label>Email
+    <input type="email" name="primary_email" value="{{.PrimaryEmail}}">
+  </label>
+  <label>Phone
+    <input type="tel" name="primary_phone" value="{{.PrimaryPhone}}">
+  </label>
+  <div class="actions">
+    <button type="submit">Save</button>
+    <a class="btn btn-secondary" href="{{.CancelURL}}">Cancel</a>
+  </div>
+</form>
+{{end}}

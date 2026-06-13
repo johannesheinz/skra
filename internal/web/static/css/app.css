@@ -147,6 +147,17 @@ input:focus, select:focus, textarea:focus {
   background: color-mix(in srgb, var(--color-danger) 8%, transparent);
 }
 
+/* Contact detail. */
+.avatar { border-radius: 50%; object-fit: cover; border: 1px solid var(--color-border); }
+.details { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-4); }
+.details dt { color: var(--color-muted); }
+.details dd { margin: 0; }
+
+/* Search + pager. */
+[role="search"] { display: flex; gap: var(--space-2); margin: 0; }
+[role="search"] input { width: auto; }
+.pager { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-4); }
+
 /* Cards & lists. */
 .card {
   background: var(--color-surface);

@@ -28,6 +28,8 @@ var pageFiles = []string{
 	"books_list.html",
 	"book_form.html",
 	"book_show.html",
+	"contact_form.html",
+	"contact_show.html",
 }
 
 var pages = mustParse()

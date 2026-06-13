@@ -77,7 +77,13 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Get("/books/{publicID}/edit", h.BookEdit)
 		r.Post("/books/{publicID}/edit", h.BookUpdate)
 		r.Post("/books/{publicID}/delete", h.BookDelete)
+		r.Get("/books/{publicID}/contacts/new", h.ContactNew)
+		r.Post("/books/{publicID}/contacts", h.ContactCreate)
 
+		r.Get("/contacts/{publicID}", h.ContactShow)
+		r.Get("/contacts/{publicID}/edit", h.ContactEdit)
+		r.Post("/contacts/{publicID}/edit", h.ContactUpdate)
+		r.Post("/contacts/{publicID}/delete", h.ContactDelete)
 		r.Get("/contacts/{publicID}/photo", h.ContactPhoto)
 	})
 
