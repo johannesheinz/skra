@@ -1,0 +1,18 @@
+{{define "contact_cards"}}
+<ul class="card-grid">
+  {{range .}}
+  <li class="contact-card">
+    <a class="contact-card-head" href="{{.URL}}">
+      {{if .HasPhoto}}
+      <img class="avatar avatar-sm" src="{{.PhotoURL}}" alt="" width="56" height="56">
+      {{else}}
+      <span class="avatar avatar-sm avatar-placeholder" aria-hidden="true">{{initial .Name}}</span>
+      {{end}}
+      <span class="contact-card-name">{{.Name}}</span>
+    </a>
+    {{if .Org}}<span class="muted">{{.Org}}</span>{{end}}
+    {{if .Email}}<a class="muted" href="mailto:{{.Email}}">{{.Email}}</a>{{end}}
+  </li>
+  {{end}}
+</ul>
+{{end}}

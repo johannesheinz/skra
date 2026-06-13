@@ -6,6 +6,7 @@ import (
 
 	"github.com/johannesheinz/skra/internal/auth"
 	"github.com/johannesheinz/skra/internal/db"
+	"github.com/johannesheinz/skra/internal/sharing"
 	"github.com/johannesheinz/skra/internal/web/templates"
 )
 
@@ -14,6 +15,8 @@ type Handlers struct {
 	DB           *db.DB
 	Sessions     *auth.SessionStore
 	CookieSecure bool
+	ExternalURL  string
+	Gate         sharing.GateSigner
 	Logger       *slog.Logger
 
 	// dummyHash is verified against when a username is unknown, so that login
@@ -23,7 +26,7 @@ type Handlers struct {
 
 // New builds the handler set. It precomputes a dummy password hash for the
 // user-enumeration defense; failing to do so is fatal to construction.
-func New(database *db.DB, sessions *auth.SessionStore, cookieSecure bool, logger *slog.Logger) (*Handlers, error) {
+func New(database *db.DB, sessions *auth.SessionStore, cookieSecure bool, externalURL, sessionKey string, logger *slog.Logger) (*Handlers, error) {
 	dummy, err := auth.HashPassword("skra-nonexistent-account")
 	if err != nil {
 		return nil, err
@@ -32,6 +35,8 @@ func New(database *db.DB, sessions *auth.SessionStore, cookieSecure bool, logger
 		DB:           database,
 		Sessions:     sessions,
 		CookieSecure: cookieSecure,
+		ExternalURL:  externalURL,
+		Gate:         sharing.NewGateSigner(sessionKey),
 		Logger:       logger,
 		dummyHash:    dummy,
 	}, nil

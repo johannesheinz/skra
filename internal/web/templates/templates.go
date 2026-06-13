@@ -32,7 +32,8 @@ func initial(s string) string {
 	return "?"
 }
 
-// pageFiles are the content templates; each is composed with base.html.
+// pageFiles are the content templates; each is composed with base.html and the
+// shared partials.
 var pageFiles = []string{
 	"login.html",
 	"home.html",
@@ -41,6 +42,10 @@ var pageFiles = []string{
 	"book_show.html",
 	"contact_form.html",
 	"contact_show.html",
+	"shares.html",
+	"gate.html",
+	"share_directory.html",
+	"share_contact.html",
 }
 
 var pages = mustParse()
@@ -49,7 +54,7 @@ func mustParse() map[string]*template.Template {
 	set := make(map[string]*template.Template, len(pageFiles))
 	for _, page := range pageFiles {
 		t := template.New(page).Funcs(funcs)
-		template.Must(t.ParseFS(files, "base.html", page))
+		template.Must(t.ParseFS(files, "base.html", "partials.html", page))
 		set[page] = t
 	}
 	return set

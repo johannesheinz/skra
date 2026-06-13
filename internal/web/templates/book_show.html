@@ -6,6 +6,7 @@
 {{if .CanManage}}
 <div class="actions">
   <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/edit">Edit book</a>
+  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/shares">Manage sharing</a>
   <form method="post" action="/books/{{.Book.PublicID}}/delete">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <button class="btn-danger" type="submit">Delete book</button>
@@ -27,23 +28,8 @@
   </div>
 </div>
 
-{{if .Contacts}}
-<ul class="card-grid">
-  {{range .Contacts}}
-  <li class="contact-card">
-    <a class="contact-card-head" href="/contacts/{{.PublicID}}">
-      {{if .HasPhoto}}
-      <img class="avatar avatar-sm" src="/contacts/{{.PublicID}}/photo" alt="" width="56" height="56">
-      {{else}}
-      <span class="avatar avatar-sm avatar-placeholder" aria-hidden="true">{{initial .FullName}}</span>
-      {{end}}
-      <span class="contact-card-name">{{.FullName}}</span>
-    </a>
-    {{if .Org}}<span class="muted">{{.Org}}</span>{{end}}
-    {{if .PrimaryEmail}}<a class="muted" href="mailto:{{.PrimaryEmail}}">{{.PrimaryEmail}}</a>{{end}}
-  </li>
-  {{end}}
-</ul>
+{{if .Cards}}
+{{template "contact_cards" .Cards}}
 <nav class="pager">
   {{if .PrevURL}}<a class="btn btn-secondary" href="{{.PrevURL}}">Previous</a>{{end}}
   <span class="muted">Page {{.Page}}</span>

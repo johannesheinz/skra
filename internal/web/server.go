@@ -48,7 +48,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		Logger:    logger,
 		LoginPath: "/login",
 	}
-	h, err := handlers.New(database, sessions, cfg.CookieSecure, logger)
+	h, err := handlers.New(database, sessions, cfg.CookieSecure, cfg.ExternalURL, cfg.SessionKey, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +81,9 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Post("/books/{publicID}/contacts", h.ContactCreate)
 		r.Get("/books/{publicID}/export.vcf", h.BookExportVCard)
 		r.Get("/books/{publicID}/export.csv", h.BookExportCSV)
+		r.Get("/books/{publicID}/shares", h.BookShares)
+		r.Post("/books/{publicID}/shares", h.BookShareCreate)
+		r.Post("/books/{publicID}/shares/{shareID}/revoke", h.BookShareRevoke)
 
 		r.Get("/contacts/{publicID}", h.ContactShow)
 		r.Get("/contacts/{publicID}/edit", h.ContactEdit)
@@ -90,7 +93,21 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Post("/contacts/{publicID}/photo", h.ContactPhotoUpload)
 		r.Post("/contacts/{publicID}/photo/delete", h.ContactPhotoDelete)
 		r.Get("/contacts/{publicID}/export.vcf", h.ContactExportVCard)
+		r.Get("/contacts/{publicID}/shares", h.ContactShares)
+		r.Post("/contacts/{publicID}/shares", h.ContactShareCreate)
+		r.Post("/contacts/{publicID}/shares/{shareID}/revoke", h.ContactShareRevoke)
 	})
+
+	// Public share routes — outside RequireAuth (LoadUser still applies so the
+	// authenticated mode can see a session). Logged with the route pattern,
+	// never the raw token.
+	r.Get("/s/{token}", h.ShareEntry)
+	r.Post("/s/{token}/gate", h.ShareGateSubmit)
+	r.Get("/s/{token}/c/{contactPublicID}", h.ShareContactInBook)
+	r.Get("/s/{token}/c/{contactPublicID}/photo", h.ShareBookContactPhoto)
+	r.Get("/s/{token}/photo", h.ShareContactPhoto)
+	r.Get("/s/{token}/export.vcf", h.ShareExportVCard)
+	r.Get("/s/{token}/export.csv", h.ShareExportCSV)
 
 	return r, nil
 }

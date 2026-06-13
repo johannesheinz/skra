@@ -1,0 +1,13 @@
+{{define "title"}}Protected share · Skrá{{end}}
+{{define "content"}}
+<h1>Protected share</h1>
+<p class="muted">This link is protected. Enter the secret to view it.</p>
+{{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
+<form class="stack" method="post" action="{{.GateAction}}">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <label>Secret
+    <input type="password" name="secret" required autofocus>
+  </label>
+  <button type="submit">View</button>
+</form>
+{{end}}

@@ -44,8 +44,14 @@ func (h *Handlers) ContactPhoto(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	h.streamPhoto(w, r, publicID, meta.ETag)
+}
 
-	etag := `"` + meta.ETag + `"`
+// streamPhoto writes a contact's photo with a strong ETag, conditional-GET
+// support, and a private cache. The caller is responsible for authorization;
+// publicID/etag come from a prior metadata lookup.
+func (h *Handlers) streamPhoto(w http.ResponseWriter, r *http.Request, publicID, rawETag string) {
+	etag := `"` + rawETag + `"`
 	w.Header().Set("ETag", etag)
 	w.Header().Set("Cache-Control", "private, max-age=300")
 	if matchesETag(r.Header.Get("If-None-Match"), etag) {

@@ -19,6 +19,7 @@
 {{if .CanManage}}
 <div class="actions">
   <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/edit">Edit</a>
+  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/shares">Manage sharing</a>
   <form method="post" action="/contacts/{{.Contact.PublicID}}/delete">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <button class="btn-danger" type="submit">Delete</button>

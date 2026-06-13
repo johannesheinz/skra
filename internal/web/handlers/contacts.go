@@ -17,6 +17,35 @@ import (
 
 const contactsPageSize = 25
 
+// ContactCard is the view-model for one contact in a directory card grid. The
+// URLs are precomputed by the caller so the same card partial renders both the
+// authenticated browse and the public share (with share-scoped links).
+type ContactCard struct {
+	Name     string
+	Org      string
+	Email    string
+	URL      string
+	PhotoURL string
+	HasPhoto bool
+}
+
+// buildContactCards maps contacts to cards, deriving each card's detail and
+// photo URL via the supplied functions (which differ per context).
+func buildContactCards(contacts []models.Contact, detailURL, photoURL func(publicID string) string) []ContactCard {
+	cards := make([]ContactCard, 0, len(contacts))
+	for _, c := range contacts {
+		cards = append(cards, ContactCard{
+			Name:     c.FullName,
+			Org:      c.Org,
+			Email:    c.PrimaryEmail,
+			URL:      detailURL(c.PublicID),
+			PhotoURL: photoURL(c.PublicID),
+			HasPhoto: c.HasPhoto,
+		})
+	}
+	return cards
+}
+
 // Photo upload limits.
 const (
 	maxUploadBytes  = 10 << 20 // 10 MiB total request body

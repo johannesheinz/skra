@@ -18,6 +18,12 @@ func (h *Handlers) BookExportVCard(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	h.writeBookVCard(w, r, book)
+}
+
+// writeBookVCard renders every contact in a book as a vCard download, embedding
+// photos. Authorization is the caller's responsibility.
+func (h *Handlers) writeBookVCard(w http.ResponseWriter, r *http.Request, book models.AddressBook) {
 	contacts, err := models.ListContactsForExport(r.Context(), h.DB, book.ID)
 	if err != nil {
 		h.exportError(w, "list contacts for export", err)
@@ -79,6 +85,12 @@ func (h *Handlers) ContactExportVCard(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	h.writeContactVCard(w, r, contact)
+}
+
+// writeContactVCard renders one contact as a vCard download, embedding its photo
+// if present. Authorization is the caller's responsibility.
+func (h *Handlers) writeContactVCard(w http.ResponseWriter, r *http.Request, contact models.Contact) {
 	exports, err := models.ListContactsForExport(r.Context(), h.DB, contact.AddressBookID)
 	if err != nil {
 		h.exportError(w, "load contact for export", err)

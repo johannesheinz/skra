@@ -20,7 +20,13 @@ import (
 
 func testRouter(t *testing.T, d *db.DB) http.Handler {
 	t.Helper()
-	cfg := config.Config{Listen: "127.0.0.1:0", DBPath: "unused", CookieSecure: false}
+	cfg := config.Config{
+		Listen:       "127.0.0.1:0",
+		DBPath:       "unused",
+		CookieSecure: false,
+		ExternalURL:  "https://share.example.test",
+		SessionKey:   "0123456789abcdef0123456789abcdef",
+	}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	router, err := buildRouter(cfg, d, logger)
 	if err != nil {

@@ -1,0 +1,16 @@
+{{define "title"}}{{.Contact.FullName}} · Skrá{{end}}
+{{define "content"}}
+<h1>{{.Contact.FullName}}</h1>
+
+{{if .Contact.HasPhoto}}
+<img class="avatar" src="{{.PhotoURL}}" alt="" width="160" height="160">
+{{end}}
+
+<dl class="details">
+  {{if .Contact.Org}}<dt>Organization</dt><dd>{{.Contact.Org}}</dd>{{end}}
+  {{if .Contact.PrimaryEmail}}<dt>Email</dt><dd><a href="mailto:{{.Contact.PrimaryEmail}}">{{.Contact.PrimaryEmail}}</a></dd>{{end}}
+  {{if .Contact.PrimaryPhone}}<dt>Phone</dt><dd><a href="tel:{{.Contact.PrimaryPhone}}">{{.Contact.PrimaryPhone}}</a></dd>{{end}}
+</dl>
+
+{{if .DownloadURL}}<p><a href="{{.DownloadURL}}">Download vCard</a></p>{{end}}
+{{end}}

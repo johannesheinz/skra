@@ -144,6 +144,17 @@ func GetContactByPublicID(ctx context.Context, d *db.DB, publicID string) (Conta
 	return c, err
 }
 
+// GetContactByID resolves a contact by its internal id.
+func GetContactByID(ctx context.Context, d *db.DB, id int64) (Contact, error) {
+	c, err := scanContact(d.QueryRowContext(ctx,
+		`SELECT id, public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, uid, etag
+		 FROM contacts WHERE id = ?`, id))
+	if errors.Is(err, sql.ErrNoRows) {
+		return Contact{}, ErrContactNotFound
+	}
+	return c, err
+}
+
 // ListContacts returns a page of contacts in a book, optionally filtered by a
 // case-insensitive substring across the structured columns, plus the total
 // matching count for pagination.

@@ -78,10 +78,14 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 	}
 	totalPages := (total + contactsPageSize - 1) / contactsPageSize
 
+	cards := buildContactCards(contacts,
+		func(pid string) string { return "/contacts/" + pid },
+		func(pid string) string { return "/contacts/" + pid + "/photo" })
+
 	data := map[string]any{
 		"Book":      book,
 		"CanManage": canManage.Allow,
-		"Contacts":  contacts,
+		"Cards":     cards,
 		"Query":     query,
 		"Total":     total,
 		"Page":      page,

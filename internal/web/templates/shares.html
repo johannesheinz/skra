@@ -1,0 +1,51 @@
+{{define "title"}}Sharing · Skrá{{end}}
+{{define "content"}}
+<p><a href="{{.BackURL}}">← Back</a></p>
+<h1>Sharing — {{.Title}}</h1>
+{{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
+
+<h2>Create a share link</h2>
+<form class="stack" method="post" action="{{.CreateURL}}">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <label>Mode
+    <select name="mode">
+      {{range .Modes}}<option value="{{.}}">{{.}}</option>{{end}}
+    </select>
+  </label>
+  <label>Secret (required for gated_short only)
+    <input type="password" name="secret" autocomplete="new-password">
+  </label>
+  <label>Max uses (blank = unlimited)
+    <input type="number" name="max_uses" min="0">
+  </label>
+  <label>Expires (optional)
+    <input type="date" name="expires">
+  </label>
+  <button type="submit">Create link</button>
+</form>
+
+<h2>Existing links</h2>
+{{if .Links}}
+<table>
+  <thead><tr><th>Mode</th><th>URL</th><th>Status</th><th>Uses</th><th></th></tr></thead>
+  <tbody>
+  {{range .Links}}
+  <tr>
+    <td>{{.Mode}}</td>
+    <td><code>{{.URL}}</code></td>
+    <td>{{.Status}}</td>
+    <td>{{.UseCount}}{{if .MaxUses}} / {{.MaxUses}}{{end}}</td>
+    <td>
+      <form method="post" action="{{.RevokeURL}}">
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+        <button class="btn-secondary" type="submit">Revoke</button>
+      </form>
+    </td>
+  </tr>
+  {{end}}
+  </tbody>
+</table>
+{{else}}
+<p class="muted">No share links yet.</p>
+{{end}}
+{{end}}
