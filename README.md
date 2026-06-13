@@ -12,7 +12,9 @@ Early development.
 
 **Phase 1 (data & auth)** — argon2id password hashing (PHC-encoded, with lazy rehash on login); server-side sessions with HttpOnly/SameSite cookies whose `Secure` flag is config-driven; double-submit CSRF on the auth forms; the `can(user, book, action)` RBAC resolver with 404-not-403 semantics; random `public_id` generation; serialized SQLite writes; a contact-photo endpoint with strong ETag and conditional-GET (304); and `skra create-admin` first-run bootstrap.
 
-See [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) for the full specification and roadmap.
+**Phase 2 (contact management)** — self-hosted asset foundation (embedded, content-hashed CSS/JS/fonts, semantic component CSS, self-only CSP); address book CRUD with per-book authorization; contact list (search + pagination), detail, and CRUD via the hybrid write path (structured columns + regenerated `vcard_raw` + bumped `etag`); and a photo ingest pipeline (EXIF orientation, metadata stripping, downscale, JPEG re-encode).
+
+See [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) for the full specification and roadmap, and [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md) for conventions.
 
 ## Requirements
 
@@ -86,10 +88,12 @@ skra/
     │   └── migrations/     # *.sql applied by the runner
     ├── auth/               # argon2id, sessions, cookies, CSRF, middleware
     ├── rbac/               # can(user, book, action) resolver
-    ├── models/             # users, grants, contact photos (data access)
+    ├── models/             # users, grants, address books, contacts, photos
+    ├── images/             # photo ingest pipeline (orient, strip, downscale, re-encode)
     ├── testutil/           # shared test helpers
     └── web/                # chi router, server lifecycle
-        ├── handlers/       # HTTP handlers (healthz, login/logout, photo)
+        ├── handlers/       # HTTP handlers (auth, books, contacts, photo)
+        ├── static/         # embedded assets (CSS/JS/fonts/img) + serving
         └── templates/      # embedded html/template
 ```
 
