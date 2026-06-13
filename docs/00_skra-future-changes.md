@@ -2,8 +2,8 @@
 
 Candidate changes beyond the baseline specification (`skra-baseline-spec.md`).
 Unlike the baseline, these are **options with recommendations**, not fixed
-decisions. Two topics: password-hash salting/peppering, and allowing a contact
-to exist in multiple address books.
+decisions. Topics: password-hash salting/peppering, allowing a contact
+to exist in multiple address books, and full-text contact search.
 
 ---
 
@@ -199,7 +199,20 @@ removing it from its last book deletes the contact (or reassigns to an owner's
 
 ---
 
-## 3. Consistency with baseline constraints
+## 3. Full-text contact search (SQLite FTS5)
+
+The baseline search is a simple `LIKE` filter over the structured columns (`full_name`, `org`, `primary_email`, `primary_phone`), backed by the existing indexes. That is adequate for small books and exact substring matching, but it does not rank results, does not tokenize, and `LIKE '%term%'` cannot use an index (full scan per query).
+
+When search quality or volume warrants it, add an **FTS5 virtual table** as an external-content index over `contacts`:
+
+- Create `contacts_fts USING fts5(full_name, org, primary_email, primary_phone, content='contacts', content_rowid='id')`. External-content mode stores only the index, not a copy of the data — the contact row stays the single source of truth.
+- Keep it in sync with `AFTER INSERT/UPDATE/DELETE` triggers on `contacts` (the standard FTS5 external-content trigger pattern).
+- Query with `MATCH` and order by `bm25(contacts_fts)`; support prefix queries (`term*`) for type-ahead.
+- `modernc.org/sqlite` bundles FTS5, so no build changes are needed.
+
+Effort/risk: low–medium. It is additive (new virtual table + triggers in a migration, swap the search query), needs no schema change to `contacts`, and can be introduced whenever the simple search becomes a limitation. Consider adding it together with the multi-book change (§2) so the search join accounts for `contact_books` membership.
+
+## 4. Consistency with baseline constraints
 
 When implementing either topic, keep the baseline's non-negotiables intact:
 
@@ -211,7 +224,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 ---
 
-## 4. Summary
+## 5. Summary
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
@@ -219,3 +232,4 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Add pepper + scheme versioning (1b/1c) | optional 1 column | low, lazy migration | Add if a DB-leak threat model warrants it |
 | Multi-book via move/duplicate (A) | none | low | Fine for occasional cross-filing |
 | Multi-book via M:N join (B) | join table + contacts rebuild | medium | Choose for true shared contacts; do it early |
+| Full-text search via FTS5 (§3) | new virtual table + triggers | low–medium | Add when `LIKE` search becomes a limitation |

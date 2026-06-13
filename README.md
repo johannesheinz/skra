@@ -93,6 +93,17 @@ skra/
         └── templates/      # embedded html/template
 ```
 
+## Vendored assets
+
+Frontend assets are self-hosted and embedded in the binary — no CDNs, no third-party origins (see [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md)). They are vendored under `internal/web/static/` and updated manually; Dependabot cannot track them (it only covers manifest ecosystems, and adding `package.json` purely for htmx would reintroduce the npm surface we avoid).
+
+| Asset | Version | Source |
+|---|---|---|
+| htmx | 2.0.9 | https://github.com/bigskysoftware/htmx |
+| Space Grotesk | 2.0.0 | https://github.com/floriankarsten/space-grotesk |
+
+To update: replace the files under `internal/web/static/{js,fonts}/`, bump the version here, and re-run the tests.
+
 ## License
 
 [MIT](LICENSE.md). Dependencies are permissively licensed and MIT-compatible: `go-chi/chi` (MIT) and `modernc.org/sqlite` (BSD-3-Clause), plus their BSD/MIT-licensed transitive dependencies.

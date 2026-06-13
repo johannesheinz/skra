@@ -1,4 +1,7 @@
-// Package templates embeds and renders Skra's server-rendered HTML.
+// Package templates embeds and renders Skrá's server-rendered HTML. Each page is
+// parsed together with the shared base layout into its own template set, so the
+// page's "title"/"content" blocks override the base without colliding across
+// pages.
 package templates
 
 import (
@@ -7,20 +10,44 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+
+	"github.com/johannesheinz/skra/internal/web/static"
 )
 
 //go:embed *.html
 var files embed.FS
 
-var tmpl = template.Must(template.ParseFS(files, "*.html"))
+var funcs = template.FuncMap{
+	"static": static.URL,
+}
 
-// Render executes the named template into a buffer first, so a template error
-// produces a clean 500 instead of a half-written 200 response.
-func Render(w http.ResponseWriter, status int, name string, data any) error {
-	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, name, data); err != nil {
+// pageFiles are the content templates; each is composed with base.html.
+var pageFiles = []string{"login.html", "home.html"}
+
+var pages = mustParse()
+
+func mustParse() map[string]*template.Template {
+	set := make(map[string]*template.Template, len(pageFiles))
+	for _, page := range pageFiles {
+		t := template.New(page).Funcs(funcs)
+		template.Must(t.ParseFS(files, "base.html", page))
+		set[page] = t
+	}
+	return set
+}
+
+// Render executes a page (composed with the base layout) into a buffer first, so
+// a template error yields a clean 500 instead of a half-written 200.
+func Render(w http.ResponseWriter, status int, page string, data any) error {
+	t, ok := pages[page]
+	if !ok {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return fmt.Errorf("templates: render %q: %w", name, err)
+		return fmt.Errorf("templates: unknown page %q", page)
+	}
+	var buf bytes.Buffer
+	if err := t.ExecuteTemplate(&buf, "base.html", data); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return fmt.Errorf("templates: render %q: %w", page, err)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)

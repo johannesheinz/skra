@@ -1,25 +1,15 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
-  <title>Sign in · Skrá</title>
-</head>
-<body>
-  <main>
-    <h1>Skrá</h1>
-    {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
-    <form method="post" action="/login" autocomplete="off">
-      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-      <label>Username
-        <input type="text" name="username" value="{{.Username}}" required autofocus>
-      </label>
-      <label>Password
-        <input type="password" name="password" required>
-      </label>
-      <button type="submit">Sign in</button>
-    </form>
-  </main>
-</body>
-</html>
+{{define "title"}}Sign in · Skrá{{end}}
+{{define "content"}}
+<h1 class="brand">Skrá</h1>
+{{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
+<form class="stack" method="post" action="/login" autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <label>Username
+    <input type="text" name="username" value="{{.Username}}" required autofocus>
+  </label>
+  <label>Password
+    <input type="password" name="password" required>
+  </label>
+  <button type="submit">Sign in</button>
+</form>
+{{end}}

@@ -1,0 +1,142 @@
+/* Skrá stylesheet. Hand-written semantic/component CSS with design tokens. No framework, no build step. Fonts referenced without a version so a font swap revalidates via ETag; app.css itself is loaded with a cache-busting ?v= from the template. */
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/static/fonts/SpaceGrotesk-Medium-2.0.0.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/static/fonts/SpaceGrotesk-Bold-2.0.0.woff2") format("woff2");
+}
+
+/* Design tokens. A neutral starter theme — tune these values later without touching component rules. */
+:root {
+  --font-ui: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-bg: #fbfbfa;
+  --color-surface: #ffffff;
+  --color-fg: #1a1a1a;
+  --color-muted: #6b6b6b;
+  --color-border: #e3e3e0;
+  --color-accent: #2f5d50;
+  --color-accent-fg: #ffffff;
+  --color-danger: #b3261e;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --radius: 8px;
+  --maxw: 60rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #16181a;
+    --color-surface: #1f2225;
+    --color-fg: #ececec;
+    --color-muted: #a0a0a0;
+    --color-border: #34383c;
+    --color-accent: #5fb8a0;
+    --color-accent-fg: #0f1110;
+    --color-danger: #ef6b62;
+  }
+}
+
+/* Minimal reset. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-fg);
+  background: var(--color-bg);
+}
+img, svg { max-width: 100%; height: auto; }
+a { color: var(--color-accent); }
+
+/* Layout. */
+.container {
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-4);
+}
+.stack > * + * { margin-top: var(--space-4); }
+
+/* Typography. */
+h1, h2, h3 { font-weight: 700; line-height: 1.2; margin: 0 0 var(--space-4); }
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.35rem; }
+.muted { color: var(--color-muted); }
+
+/* Brand. */
+.brand { display: inline-flex; align-items: center; color: var(--color-fg); }
+.brand svg { height: 2.5rem; width: auto; }
+
+/* Forms. */
+form.stack { max-width: 24rem; }
+label { display: block; font-size: 0.9rem; }
+label > input, label > select, label > textarea { margin-top: var(--space-1); }
+input, select, textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--color-fg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Buttons. */
+.btn, button[type="submit"] {
+  display: inline-block;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+}
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-fg);
+  border-color: var(--color-border);
+}
+.btn-danger { background: var(--color-danger); color: #fff; }
+
+/* Alerts. */
+[role="alert"] {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}
+
+/* Cards & lists. */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-6);
+}
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); }
+th { color: var(--color-muted); font-size: 0.85rem; }

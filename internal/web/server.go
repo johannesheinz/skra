@@ -15,6 +15,7 @@ import (
 	"github.com/johannesheinz/skra/internal/config"
 	"github.com/johannesheinz/skra/internal/db"
 	"github.com/johannesheinz/skra/internal/web/handlers"
+	"github.com/johannesheinz/skra/internal/web/static"
 )
 
 // Server owns the HTTP server and its lifecycle.
@@ -56,9 +57,11 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(securityHeaders)
 	r.Use(authenticator.LoadUser)
 
 	r.Get("/healthz", handlers.Health)
+	r.Handle("/static/*", static.Handler())
 	r.Get("/login", h.LoginForm)
 	r.Post("/login", h.Login)
 	r.Post("/logout", h.Logout)
@@ -70,6 +73,21 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	})
 
 	return r, nil
+}
+
+// securityHeaders applies a restrictive, self-only Content-Security-Policy plus
+// related hardening headers. All assets are self-hosted, so no third-party
+// origins are permitted; img-src allows data: for inline placeholders.
+func securityHeaders(next http.Handler) http.Handler {
+	const csp = "default-src 'self'; img-src 'self' data:; object-src 'none'; " +
+		"base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Content-Security-Policy", csp)
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("Referrer-Policy", "no-referrer")
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Run starts the server and blocks until ctx is cancelled, then shuts down
