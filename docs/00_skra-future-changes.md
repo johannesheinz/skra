@@ -4,7 +4,8 @@ Candidate changes beyond the baseline specification (`skra-baseline-spec.md`).
 Unlike the baseline, these are **options with recommendations**, not fixed
 decisions. Topics: password-hash salting/peppering, allowing a contact
 to exist in multiple address books, full-text contact search,
-dependency-update tooling, contact de-duplication, and CSV import.
+dependency-update tooling, contact de-duplication, CSV import, and
+OpenStreetMap links for addresses.
 
 ---
 
@@ -251,7 +252,18 @@ Shape:
 
 Effort/risk: medium — the parser and header maps plus a mapping UI; no schema change (the staging table and commit path already exist).
 
-## 7. Consistency with baseline constraints
+## 7. OpenStreetMap links for addresses
+
+Now that contacts carry structured postal addresses (the rich-fields work), each address on the detail page could offer a "View on map" action linking to OpenStreetMap, e.g. `https://www.openstreetmap.org/search?query=<url-encoded address>` opened in a new tab. A `geo:` URI (`geo:0,0?q=<address>`) is a nice companion for mobile, handing off to the device's map app.
+
+Important constraint — keep it a link, not an embed:
+
+- An **outbound link** is a plain navigation the user chooses to follow. It does **not** load any third-party resource into Skrá's pages, so it does not breach the self-only CSP or the local-first/no-tracking stance. Use `rel="noopener noreferrer"`; the existing `Referrer-Policy: no-referrer` already prevents leaking the page URL (which may carry a `public_id`) to OpenStreetMap.
+- **Do not embed map tiles or an `<iframe>` map** by default — that would load third-party resources on every view, defeat the CSP, and enable tracking. If an embedded map is ever wanted, it requires either an explicit per-deployment CSP relaxation or a self-hosted tile server, and should be opt-in.
+
+Geocoding to real coordinates is out of scope; the link relies on OpenStreetMap's free-text search. Effort/risk: very low — a template link built from the address fields, no schema change. Make it unobtrusive since clicking it does disclose the address to OpenStreetMap.
+
+## 8. Consistency with baseline constraints
 
 When implementing either topic, keep the baseline's non-negotiables intact:
 
@@ -263,7 +275,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 ---
 
-## 8. Summary
+## 9. Summary
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
@@ -275,3 +287,4 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Dependabot → Renovate (§4) | config only (no app code) | low | Do it to also track the vendored htmx/font versions |
 | Contact de-duplication (§5) | none (within-book) | medium | Add after rich fields; pairs with the multi-book change |
 | CSV import (§6) | none (staging exists) | medium | Follow-up to the vCard import; needs a parser + mapping UI |
+| OpenStreetMap address links (§7) | none | very low | Link out (don't embed) to keep the self-only CSP intact |
