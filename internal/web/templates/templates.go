@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
+	"unicode"
 
 	"github.com/johannesheinz/skra/internal/web/static"
 )
@@ -18,7 +20,16 @@ import (
 var files embed.FS
 
 var funcs = template.FuncMap{
-	"static": static.URL,
+	"static":  static.URL,
+	"initial": initial,
+}
+
+// initial returns the uppercased first letter of s for avatar placeholders.
+func initial(s string) string {
+	for _, r := range strings.TrimSpace(s) {
+		return string(unicode.ToUpper(r))
+	}
+	return "?"
 }
 
 // pageFiles are the content templates; each is composed with base.html.

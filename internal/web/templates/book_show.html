@@ -15,27 +15,35 @@
 
 <h2>Contacts <span class="muted">({{.Total}})</span></h2>
 
-<div class="actions">
+<div class="toolbar">
   <form method="get" action="/books/{{.Book.PublicID}}" role="search">
     <input type="search" name="q" value="{{.Query}}" placeholder="Search contacts">
     <button class="btn-secondary" type="submit">Search</button>
   </form>
-  {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">New contact</a>{{end}}
+  <div class="actions">
+    {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">New contact</a>{{end}}
+    <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/export.vcf">Export vCard</a>
+    <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/export.csv">Export CSV</a>
+  </div>
 </div>
 
 {{if .Contacts}}
-<table>
-  <thead><tr><th>Name</th><th>Organization</th><th>Email</th></tr></thead>
-  <tbody>
+<ul class="card-grid">
   {{range .Contacts}}
-    <tr>
-      <td><a href="/contacts/{{.PublicID}}">{{.FullName}}</a></td>
-      <td>{{.Org}}</td>
-      <td>{{.PrimaryEmail}}</td>
-    </tr>
+  <li class="contact-card">
+    <a class="contact-card-head" href="/contacts/{{.PublicID}}">
+      {{if .HasPhoto}}
+      <img class="avatar avatar-sm" src="/contacts/{{.PublicID}}/photo" alt="" width="56" height="56">
+      {{else}}
+      <span class="avatar avatar-sm avatar-placeholder" aria-hidden="true">{{initial .FullName}}</span>
+      {{end}}
+      <span class="contact-card-name">{{.FullName}}</span>
+    </a>
+    {{if .Org}}<span class="muted">{{.Org}}</span>{{end}}
+    {{if .PrimaryEmail}}<a class="muted" href="mailto:{{.PrimaryEmail}}">{{.PrimaryEmail}}</a>{{end}}
+  </li>
   {{end}}
-  </tbody>
-</table>
+</ul>
 <nav class="pager">
   {{if .PrevURL}}<a class="btn btn-secondary" href="{{.PrevURL}}">Previous</a>{{end}}
   <span class="muted">Page {{.Page}}</span>

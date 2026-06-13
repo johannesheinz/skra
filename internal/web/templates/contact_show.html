@@ -14,6 +14,8 @@
   {{if .Contact.PrimaryPhone}}<dt>Phone</dt><dd><a href="tel:{{.Contact.PrimaryPhone}}">{{.Contact.PrimaryPhone}}</a></dd>{{end}}
 </dl>
 
+<p><a href="/contacts/{{.Contact.PublicID}}/export.vcf">Download vCard</a></p>
+
 {{if .CanManage}}
 <div class="actions">
   <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/edit">Edit</a>
