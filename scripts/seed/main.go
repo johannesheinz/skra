@@ -4,7 +4,7 @@
 //
 // Usage:
 //
-//	go run ./scripts/seed --db skra-demo.db
+//	go run ./scripts/seed --db skra-demo.db --extra 150
 //	SKRA_LISTEN=127.0.0.1:3000 SKRA_DB_PATH=skra-demo.db \
 //	  SKRA_COOKIE_SECURE=false SKRA_EXTERNAL_URL=http://127.0.0.1:3000 \
 //	  SKRA_SESSION_KEY=dev-only-session-key-not-secret-000 ./skra serve
@@ -21,6 +21,7 @@ import (
 	"image/color"
 	"image/png"
 	"os"
+	"strings"
 
 	"github.com/johannesheinz/skra/internal/auth"
 	"github.com/johannesheinz/skra/internal/db"
@@ -40,6 +41,7 @@ func main() {
 
 func run() error {
 	dbPath := flag.String("db", "skra-demo.db", "SQLite database path to seed")
+	extra := flag.Int("extra", 150, "number of generated contacts to add across the books")
 	force := flag.Bool("force", false, "seed even if the database already has users")
 	flag.Parse()
 
@@ -58,55 +60,72 @@ func run() error {
 		return fmt.Errorf("database already has %d user(s); pass --force to seed anyway", count)
 	}
 
-	admin, err := createUser(ctx, database, "admin", "admin@demo.test", models.RoleAdmin)
-	if err != nil {
-		return err
+	// Users.
+	users := map[string]models.User{}
+	for _, u := range []struct{ name, role string }{
+		{"admin", models.RoleAdmin},
+		{"alice", models.RoleUser},
+		{"bob", models.RoleUser},
+		{"carol", models.RoleUser},
+		{"dave", models.RoleUser},
+	} {
+		created, err := createUser(ctx, database, u.name, u.name+"@demo.test", u.role)
+		if err != nil {
+			return err
+		}
+		users[u.name] = created
 	}
-	alice, err := createUser(ctx, database, "alice", "alice@demo.test", models.RoleUser)
-	if err != nil {
-		return err
+
+	// Books with cross-user grants (owner already gets a manager grant).
+	type bookSpec struct {
+		name, owner, desc string
+		grants            map[string]string // username -> level
 	}
-	bob, err := createUser(ctx, database, "bob", "bob@demo.test", models.RoleUser)
-	if err != nil {
+	specs := []bookSpec{
+		{"Work", "admin", "Colleagues and clients", map[string]string{"alice": models.AccessManager, "bob": models.AccessViewer}},
+		{"Friends", "alice", "People I actually like", nil},
+		{"Family", "bob", "Relatives", map[string]string{"carol": models.AccessViewer}},
+		{"Clients", "admin", "External contacts", map[string]string{"dave": models.AccessManager}},
+	}
+	var books []models.AddressBook
+	for _, s := range specs {
+		book, err := models.CreateAddressBook(ctx, database, users[s.owner].ID, s.name, s.desc)
+		if err != nil {
+			return err
+		}
+		for username, level := range s.grants {
+			if err := models.AddOrUpdateMember(ctx, database, book.ID, users[username].ID, level, users[s.owner].ID); err != nil {
+				return err
+			}
+		}
+		books = append(books, book)
+	}
+
+	// Curated, recognizable contacts go in the first book for flavor.
+	if err := seedContacts(ctx, database, books[0].ID, curatedContacts); err != nil {
 		return err
 	}
 
-	// Work book owned by the admin; alice manages it, bob may view it.
-	work, err := models.CreateAddressBook(ctx, database, admin.ID, "Work", "Colleagues and clients")
-	if err != nil {
-		return err
-	}
-	if err := models.AddOrUpdateMember(ctx, database, work.ID, alice.ID, models.AccessManager, admin.ID); err != nil {
-		return err
-	}
-	if err := models.AddOrUpdateMember(ctx, database, work.ID, bob.ID, models.AccessViewer, admin.ID); err != nil {
-		return err
+	// Generated contacts spread round-robin across all books.
+	for i := 0; i < *extra; i++ {
+		book := books[i%len(books)]
+		if err := seedContacts(ctx, database, book.ID, []demoContact{generateContact(i)}); err != nil {
+			return err
+		}
 	}
 
-	// Friends book owned by alice.
-	friends, err := models.CreateAddressBook(ctx, database, alice.ID, "Friends", "People I actually like")
-	if err != nil {
-		return err
-	}
-
-	if err := seedContacts(ctx, database, work.ID, workContacts); err != nil {
-		return err
-	}
-	if err := seedContacts(ctx, database, friends.ID, friendContacts); err != nil {
-		return err
-	}
-
+	total := len(curatedContacts) + *extra
 	fmt.Printf(`seeded %s
 
-  users:    admin / alice / bob   (password: %s)
-  books:    "Work" (admin; alice=manager, bob=viewer), "Friends" (alice)
-  contacts: %d in Work, %d in Friends
+  users:    admin, alice, bob, carol, dave   (password: %s)
+  books:    %d (Work, Friends, Family, Clients) with cross-user grants
+  contacts: %d total (%d curated + %d generated)
 
 run it:
   SKRA_LISTEN=127.0.0.1:3000 SKRA_DB_PATH=%s \
     SKRA_COOKIE_SECURE=false SKRA_EXTERNAL_URL=http://127.0.0.1:3000 \
     SKRA_SESSION_KEY=dev-only-session-key-not-secret-000 ./skra serve
-`, *dbPath, demoPassword, len(workContacts), len(friendContacts), *dbPath)
+`, *dbPath, demoPassword, len(books), total, len(curatedContacts), *extra, *dbPath)
 	return nil
 }
 
@@ -142,6 +161,49 @@ func seedContacts(ctx context.Context, d *db.DB, bookID int64, contacts []demoCo
 	return nil
 }
 
+// generateContact deterministically builds a varied rich contact from an index,
+// so emails are unique and runs are reproducible.
+func generateContact(i int) demoContact {
+	first := firstNames[i%len(firstNames)]
+	last := lastNames[(i*7)%len(lastNames)]
+	slug := strings.ToLower(first) + "." + strings.ToLower(last) + fmt.Sprint(i+1)
+
+	in := models.ContactInput{
+		GivenName:  first,
+		FamilyName: last,
+		Emails:     []vcardio.Typed{{Type: "home", Value: slug + "@demo.test"}},
+		Phones:     []vcardio.Typed{{Type: "mobile", Value: fmt.Sprintf("+1 555 %04d", i+1)}},
+	}
+	if i%2 == 0 {
+		in.Org = orgs[i%len(orgs)]
+		in.Title = titles[i%len(titles)]
+		in.Emails = append(in.Emails, vcardio.Typed{Type: "work", Value: strings.ToLower(first) + "@" + strings.ToLower(strings.ReplaceAll(in.Org, " ", "")) + ".demo"})
+	}
+	if i%3 == 0 {
+		in.Phones = append(in.Phones, vcardio.Typed{Type: "work", Value: fmt.Sprintf("+1 555 %04d", 9000+i)})
+	}
+	if i%4 == 0 {
+		city := cities[i%len(cities)]
+		in.Addresses = []vcardio.Address{{Type: "home", Street: fmt.Sprintf("%d %s St", 10+i, last), City: city, Region: regions[i%len(regions)], PostalCode: fmt.Sprintf("%05d", 10000+i*7%89999), Country: "USA"}}
+	}
+	if i%5 == 0 {
+		in.Birthday = fmt.Sprintf("19%02d-%02d-%02d", 60+i%39, 1+i%12, 1+i%28)
+	}
+	if i%6 == 0 {
+		in.Note = "Met via " + orgs[(i+3)%len(orgs)] + "."
+	}
+	if i%9 == 0 {
+		in.URLs = []string{"https://demo.test/" + slug}
+	}
+
+	var col *color.RGBA
+	if i%3 == 0 {
+		c := palette[i%len(palette)]
+		col = &c
+	}
+	return demoContact{in: in, color: col}
+}
+
 // avatarPNG returns a solid-color square PNG to stand in for a contact photo.
 func avatarPNG(c color.RGBA) []byte {
 	img := image.NewRGBA(image.Rect(0, 0, 256, 256))
@@ -158,7 +220,17 @@ func avatarPNG(c color.RGBA) []byte {
 func email(t, v string) vcardio.Typed { return vcardio.Typed{Type: t, Value: v} }
 func phone(t, v string) vcardio.Typed { return vcardio.Typed{Type: t, Value: v} }
 
-var workContacts = []demoContact{
+var (
+	firstNames = []string{"Grace", "Alan", "Ada", "Katherine", "Dennis", "Jamie", "Priya", "Tom", "Mei", "Omar", "Sofia", "Liam", "Noor", "Hiro", "Elena", "Kwame", "Ingrid", "Diego", "Yuki", "Fatima"}
+	lastNames  = []string{"Hopper", "Turing", "Lovelace", "Johnson", "Ritchie", "Rivera", "Nair", "Okafor", "Lin", "Haddad", "Costa", "Murphy", "Khan", "Sato", "Petrova", "Mensah", "Larsen", "Reyes", "Tanaka", "Aziz"}
+	orgs       = []string{"Acme", "Globex", "Initech", "Umbrella", "Hooli", "Soylent", "Stark Industries", "Wayne Enterprises"}
+	titles     = []string{"Engineer", "Designer", "Manager", "Analyst", "Director", "Consultant", "Researcher", "Coordinator"}
+	cities     = []string{"Portland", "Austin", "Denver", "Seattle", "Boston", "Atlanta", "Chicago", "Madison"}
+	regions    = []string{"OR", "TX", "CO", "WA", "MA", "GA", "IL", "WI"}
+	palette    = []color.RGBA{{47, 93, 80, 255}, {120, 80, 160, 255}, {180, 90, 60, 255}, {60, 120, 180, 255}, {150, 120, 50, 255}, {90, 100, 110, 255}}
+)
+
+var curatedContacts = []demoContact{
 	{
 		in: models.ContactInput{
 			GivenName: "Grace", FamilyName: "Hopper", Org: "Navy", Title: "Rear Admiral",
@@ -183,55 +255,6 @@ var workContacts = []demoContact{
 			GivenName: "Ada", FamilyName: "Lovelace", Org: "Analytical Engine Co.",
 			Emails: []vcardio.Typed{email("home", "ada@analytical.demo")},
 			URLs:   []string{"https://example.demo/ada"},
-		},
-	},
-	{
-		in: models.ContactInput{
-			GivenName: "Katherine", FamilyName: "Johnson", Org: "NASA", Title: "Mathematician",
-			Emails:    []vcardio.Typed{email("work", "katherine@nasa.demo")},
-			Phones:    []vcardio.Typed{phone("work", "+1 757 555 0188")},
-			Birthday:  "1918-08-26",
-			Addresses: []vcardio.Address{{Type: "work", City: "Hampton", Region: "VA", Country: "USA"}},
-		},
-		color: &color.RGBA{180, 90, 60, 255},
-	},
-	{
-		in: models.ContactInput{
-			GivenName: "Dennis", FamilyName: "Ritchie", Org: "Bell Labs", Title: "Researcher",
-			Emails: []vcardio.Typed{email("work", "dmr@bell.demo")},
-		},
-	},
-}
-
-var friendContacts = []demoContact{
-	{
-		in: models.ContactInput{
-			GivenName: "Jamie", FamilyName: "Rivera",
-			Emails: []vcardio.Typed{email("home", "jamie@friends.demo")},
-			Phones: []vcardio.Typed{phone("mobile", "+1 415 555 0143"), phone("home", "+1 415 555 0199")},
-			Note:   "Makes excellent tacos.",
-		},
-		color: &color.RGBA{60, 120, 180, 255},
-	},
-	{
-		in: models.ContactInput{
-			GivenName: "Priya", FamilyName: "Nair",
-			Emails:    []vcardio.Typed{email("home", "priya@friends.demo")},
-			Birthday:  "1992-03-14",
-			Addresses: []vcardio.Address{{Type: "home", Street: "22 Garden Way", City: "Portland", Region: "OR", PostalCode: "97201", Country: "USA"}},
-		},
-	},
-	{
-		in: models.ContactInput{
-			GivenName: "Tom", FamilyName: "Okafor",
-			Phones: []vcardio.Typed{phone("mobile", "+44 7700 900222")},
-		},
-		color: &color.RGBA{150, 120, 50, 255},
-	},
-	{
-		in: models.ContactInput{
-			GivenName: "Mei", FamilyName: "Lin",
-			Emails: []vcardio.Typed{email("home", "mei@friends.demo"), email("work", "mei.lin@work.demo")},
 		},
 	},
 }
