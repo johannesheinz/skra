@@ -3,7 +3,9 @@ package models
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -258,6 +260,50 @@ func GetContactPhotoMeta(ctx context.Context, d *db.DB, contactPublicID string) 
 		return PhotoMeta{}, false, fmt.Errorf("models: get contact photo meta: %w", err)
 	}
 	return m, true, nil
+}
+
+// SetContactPhoto stores (or replaces) a contact's normalized JPEG photo and
+// flags the contact as having one, in a single transaction. The ETag is the
+// content hash, so re-uploading identical bytes is a no-op for caches.
+func SetContactPhoto(ctx context.Context, d *db.DB, contactID int64, jpeg []byte) error {
+	sum := sha256.Sum256(jpeg)
+	etag := hex.EncodeToString(sum[:])
+	err := d.Write(ctx, func(tx *sql.Tx) error {
+		if _, err := tx.ExecContext(ctx,
+			`INSERT INTO contact_photos (contact_id, mime_type, bytes, etag)
+			 VALUES (?, 'image/jpeg', ?, ?)
+			 ON CONFLICT(contact_id) DO UPDATE SET
+			   mime_type = excluded.mime_type, bytes = excluded.bytes,
+			   etag = excluded.etag, updated_at = datetime('now')`,
+			contactID, jpeg, etag); err != nil {
+			return fmt.Errorf("upsert photo: %w", err)
+		}
+		if _, err := tx.ExecContext(ctx,
+			`UPDATE contacts SET has_photo = 1, updated_at = datetime('now') WHERE id = ?`, contactID); err != nil {
+			return fmt.Errorf("flag has_photo: %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("models: set contact photo: %w", err)
+	}
+	return nil
+}
+
+// DeleteContactPhoto removes a contact's photo and clears its has_photo flag.
+func DeleteContactPhoto(ctx context.Context, d *db.DB, contactID int64) error {
+	err := d.Write(ctx, func(tx *sql.Tx) error {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM contact_photos WHERE contact_id = ?`, contactID); err != nil {
+			return err
+		}
+		_, err := tx.ExecContext(ctx,
+			`UPDATE contacts SET has_photo = 0, updated_at = datetime('now') WHERE id = ?`, contactID)
+		return err
+	})
+	if err != nil {
+		return fmt.Errorf("models: delete contact photo: %w", err)
+	}
+	return nil
 }
 
 // GetContactPhoto loads the photo BLOB for a contact by public_id.

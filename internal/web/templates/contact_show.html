@@ -2,6 +2,7 @@
 {{define "content"}}
 <p><a href="/books/{{.Book.PublicID}}">← {{.Book.Name}}</a></p>
 <h1>{{.Contact.FullName}}</h1>
+{{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 
 {{if .Contact.HasPhoto}}
 <img class="avatar" src="/contacts/{{.Contact.PublicID}}/photo" alt="" width="160" height="160">
@@ -21,5 +22,20 @@
     <button class="btn-danger" type="submit">Delete</button>
   </form>
 </div>
+
+<h2>Photo</h2>
+<form class="stack" method="post" action="/contacts/{{.Contact.PublicID}}/photo" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <label>Upload (JPEG or PNG; auto-resized)
+    <input type="file" name="photo" accept="image/jpeg,image/png" required>
+  </label>
+  <button type="submit">Upload photo</button>
+</form>
+{{if .Contact.HasPhoto}}
+<form method="post" action="/contacts/{{.Contact.PublicID}}/photo/delete">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <button class="btn-secondary" type="submit">Remove photo</button>
+</form>
+{{end}}
 {{end}}
 {{end}}

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -9,11 +10,18 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/johannesheinz/skra/internal/auth"
+	"github.com/johannesheinz/skra/internal/images"
 	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/rbac"
 )
 
 const contactsPageSize = 25
+
+// Photo upload limits.
+const (
+	maxUploadBytes  = 10 << 20 // 10 MiB total request body
+	maxUploadMemory = 1 << 20  // keep up to 1 MiB in memory, spill the rest to temp
+)
 
 // ContactNew renders the create form for a contact in a book
 // (GET /books/{publicID}/contacts/new). Requires manager on the book.
@@ -114,6 +122,79 @@ func (h *Handlers) ContactDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, "/books/"+book.PublicID, http.StatusSeeOther)
+}
+
+// ContactPhotoUpload accepts a multipart photo, runs it through the ingest
+// pipeline, and stores the normalized JPEG (POST /contacts/{publicID}/photo).
+func (h *Handlers) ContactPhotoUpload(w http.ResponseWriter, r *http.Request) {
+	contact, book, user, ok := h.authorizeContact(w, r, rbac.Write)
+	if !ok {
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
+		http.Error(w, "upload too large or malformed", http.StatusRequestEntityTooLarge)
+		return
+	}
+	if err := auth.VerifyCSRF(r); err != nil {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	file, _, err := r.FormFile("photo")
+	if err != nil {
+		h.renderContactWithError(w, r, contact, book, user, "Choose an image file to upload.")
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		h.Logger.Error("read upload failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	jpeg, err := images.Process(data)
+	if err != nil {
+		// Decode failures are user error (unsupported/corrupt image, e.g. HEIC).
+		h.renderContactWithError(w, r, contact, book, user, "That image could not be processed. Use JPEG or PNG.")
+		return
+	}
+	if err := models.SetContactPhoto(r.Context(), h.DB, contact.ID, jpeg); err != nil {
+		h.Logger.Error("store photo failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/contacts/"+contact.PublicID, http.StatusSeeOther)
+}
+
+// ContactPhotoDelete removes a contact's photo (POST /contacts/{publicID}/photo/delete).
+func (h *Handlers) ContactPhotoDelete(w http.ResponseWriter, r *http.Request) {
+	contact, _, _, ok := h.authorizeContact(w, r, rbac.Write)
+	if !ok {
+		return
+	}
+	if !h.checkForm(w, r) {
+		return
+	}
+	if err := models.DeleteContactPhoto(r.Context(), h.DB, contact.ID); err != nil {
+		h.Logger.Error("delete photo failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/contacts/"+contact.PublicID, http.StatusSeeOther)
+}
+
+func (h *Handlers) renderContactWithError(w http.ResponseWriter, r *http.Request, contact models.Contact, book models.AddressBook, user models.User, errMsg string) {
+	canManage, _ := rbac.Can(r.Context(), h.DB, user, contact.AddressBookID, rbac.Write)
+	h.render(w, r, http.StatusUnprocessableEntity, "contact_show.html", map[string]any{
+		"Contact":   contact,
+		"Book":      book,
+		"CanManage": canManage.Allow,
+		"Error":     errMsg,
+	})
 }
 
 // authorizeContact resolves the {publicID} contact, loads its book (for links),
