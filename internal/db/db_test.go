@@ -74,6 +74,7 @@ func TestMigrationsCreateSchema(t *testing.T) {
 	wantTables := []string{
 		"users", "address_books", "contacts", "contact_photos",
 		"address_book_members", "share_links", "sessions", "schema_migrations",
+		"import_uploads",
 	}
 	for _, table := range wantTables {
 		var name string
@@ -89,8 +90,8 @@ func TestMigrationsCreateSchema(t *testing.T) {
 	if err := database.QueryRow("SELECT MAX(version) FROM schema_migrations").Scan(&version); err != nil {
 		t.Fatalf("query schema_migrations: %v", err)
 	}
-	if version != 1 {
-		t.Errorf("max migration version = %d, want 1", version)
+	if version != 2 {
+		t.Errorf("max migration version = %d, want 2", version)
 	}
 }
 
@@ -114,8 +115,8 @@ func TestMigrationsAreIdempotent(t *testing.T) {
 	if err := second.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
 		t.Fatalf("count schema_migrations: %v", err)
 	}
-	if count != 1 {
-		t.Errorf("schema_migrations row count = %d, want 1", count)
+	if count != 2 {
+		t.Errorf("schema_migrations row count = %d, want 2", count)
 	}
 }
 
