@@ -79,6 +79,8 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Post("/books/{publicID}/delete", h.BookDelete)
 		r.Get("/books/{publicID}/contacts/new", h.ContactNew)
 		r.Post("/books/{publicID}/contacts", h.ContactCreate)
+		r.Get("/books/{publicID}/export.vcf", h.BookExportVCard)
+		r.Get("/books/{publicID}/export.csv", h.BookExportCSV)
 
 		r.Get("/contacts/{publicID}", h.ContactShow)
 		r.Get("/contacts/{publicID}/edit", h.ContactEdit)
@@ -87,6 +89,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Get("/contacts/{publicID}/photo", h.ContactPhoto)
 		r.Post("/contacts/{publicID}/photo", h.ContactPhotoUpload)
 		r.Post("/contacts/{publicID}/photo/delete", h.ContactPhotoDelete)
+		r.Get("/contacts/{publicID}/export.vcf", h.ContactExportVCard)
 	})
 
 	return r, nil

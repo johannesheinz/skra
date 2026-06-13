@@ -185,6 +185,62 @@ func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query stri
 	return contacts, total, nil
 }
 
+// ContactExport carries the fields needed to export a contact: the structured
+// columns for CSV and the canonical vcard_raw for vCard.
+type ContactExport struct {
+	ID       int64
+	FullName string
+	Org      string
+	Email    string
+	Phone    string
+	VCardRaw string
+	HasPhoto bool
+}
+
+// ListContactsForExport returns every contact in a book (no pagination) with the
+// data needed for vCard and CSV export, ordered by name.
+func ListContactsForExport(ctx context.Context, d *db.DB, addressBookID int64) ([]ContactExport, error) {
+	rows, err := d.QueryContext(ctx,
+		`SELECT id, full_name, org, primary_email, primary_phone, vcard_raw, has_photo
+		 FROM contacts WHERE address_book_id = ? ORDER BY full_name COLLATE NOCASE`, addressBookID)
+	if err != nil {
+		return nil, fmt.Errorf("models: list contacts for export: %w", err)
+	}
+	defer rows.Close()
+
+	var out []ContactExport
+	for rows.Next() {
+		var c ContactExport
+		var org, email, phone sql.NullString
+		var hasPhoto int64
+		if err := rows.Scan(&c.ID, &c.FullName, &org, &email, &phone, &c.VCardRaw, &hasPhoto); err != nil {
+			return nil, fmt.Errorf("models: scan export contact: %w", err)
+		}
+		c.Org = org.String
+		c.Email = email.String
+		c.Phone = phone.String
+		c.HasPhoto = hasPhoto != 0
+		out = append(out, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("models: iterate export contacts: %w", err)
+	}
+	return out, nil
+}
+
+// GetPhotoBytes returns a contact's stored JPEG by internal id, for export.
+func GetPhotoBytes(ctx context.Context, d *db.DB, contactID int64) ([]byte, bool, error) {
+	var b []byte
+	err := d.QueryRowContext(ctx, `SELECT bytes FROM contact_photos WHERE contact_id = ?`, contactID).Scan(&b)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, fmt.Errorf("models: get photo bytes: %w", err)
+	}
+	return b, true, nil
+}
+
 type rowScanner interface {
 	Scan(dest ...any) error
 }
