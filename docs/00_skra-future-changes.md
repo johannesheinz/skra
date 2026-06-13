@@ -3,7 +3,8 @@
 Candidate changes beyond the baseline specification (`skra-baseline-spec.md`).
 Unlike the baseline, these are **options with recommendations**, not fixed
 decisions. Topics: password-hash salting/peppering, allowing a contact
-to exist in multiple address books, and full-text contact search.
+to exist in multiple address books, full-text contact search, and
+dependency-update tooling.
 
 ---
 
@@ -212,7 +213,19 @@ When search quality or volume warrants it, add an **FTS5 virtual table** as an e
 
 Effort/risk: low–medium. It is additive (new virtual table + triggers in a migration, swap the search query), needs no schema change to `contacts`, and can be introduced whenever the simple search becomes a limitation. Consider adding it together with the multi-book change (§2) so the search join accounts for `contact_books` membership.
 
-## 4. Consistency with baseline constraints
+## 4. Dependency updates: migrate Dependabot → Renovate
+
+Dependabot covers the manifest ecosystems (`gomod`, `github-actions`, `docker`) but cannot track the hand-vendored frontend assets — `htmx.min.js` and the Space Grotesk WOFF2 files — because they have no package manifest, and adding a `package.json` purely to satisfy it would reintroduce the npm supply-chain surface we deliberately avoid. Those assets are therefore updated by hand today (see the README "Vendored assets" section).
+
+Renovate closes that gap: its **custom/regex manager** plus **custom datasources** can watch arbitrary files and version strings, so one tool can cover everything in this repo.
+
+- Keep the Go modules, GitHub Actions, and Dockerfile coverage Dependabot already provides.
+- Add a regex manager that matches the vendored versions where they live (the version table in `README.md`, the version comment in `internal/web/static/static.go`, and/or the versioned filenames) and resolves the latest upstream via the `github-releases` datasource (`bigskysoftware/htmx`, `floriankarsten/space-grotesk`). Renovate then opens a PR when a new release appears.
+- Note that Renovate only bumps the recorded version string; actually replacing the vendored binary files (and re-subsetting the font) still needs the manual step the README documents, unless paired with a small CI job that downloads and commits the new files. Decide whether the version-bump PR alone is enough as a notification, or whether to automate the file refresh.
+
+Replace `.github/dependabot.yml` with `renovate.json` (or run the Renovate GitHub App / a self-hosted `renovate` action). Effort/risk: low — configuration only, no application code.
+
+## 5. Consistency with baseline constraints
 
 When implementing either topic, keep the baseline's non-negotiables intact:
 
@@ -224,7 +237,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 ---
 
-## 5. Summary
+## 6. Summary
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
@@ -233,3 +246,4 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Multi-book via move/duplicate (A) | none | low | Fine for occasional cross-filing |
 | Multi-book via M:N join (B) | join table + contacts rebuild | medium | Choose for true shared contacts; do it early |
 | Full-text search via FTS5 (§3) | new virtual table + triggers | low–medium | Add when `LIKE` search becomes a limitation |
+| Dependabot → Renovate (§4) | config only (no app code) | low | Do it to also track the vendored htmx/font versions |
