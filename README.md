@@ -91,6 +91,16 @@ The image is a non-root `distroless/static` runtime containing only the binary.
 go test ./...
 ```
 
+## Demo data
+
+Seed a throwaway database with users, books, and rich contacts (for demos/development only — never against production):
+
+```sh
+go run ./scripts/seed --db skra-demo.db
+```
+
+It prints the demo credentials and a ready-to-run `skra serve` command. Logins: `admin` / `alice` / `bob`, password `demo-password-123`.
+
 ## Project layout
 
 ```
