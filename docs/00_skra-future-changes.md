@@ -4,8 +4,8 @@ Candidate changes beyond the baseline specification (`skra-baseline-spec.md`).
 Unlike the baseline, these are **options with recommendations**, not fixed
 decisions. Topics: password-hash salting/peppering, allowing a contact
 to exist in multiple address books, full-text contact search,
-dependency-update tooling, contact de-duplication, CSV import, and
-OpenStreetMap links for addresses.
+dependency-update tooling, contact de-duplication, CSV import,
+OpenStreetMap links for addresses, and a responsive/mobile layout.
 
 ---
 
@@ -263,7 +263,21 @@ Important constraint — keep it a link, not an embed:
 
 Geocoding to real coordinates is out of scope; the link relies on OpenStreetMap's free-text search. Effort/risk: very low — a template link built from the address fields, no schema change. Make it unobtrusive since clicking it does disclose the address to OpenStreetMap.
 
-## 8. Consistency with baseline constraints
+## 8. Responsive / mobile layout
+
+The current CSS is already fluid in places (a max-width container, the contact card grid auto-fills, the app bar and toolbars use flex-wrap, the viewport meta tag is set), but there has been no deliberate small-screen pass. A focused responsive phase would make Skrá comfortable on phones.
+
+Work:
+
+- **App bar:** collapse the nav into a compact menu on narrow viewports rather than wrapping; keep the brand and sign-out reachable.
+- **Tables → cards:** the user list, members, and share-link tables overflow on phones. Either let them scroll inside an `overflow-x: auto` wrapper or restyle them as stacked rows (label/value) below a breakpoint. (The contact directory already uses cards, so it adapts.)
+- **Forms:** the contact edit form's repeatable rows (`.field-row`) and the address row's six inputs should stack cleanly; ensure inputs hit the ~44px touch-target size and `font-size: 16px` so iOS doesn't zoom on focus.
+- **Photos/avatars:** cap sizes with relative units; the directory grid's `minmax` already reflows.
+- **Breakpoints via tokens:** add a small set of `@media` rules driven by the existing design tokens — no framework, consistent with the hand-written CSS approach.
+
+This is pure CSS plus minor template structure (e.g. wrapping wide tables); no Go, no schema, no new dependency. Effort/risk: low–medium, mostly iteration against real screens. A good companion to the eventual design/colors pass.
+
+## 9. Consistency with baseline constraints
 
 When implementing either topic, keep the baseline's non-negotiables intact:
 
@@ -275,7 +289,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 ---
 
-## 9. Summary
+## 10. Summary
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
@@ -288,3 +302,4 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Contact de-duplication (§5) | none (within-book) | medium | Add after rich fields; pairs with the multi-book change |
 | CSV import (§6) | none (staging exists) | medium | Follow-up to the vCard import; needs a parser + mapping UI |
 | OpenStreetMap address links (§7) | none | very low | Link out (don't embed) to keep the self-only CSP intact |
+| Responsive / mobile layout (§8) | none (CSS + minor templates) | low–medium | Deliberate small-screen pass; pairs with the design/colors pass |
