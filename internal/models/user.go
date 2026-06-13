@@ -83,6 +83,80 @@ func GetUserByID(ctx context.Context, d *db.DB, id int64) (User, error) {
 		 FROM users WHERE id = ?`, id))
 }
 
+// GetUserByPublicID loads a user by public id, returning ErrUserNotFound if none
+// exists.
+func GetUserByPublicID(ctx context.Context, d *db.DB, publicID string) (User, error) {
+	return scanUser(d.QueryRowContext(ctx,
+		`SELECT id, public_id, username, email, password_hash, role
+		 FROM users WHERE public_id = ?`, publicID))
+}
+
+// ListUsers returns all users ordered by username, for admin management.
+func ListUsers(ctx context.Context, d *db.DB) ([]User, error) {
+	rows, err := d.QueryContext(ctx,
+		`SELECT id, public_id, username, email, password_hash, role
+		 FROM users ORDER BY username COLLATE NOCASE`)
+	if err != nil {
+		return nil, fmt.Errorf("models: list users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.PublicID, &u.Username, &u.Email, &u.PasswordHash, &u.Role); err != nil {
+			return nil, fmt.Errorf("models: scan user: %w", err)
+		}
+		users = append(users, u)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("models: iterate users: %w", err)
+	}
+	return users, nil
+}
+
+// UpdateUser changes a user's email and role (username is immutable) and bumps
+// updated_at. The role must be RoleAdmin or RoleUser.
+func UpdateUser(ctx context.Context, d *db.DB, id int64, email, role string) error {
+	if role != RoleAdmin && role != RoleUser {
+		return fmt.Errorf("models: invalid role %q", role)
+	}
+	_, err := d.ExecWrite(ctx,
+		`UPDATE users SET email = ?, role = ?, updated_at = datetime('now') WHERE id = ?`,
+		email, role, id)
+	if err != nil {
+		return fmt.Errorf("models: update user: %w", err)
+	}
+	return nil
+}
+
+// DeleteUser removes a user. It fails if the user still owns address books
+// (owner_id is ON DELETE RESTRICT); the caller surfaces that as a usage error.
+func DeleteUser(ctx context.Context, d *db.DB, id int64) error {
+	if _, err := d.ExecWrite(ctx, `DELETE FROM users WHERE id = ?`, id); err != nil {
+		return fmt.Errorf("models: delete user: %w", err)
+	}
+	return nil
+}
+
+// CountAdmins returns the number of admin accounts, for last-admin guards.
+func CountAdmins(ctx context.Context, d *db.DB) (int, error) {
+	var n int
+	if err := d.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE role = ?", RoleAdmin).Scan(&n); err != nil {
+		return 0, fmt.Errorf("models: count admins: %w", err)
+	}
+	return n, nil
+}
+
+// OwnsAddressBooks reports whether a user owns any address books (blocks delete).
+func OwnsAddressBooks(ctx context.Context, d *db.DB, userID int64) (bool, error) {
+	var n int
+	if err := d.QueryRowContext(ctx, "SELECT COUNT(*) FROM address_books WHERE owner_id = ?", userID).Scan(&n); err != nil {
+		return false, fmt.Errorf("models: count owned books: %w", err)
+	}
+	return n > 0, nil
+}
+
 // CountUsers returns the number of user rows; used by admin bootstrap to refuse
 // running on a non-empty database.
 func CountUsers(ctx context.Context, d *db.DB) (int, error) {
