@@ -9,6 +9,9 @@ import (
 	"strings"
 )
 
+// minSessionKeyLen is the minimum accepted length for the cookie-signing key.
+const minSessionKeyLen = 32
+
 // Config holds the validated runtime configuration.
 type Config struct {
 	// Listen is the internal bind address, e.g. "127.0.0.1:3000".
@@ -20,12 +23,20 @@ type Config struct {
 	// HTTP behind a TLS-terminating proxy, so naive code would emit non-Secure
 	// cookies on an HTTPS site.
 	CookieSecure bool
+	// ExternalURL is the public origin (e.g. https://contacts.example.com) used
+	// to build absolute share links. No trailing slash.
+	ExternalURL string
+	// SessionKey signs share-gate cookies (HMAC). Keep it secret and stable;
+	// rotating it invalidates outstanding gate cookies.
+	SessionKey string
 }
 
 const (
 	envListen       = "SKRA_LISTEN"
 	envDBPath       = "SKRA_DB_PATH"
 	envCookieSecure = "SKRA_COOKIE_SECURE"
+	envExternalURL  = "SKRA_EXTERNAL_URL"
+	envSessionKey   = "SKRA_SESSION_KEY"
 )
 
 // Load reads configuration from the environment and validates it. It returns an
@@ -48,11 +59,33 @@ func Load() (Config, error) {
 		problems = append(problems, err.Error())
 	}
 
+	externalURL := strings.TrimRight(strings.TrimSpace(os.Getenv(envExternalURL)), "/")
+	switch {
+	case externalURL == "":
+		problems = append(problems, "missing "+envExternalURL)
+	case !strings.HasPrefix(externalURL, "http://") && !strings.HasPrefix(externalURL, "https://"):
+		problems = append(problems, envExternalURL+" must start with http:// or https://")
+	}
+
+	sessionKey := os.Getenv(envSessionKey)
+	switch {
+	case strings.TrimSpace(sessionKey) == "":
+		problems = append(problems, "missing "+envSessionKey)
+	case len(sessionKey) < minSessionKeyLen:
+		problems = append(problems, fmt.Sprintf("%s must be at least %d characters", envSessionKey, minSessionKeyLen))
+	}
+
 	if len(problems) > 0 {
 		return Config{}, fmt.Errorf("invalid configuration: %s", strings.Join(problems, "; "))
 	}
 
-	return Config{Listen: listen, DBPath: dbPath, CookieSecure: cookieSecure}, nil
+	return Config{
+		Listen:       listen,
+		DBPath:       dbPath,
+		CookieSecure: cookieSecure,
+		ExternalURL:  externalURL,
+		SessionKey:   sessionKey,
+	}, nil
 }
 
 // parseBool requires the variable to be exactly "true" or "false" — there is no

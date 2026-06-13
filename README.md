@@ -54,8 +54,10 @@ All configuration comes from the environment; there are no fallback defaults, so
 | `SKRA_LISTEN` | `127.0.0.1:3000` | Internal bind address (localhost-only behind a proxy) |
 | `SKRA_DB_PATH` | `/var/lib/skra/skra.db` | SQLite file location (created on first run) |
 | `SKRA_COOKIE_SECURE` | `true` | `Secure` cookie flag; drive from the external scheme, must be `true`/`false` |
+| `SKRA_EXTERNAL_URL` | `https://contacts.example.com` | Public origin for absolute share links (`http(s)://`, no trailing slash) |
+| `SKRA_SESSION_KEY` | (random, ≥32 chars) | Secret key signing share-gate cookies; keep stable and secret |
 
-`skra create-admin` additionally reads `SKRA_ADMIN_USERNAME`, `SKRA_ADMIN_EMAIL`, and `SKRA_ADMIN_PASSWORD` (used once, then removable). Additional `SKRA_*` variables (external URL, session signing key, trusted proxies, etc.) arrive in later phases.
+`skra create-admin` additionally reads `SKRA_ADMIN_USERNAME`, `SKRA_ADMIN_EMAIL`, and `SKRA_ADMIN_PASSWORD` (used once, then removable). Remaining `SKRA_*` variables (trusted proxies, etc.) arrive in later phases.
 
 ## Docker
 
@@ -65,6 +67,8 @@ docker run --rm -p 3000:3000 \
   -e SKRA_LISTEN=0.0.0.0:3000 \
   -e SKRA_DB_PATH=/var/lib/skra/skra.db \
   -e SKRA_COOKIE_SECURE=false \
+  -e SKRA_EXTERNAL_URL=http://localhost:3000 \
+  -e SKRA_SESSION_KEY=change-me-to-a-long-random-secret-value \
   -v skra-data:/var/lib/skra \
   skra
 ```
