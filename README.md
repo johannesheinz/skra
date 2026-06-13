@@ -16,6 +16,8 @@ Early development.
 
 **Phase 3 (presentation & export)** — a permission-gated contact directory (card grid, structured for reuse by public sharing); vCard export (whole book or single contact, embedding base64 photos) and CSV export with formula-injection sanitization.
 
+**Phase 4 (public sharing)** — share links for a book or contact in three modes (`authenticated`, `public_long`, `gated_short`); manager-only creation with mode validation, listing, and revocation; public `/s/{token}` serving that reuses the directory/contact presentation, with an HMAC-signed gate (and failure throttling) for gated links.
+
 See [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) for the full specification and roadmap, and [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md) for conventions.
 
 ## Requirements
