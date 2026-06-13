@@ -50,6 +50,9 @@ var pageFiles = []string{
 	"admin_user_form.html",
 	"members.html",
 	"account_password.html",
+	"import_form.html",
+	"import_preview.html",
+	"import_result.html",
 }
 
 var pages = mustParse()

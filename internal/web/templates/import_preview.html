@@ -1,0 +1,28 @@
+{{define "title"}}Import preview · Skrá{{end}}
+{{define "content"}}
+<h1>Import preview — {{.Book.Name}}</h1>
+<p>{{.Total}} contact(s) parsed: <strong>{{.New}}</strong> new, <strong>{{.Duplicate}}</strong> duplicate{{if .Malformed}}, {{.Malformed}} skipped (malformed){{end}}.</p>
+
+<table>
+  <thead><tr><th>Name</th><th>Email</th><th>Status</th></tr></thead>
+  <tbody>
+  {{range .Rows}}
+  <tr><td>{{.Name}}</td><td>{{.Email}}</td><td>{{.Status}}</td></tr>
+  {{end}}
+  </tbody>
+</table>
+
+<form class="stack" method="post" action="{{.CommitURL}}">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <input type="hidden" name="token" value="{{.Token}}">
+  <fieldset>
+    <legend>Duplicates</legend>
+    <label><input type="radio" name="action" value="skip" checked> Skip duplicates</label>
+    <label><input type="radio" name="action" value="create_new"> Import everything as new contacts</label>
+  </fieldset>
+  <div class="actions">
+    <button type="submit">Import</button>
+    <a class="btn btn-secondary" href="{{.CancelURL}}">Cancel</a>
+  </div>
+</form>
+{{end}}

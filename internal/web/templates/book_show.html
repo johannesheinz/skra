@@ -23,6 +23,7 @@
   </form>
   <div class="actions">
     {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">New contact</a>{{end}}
+    {{if .CanManage}}<a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/import">Import</a>{{end}}
     <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/export.vcf">Export vCard</a>
     <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/export.csv">Export CSV</a>
   </div>
