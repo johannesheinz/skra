@@ -46,6 +46,10 @@ var pageFiles = []string{
 	"gate.html",
 	"share_directory.html",
 	"share_contact.html",
+	"admin_users_list.html",
+	"admin_user_form.html",
+	"members.html",
+	"account_password.html",
 }
 
 var pages = mustParse()

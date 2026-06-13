@@ -15,7 +15,8 @@
     {{with .User}}
     <nav class="appnav">
       <a href="/books">Address books</a>
-      <span class="muted">{{.Username}}</span>
+      {{if eq .Role "admin"}}<a href="/admin/users">Users</a>{{end}}
+      <a href="/account/password">{{.Username}}</a>
       <form method="post" action="/logout">
         <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
         <button class="btn-secondary" type="submit">Sign out</button>

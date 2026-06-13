@@ -10,6 +10,9 @@ import (
 	"github.com/johannesheinz/skra/internal/web/templates"
 )
 
+// MinPasswordLen is the minimum length for user-set and admin-set passwords.
+const MinPasswordLen = 8
+
 // Handlers holds the dependencies shared by Skra's HTTP handlers.
 type Handlers struct {
 	DB           *db.DB

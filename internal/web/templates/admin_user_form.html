@@ -1,0 +1,42 @@
+{{define "title"}}{{if .IsNew}}New user{{else}}Edit user{{end}} · Skrá{{end}}
+{{define "content"}}
+<p><a href="/admin/users">← Users</a></p>
+<h1>{{if .IsNew}}New user{{else}}Edit {{.Username}}{{end}}</h1>
+{{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
+{{if .Notice}}<p>{{.Notice}}</p>{{end}}
+
+<form class="stack" method="post" action="{{.FormAction}}" autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  {{if .IsNew}}
+  <label>Username <input type="text" name="username" value="{{.Username}}" required autofocus></label>
+  {{else}}
+  <label>Username <input type="text" value="{{.Username}}" disabled></label>
+  {{end}}
+  <label>Email <input type="email" name="email" value="{{.Email}}" required></label>
+  <label>Role
+    <select name="role">
+      <option value="user" {{if eq .Role "user"}}selected{{end}}>user</option>
+      <option value="admin" {{if eq .Role "admin"}}selected{{end}}>admin</option>
+    </select>
+  </label>
+  {{if .IsNew}}
+  <label>Password <input type="password" name="password" required></label>
+  {{end}}
+  <button type="submit">Save</button>
+</form>
+
+{{if not .IsNew}}
+<h2>Reset password</h2>
+<form class="stack" method="post" action="/admin/users/{{.PublicID}}/password" autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <label>New password <input type="password" name="password" required></label>
+  <button class="btn-secondary" type="submit">Reset password</button>
+</form>
+
+<h2>Delete</h2>
+<form method="post" action="/admin/users/{{.PublicID}}/delete">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <button class="btn-danger" type="submit">Delete user</button>
+</form>
+{{end}}
+{{end}}

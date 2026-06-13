@@ -70,6 +70,9 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Use(authenticator.RequireAuth)
 		r.Get("/", h.Home)
 
+		r.Get("/account/password", h.AccountPasswordForm)
+		r.Post("/account/password", h.AccountPasswordUpdate)
+
 		r.Get("/books", h.BooksList)
 		r.Get("/books/new", h.BookNew)
 		r.Post("/books", h.BookCreate)
@@ -84,6 +87,10 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Get("/books/{publicID}/shares", h.BookShares)
 		r.Post("/books/{publicID}/shares", h.BookShareCreate)
 		r.Post("/books/{publicID}/shares/{shareID}/revoke", h.BookShareRevoke)
+		r.Get("/books/{publicID}/members", h.BookMembers)
+		r.Post("/books/{publicID}/members", h.BookMemberAdd)
+		r.Post("/books/{publicID}/members/new", h.BookMemberCreate)
+		r.Post("/books/{publicID}/members/{userPublicID}/revoke", h.BookMemberRevoke)
 
 		r.Get("/contacts/{publicID}", h.ContactShow)
 		r.Get("/contacts/{publicID}/edit", h.ContactEdit)
@@ -96,6 +103,19 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Get("/contacts/{publicID}/shares", h.ContactShares)
 		r.Post("/contacts/{publicID}/shares", h.ContactShareCreate)
 		r.Post("/contacts/{publicID}/shares/{shareID}/revoke", h.ContactShareRevoke)
+	})
+
+	// Admin-only user management. RequireAdmin returns 404 for non-admins
+	// (including anonymous), so the surface is not revealed.
+	r.Group(func(r chi.Router) {
+		r.Use(authenticator.RequireAdmin)
+		r.Get("/admin/users", h.AdminUsersList)
+		r.Get("/admin/users/new", h.AdminUserNew)
+		r.Post("/admin/users", h.AdminUserCreate)
+		r.Get("/admin/users/{publicID}/edit", h.AdminUserEdit)
+		r.Post("/admin/users/{publicID}/edit", h.AdminUserUpdate)
+		r.Post("/admin/users/{publicID}/password", h.AdminUserPassword)
+		r.Post("/admin/users/{publicID}/delete", h.AdminUserDelete)
 	})
 
 	// Public share routes — outside RequireAuth (LoadUser still applies so the

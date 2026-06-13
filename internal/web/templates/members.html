@@ -1,0 +1,59 @@
+{{define "title"}}Members · Skrá{{end}}
+{{define "content"}}
+<p><a href="{{.BackURL}}">← {{.Book.Name}}</a></p>
+<h1>Members — {{.Book.Name}}</h1>
+{{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
+
+{{if .Members}}
+<table>
+  <thead><tr><th>Username</th><th>Email</th><th>Access</th><th></th></tr></thead>
+  <tbody>
+  {{range .Members}}
+  <tr>
+    <td>{{.Username}}</td>
+    <td>{{.Email}}</td>
+    <td>{{.Level}}{{if .IsOwner}} (owner){{end}}</td>
+    <td>
+      {{if not .IsOwner}}
+      <form method="post" action="{{.RevokeURL}}">
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+        <button class="btn-secondary" type="submit">Revoke</button>
+      </form>
+      {{end}}
+    </td>
+  </tr>
+  {{end}}
+  </tbody>
+</table>
+{{else}}
+<p class="muted">No members yet.</p>
+{{end}}
+
+<h2>Grant access to an existing user</h2>
+<form class="stack" method="post" action="{{.AddURL}}" autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <label>Username <input type="text" name="username" required></label>
+  <label>Access
+    <select name="level">
+      <option value="viewer">viewer</option>
+      <option value="manager">manager</option>
+    </select>
+  </label>
+  <button type="submit">Grant access</button>
+</form>
+
+<h2>Create a new user for this book</h2>
+<form class="stack" method="post" action="{{.CreateURL}}" autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <label>Username <input type="text" name="username" required></label>
+  <label>Email <input type="email" name="email" required></label>
+  <label>Password <input type="password" name="password" required></label>
+  <label>Access
+    <select name="level">
+      <option value="viewer">viewer</option>
+      <option value="manager">manager</option>
+    </select>
+  </label>
+  <button type="submit">Create and grant</button>
+</form>
+{{end}}
