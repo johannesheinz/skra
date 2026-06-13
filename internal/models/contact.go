@@ -1,7 +1,6 @@
 package models
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"database/sql"
@@ -10,10 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/emersion/go-vcard"
-
 	"github.com/johannesheinz/skra/internal/db"
 	"github.com/johannesheinz/skra/internal/ids"
+	"github.com/johannesheinz/skra/internal/vcardio"
 )
 
 // ErrContactNotFound is returned when a contact lookup matches no row.
@@ -34,30 +32,65 @@ type Contact struct {
 	ETag          string
 }
 
-// ContactInput carries the editable fields of a contact.
+// ContactInput carries the editable fields of a contact. It supports the rich
+// model (name components plus multi-value emails/phones/addresses) and keeps a
+// couple of legacy convenience fields (FullName, PrimaryEmail, PrimaryPhone) so
+// simple callers and tests stay terse.
 type ContactInput struct {
-	FullName     string
-	Org          string
+	GivenName  string
+	FamilyName string
+	FullName   string // explicit display name, used when name components are absent
+	Org        string
+	Title      string
+	Birthday   string
+	Note       string
+	Emails     []vcardio.Typed
+	Phones     []vcardio.Typed
+	Addresses  []vcardio.Address
+	URLs       []string
+
+	// Legacy convenience: folded into Emails/Phones when those are empty.
 	PrimaryEmail string
 	PrimaryPhone string
 }
 
-func (in ContactInput) normalized() ContactInput {
-	return ContactInput{
-		FullName:     strings.TrimSpace(in.FullName),
-		Org:          strings.TrimSpace(in.Org),
-		PrimaryEmail: strings.TrimSpace(in.PrimaryEmail),
-		PrimaryPhone: strings.TrimSpace(in.PrimaryPhone),
-	}
+// Details converts the input to its rich vCard representation (also used to
+// re-render the form after a validation error).
+func (in ContactInput) Details() vcardio.Details {
+	return in.toDetails()
 }
 
-// CreateContact inserts a contact into a book using the hybrid write path: it
-// stores the structured columns and a freshly generated vcard_raw, with a stable
-// uid and a new etag.
+func (in ContactInput) toDetails() vcardio.Details {
+	d := vcardio.Details{
+		GivenName:     strings.TrimSpace(in.GivenName),
+		FamilyName:    strings.TrimSpace(in.FamilyName),
+		FormattedName: strings.TrimSpace(in.FullName),
+		Org:           strings.TrimSpace(in.Org),
+		Title:         strings.TrimSpace(in.Title),
+		Birthday:      strings.TrimSpace(in.Birthday),
+		Note:          strings.TrimSpace(in.Note),
+		Emails:        in.Emails,
+		Phones:        in.Phones,
+		Addresses:     in.Addresses,
+		URLs:          in.URLs,
+	}
+	if len(d.Emails) == 0 && strings.TrimSpace(in.PrimaryEmail) != "" {
+		d.Emails = []vcardio.Typed{{Value: strings.TrimSpace(in.PrimaryEmail)}}
+	}
+	if len(d.Phones) == 0 && strings.TrimSpace(in.PrimaryPhone) != "" {
+		d.Phones = []vcardio.Typed{{Value: strings.TrimSpace(in.PrimaryPhone)}}
+	}
+	return d
+}
+
+// CreateContact inserts a contact via the hybrid write path: the full record is
+// encoded into vcard_raw while the structured columns (display name, primary
+// email/phone) are denormalized for listing and search. uid is stable; etag new.
 func CreateContact(ctx context.Context, d *db.DB, addressBookID int64, in ContactInput) (Contact, error) {
-	in = in.normalized()
-	if in.FullName == "" {
-		return Contact{}, fmt.Errorf("models: contact full name must not be empty")
+	details := in.toDetails()
+	name := details.DisplayName()
+	if name == "" {
+		return Contact{}, fmt.Errorf("models: contact must have a name")
 	}
 	publicID, err := ids.NewPublicID()
 	if err != nil {
@@ -71,17 +104,17 @@ func CreateContact(ctx context.Context, d *db.DB, addressBookID int64, in Contac
 	if err != nil {
 		return Contact{}, err
 	}
-	vcardRaw, err := buildVCard(in, uid)
+	vcardRaw, err := vcardio.Encode(details, uid)
 	if err != nil {
-		return Contact{}, err
+		return Contact{}, fmt.Errorf("models: encode vcard: %w", err)
 	}
 
 	res, err := d.ExecWrite(ctx,
 		`INSERT INTO contacts
 		   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag)
 		 VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
-		publicID, addressBookID, in.FullName, nullString(in.Org), nullString(in.PrimaryEmail),
-		nullString(in.PrimaryPhone), vcardRaw, uid, etag)
+		publicID, addressBookID, name, nullString(details.Org), nullString(details.PrimaryEmail()),
+		nullString(details.PrimaryPhone()), vcardRaw, uid, etag)
 	if err != nil {
 		return Contact{}, fmt.Errorf("models: insert contact: %w", err)
 	}
@@ -92,7 +125,7 @@ func CreateContact(ctx context.Context, d *db.DB, addressBookID int64, in Contac
 
 	return Contact{
 		ID: id, PublicID: publicID, AddressBookID: addressBookID,
-		FullName: in.FullName, Org: in.Org, PrimaryEmail: in.PrimaryEmail, PrimaryPhone: in.PrimaryPhone,
+		FullName: name, Org: details.Org, PrimaryEmail: details.PrimaryEmail(), PrimaryPhone: details.PrimaryPhone(),
 		UID: uid, ETag: etag,
 	}, nil
 }
@@ -100,29 +133,59 @@ func CreateContact(ctx context.Context, d *db.DB, addressBookID int64, in Contac
 // UpdateContact rewrites a contact's fields, regenerating vcard_raw and bumping
 // the etag while preserving the stable uid.
 func UpdateContact(ctx context.Context, d *db.DB, contact Contact, in ContactInput) error {
-	in = in.normalized()
-	if in.FullName == "" {
-		return fmt.Errorf("models: contact full name must not be empty")
+	details := in.toDetails()
+	name := details.DisplayName()
+	if name == "" {
+		return fmt.Errorf("models: contact must have a name")
 	}
 	etag, err := ids.Random(16)
 	if err != nil {
 		return err
 	}
-	vcardRaw, err := buildVCard(in, contact.UID)
+	vcardRaw, err := vcardio.Encode(details, contact.UID)
 	if err != nil {
-		return err
+		return fmt.Errorf("models: encode vcard: %w", err)
 	}
 	_, err = d.ExecWrite(ctx,
 		`UPDATE contacts
 		    SET full_name = ?, org = ?, primary_email = ?, primary_phone = ?,
 		        vcard_raw = ?, etag = ?, updated_at = datetime('now')
 		  WHERE id = ?`,
-		in.FullName, nullString(in.Org), nullString(in.PrimaryEmail), nullString(in.PrimaryPhone),
+		name, nullString(details.Org), nullString(details.PrimaryEmail()), nullString(details.PrimaryPhone()),
 		vcardRaw, etag, contact.ID)
 	if err != nil {
 		return fmt.Errorf("models: update contact: %w", err)
 	}
 	return nil
+}
+
+// GetContactDetails loads a contact and its parsed rich Details (from vcard_raw)
+// for the detail and edit views.
+func GetContactDetails(ctx context.Context, d *db.DB, publicID string) (Contact, vcardio.Details, error) {
+	var c Contact
+	var org, email, phone sql.NullString
+	var hasPhoto int64
+	var vcardRaw string
+	err := d.QueryRowContext(ctx,
+		`SELECT id, public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, uid, etag, vcard_raw
+		 FROM contacts WHERE public_id = ?`, publicID).
+		Scan(&c.ID, &c.PublicID, &c.AddressBookID, &c.FullName, &org, &email, &phone, &hasPhoto, &c.UID, &c.ETag, &vcardRaw)
+	if errors.Is(err, sql.ErrNoRows) {
+		return Contact{}, vcardio.Details{}, ErrContactNotFound
+	}
+	if err != nil {
+		return Contact{}, vcardio.Details{}, fmt.Errorf("models: get contact details: %w", err)
+	}
+	c.Org = org.String
+	c.PrimaryEmail = email.String
+	c.PrimaryPhone = phone.String
+	c.HasPhoto = hasPhoto != 0
+
+	details, err := vcardio.Parse(vcardRaw)
+	if err != nil {
+		return Contact{}, vcardio.Details{}, fmt.Errorf("models: parse contact vcard: %w", err)
+	}
+	return c, details, nil
 }
 
 // DeleteContact removes a contact; its photo cascades.
@@ -269,29 +332,6 @@ func scanContact(row rowScanner) (Contact, error) {
 	c.PrimaryPhone = phone.String
 	c.HasPhoto = hasPhoto != 0
 	return c, nil
-}
-
-// buildVCard renders the structured fields into a canonical vCard 4.0 string.
-func buildVCard(in ContactInput, uid string) (string, error) {
-	card := vcard.Card{}
-	card.SetValue(vcard.FieldFormattedName, in.FullName)
-	if in.Org != "" {
-		card.SetValue(vcard.FieldOrganization, in.Org)
-	}
-	if in.PrimaryEmail != "" {
-		card.SetValue(vcard.FieldEmail, in.PrimaryEmail)
-	}
-	if in.PrimaryPhone != "" {
-		card.SetValue(vcard.FieldTelephone, in.PrimaryPhone)
-	}
-	card.SetValue(vcard.FieldUID, uid)
-	vcard.ToV4(card)
-
-	var buf bytes.Buffer
-	if err := vcard.NewEncoder(&buf).Encode(card); err != nil {
-		return "", fmt.Errorf("models: encode vcard: %w", err)
-	}
-	return buf.String(), nil
 }
 
 // --- Photo metadata/bytes (used by the photo-serving endpoint) ---
