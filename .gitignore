@@ -1,0 +1,22 @@
+# Compiled binary (built via `go build -o skra .`)
+/skra
+
+# SQLite data files
+*.db
+*.db-wal
+*.db-shm
+
+# Local environment / secrets
+skra.env
+*.env
+!skra.env.example
+
+# Go build/test artifacts
+*.test
+*.out
+/dist/
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
