@@ -8,10 +8,13 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
+	"github.com/johannesheinz/skra/internal/auth"
 	"github.com/johannesheinz/skra/internal/config"
 	"github.com/johannesheinz/skra/internal/db"
+	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/web"
 )
 
@@ -24,15 +27,27 @@ func main() {
 
 func run(args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("usage: skra <command>\n\ncommands:\n  serve    run the HTTP server")
+		return usageError()
 	}
 
 	switch args[1] {
 	case "serve":
 		return serve()
+	case "create-admin":
+		return createAdmin()
 	default:
-		return fmt.Errorf("unknown command %q (try: serve)", args[1])
+		return fmt.Errorf("unknown command %q\n\n%s", args[1], usage())
 	}
+}
+
+func usage() string {
+	return "usage: skra <command>\n\ncommands:\n" +
+		"  serve          run the HTTP server\n" +
+		"  create-admin   create the initial admin account (first-run bootstrap)"
+}
+
+func usageError() error {
+	return fmt.Errorf("%s", usage())
 }
 
 func serve() error {
@@ -50,8 +65,67 @@ func serve() error {
 	defer database.Close()
 	logger.Info("database ready", "path", cfg.DBPath)
 
+	server, err := web.New(cfg, database, logger)
+	if err != nil {
+		return err
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	return web.New(cfg.Listen, logger).Run(ctx)
+	return server.Run(ctx)
+}
+
+// createAdmin bootstraps the first admin account. It reads credentials from the
+// environment, refuses to run on a database that already has users, and uses
+// only SKRA_DB_PATH (not the full serve configuration).
+func createAdmin() error {
+	dbPath := strings.TrimSpace(os.Getenv("SKRA_DB_PATH"))
+	username := strings.TrimSpace(os.Getenv("SKRA_ADMIN_USERNAME"))
+	email := strings.TrimSpace(os.Getenv("SKRA_ADMIN_EMAIL"))
+	password := os.Getenv("SKRA_ADMIN_PASSWORD")
+
+	var missing []string
+	if dbPath == "" {
+		missing = append(missing, "SKRA_DB_PATH")
+	}
+	if username == "" {
+		missing = append(missing, "SKRA_ADMIN_USERNAME")
+	}
+	if email == "" {
+		missing = append(missing, "SKRA_ADMIN_EMAIL")
+	}
+	if password == "" {
+		missing = append(missing, "SKRA_ADMIN_PASSWORD")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("create-admin requires: %s", strings.Join(missing, ", "))
+	}
+
+	database, err := db.Open(dbPath)
+	if err != nil {
+		return err
+	}
+	defer database.Close()
+
+	ctx := context.Background()
+	count, err := models.CountUsers(ctx, database)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return fmt.Errorf("refusing to bootstrap: database already has %d user(s)", count)
+	}
+
+	hash, err := auth.HashPassword(password)
+	if err != nil {
+		return err
+	}
+	user, err := models.CreateUser(ctx, database, username, email, hash, models.RoleAdmin)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("created admin %q (public_id %s)\n", user.Username, user.PublicID)
+	return nil
 }

@@ -1,12 +1,14 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"path/filepath"
+	"sync"
 	"testing"
 )
 
-func openTestDB(t *testing.T) (*sql.DB, string) {
+func openTestDB(t *testing.T) (*DB, string) {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "skra.db")
 	database, err := Open(path)
@@ -114,6 +116,52 @@ func TestMigrationsAreIdempotent(t *testing.T) {
 	}
 	if count != 1 {
 		t.Errorf("schema_migrations row count = %d, want 1", count)
+	}
+}
+
+func TestConcurrentWritesAreSerialized(t *testing.T) {
+	database, _ := openTestDB(t)
+	ctx := context.Background()
+
+	if _, err := database.ExecWrite(ctx, "CREATE TABLE counter (n INTEGER NOT NULL)"); err != nil {
+		t.Fatalf("create table: %v", err)
+	}
+	if _, err := database.ExecWrite(ctx, "INSERT INTO counter (n) VALUES (0)"); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	const goroutines, perGoroutine = 8, 50
+	var wg sync.WaitGroup
+	for g := 0; g < goroutines; g++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < perGoroutine; i++ {
+				// A read-modify-write inside one serialized tx; if writes were
+				// not serialized this would lose updates or hit lock errors.
+				err := database.Write(ctx, func(tx *sql.Tx) error {
+					var n int
+					if err := tx.QueryRow("SELECT n FROM counter").Scan(&n); err != nil {
+						return err
+					}
+					_, err := tx.Exec("UPDATE counter SET n = ?", n+1)
+					return err
+				})
+				if err != nil {
+					t.Errorf("write: %v", err)
+					return
+				}
+			}
+		}()
+	}
+	wg.Wait()
+
+	var n int
+	if err := database.QueryRow("SELECT n FROM counter").Scan(&n); err != nil {
+		t.Fatalf("final read: %v", err)
+	}
+	if want := goroutines * perGoroutine; n != want {
+		t.Errorf("counter = %d, want %d (lost updates indicate writes were not serialized)", n, want)
 	}
 }
 

@@ -1,6 +1,6 @@
 // Package config loads and validates Skra's runtime configuration from the
-// environment. Per project policy there are no silent defaults: a missing or
-// empty required variable is a startup error.
+// environment. Per project policy there are no silent defaults: a missing,
+// empty, or malformed required variable is a startup error.
 package config
 
 import (
@@ -15,33 +15,57 @@ type Config struct {
 	Listen string
 	// DBPath is the SQLite file location.
 	DBPath string
+	// CookieSecure sets the Secure flag on cookies. It must be derived from the
+	// external scheme, not the internal HTTP connection: the app sees plain
+	// HTTP behind a TLS-terminating proxy, so naive code would emit non-Secure
+	// cookies on an HTTPS site.
+	CookieSecure bool
 }
 
-// envKeys are the environment variables read at startup.
 const (
-	envListen = "SKRA_LISTEN"
-	envDBPath = "SKRA_DB_PATH"
+	envListen       = "SKRA_LISTEN"
+	envDBPath       = "SKRA_DB_PATH"
+	envCookieSecure = "SKRA_COOKIE_SECURE"
 )
 
-// Load reads configuration from the environment and validates it.
-// It returns an error naming every missing required variable rather than
-// falling back to a default.
+// Load reads configuration from the environment and validates it. It returns an
+// error describing every problem found rather than falling back to a default.
 func Load() (Config, error) {
-	var missing []string
+	var problems []string
 
 	listen := strings.TrimSpace(os.Getenv(envListen))
 	if listen == "" {
-		missing = append(missing, envListen)
+		problems = append(problems, "missing "+envListen)
 	}
 
 	dbPath := strings.TrimSpace(os.Getenv(envDBPath))
 	if dbPath == "" {
-		missing = append(missing, envDBPath)
+		problems = append(problems, "missing "+envDBPath)
 	}
 
-	if len(missing) > 0 {
-		return Config{}, fmt.Errorf("missing required environment variables: %s", strings.Join(missing, ", "))
+	cookieSecure, err := parseBool(envCookieSecure)
+	if err != nil {
+		problems = append(problems, err.Error())
 	}
 
-	return Config{Listen: listen, DBPath: dbPath}, nil
+	if len(problems) > 0 {
+		return Config{}, fmt.Errorf("invalid configuration: %s", strings.Join(problems, "; "))
+	}
+
+	return Config{Listen: listen, DBPath: dbPath, CookieSecure: cookieSecure}, nil
+}
+
+// parseBool requires the variable to be exactly "true" or "false" — there is no
+// default, and any other value (including empty) is an error.
+func parseBool(key string) (bool, error) {
+	switch strings.TrimSpace(os.Getenv(key)) {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
+	case "":
+		return false, fmt.Errorf("missing %s", key)
+	default:
+		return false, fmt.Errorf("%s must be \"true\" or \"false\"", key)
+	}
 }

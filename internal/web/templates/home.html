@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Skrá</title>
+</head>
+<body>
+  <main>
+    <h1>Skrá</h1>
+    <p>Signed in as <strong>{{.Username}}</strong> ({{.Role}}).</p>
+    <form method="post" action="/logout">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <button type="submit">Sign out</button>
+    </form>
+  </main>
+</body>
+</html>

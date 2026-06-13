@@ -11,6 +11,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/johannesheinz/skra/internal/auth"
+	"github.com/johannesheinz/skra/internal/config"
+	"github.com/johannesheinz/skra/internal/db"
 	"github.com/johannesheinz/skra/internal/web/handlers"
 )
 
@@ -20,26 +23,53 @@ type Server struct {
 	logger     *slog.Logger
 }
 
-// New builds a Server bound to addr with the application routes mounted.
-func New(addr string, logger *slog.Logger) *Server {
+// New builds a Server from configuration, the open database, and a logger.
+func New(cfg config.Config, database *db.DB, logger *slog.Logger) (*Server, error) {
+	router, err := buildRouter(cfg, database, logger)
+	if err != nil {
+		return nil, err
+	}
 	return &Server{
 		httpServer: &http.Server{
-			Addr:              addr,
-			Handler:           router(logger),
+			Addr:              cfg.Listen,
+			Handler:           router,
 			ReadHeaderTimeout: 10 * time.Second,
 		},
 		logger: logger,
-	}
+	}, nil
 }
 
-func router(logger *slog.Logger) http.Handler {
+func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.Handler, error) {
+	sessions := auth.NewSessionStore(database)
+	authenticator := &auth.Authenticator{
+		Sessions:  sessions,
+		DB:        database,
+		Logger:    logger,
+		LoginPath: "/login",
+	}
+	h, err := handlers.New(database, sessions, cfg.CookieSecure, logger)
+	if err != nil {
+		return nil, err
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(authenticator.LoadUser)
 
 	r.Get("/healthz", handlers.Health)
-	return r
+	r.Get("/login", h.LoginForm)
+	r.Post("/login", h.Login)
+	r.Post("/logout", h.Logout)
+
+	r.Group(func(r chi.Router) {
+		r.Use(authenticator.RequireAuth)
+		r.Get("/", h.Home)
+		r.Get("/contacts/{publicID}/photo", h.ContactPhoto)
+	})
+
+	return r, nil
 }
 
 // Run starts the server and blocks until ctx is cancelled, then shuts down

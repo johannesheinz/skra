@@ -6,13 +6,11 @@
 
 ## Status
 
-Early development. **Phase 0 (skeleton)** is implemented:
+Early development.
 
-- Single static, CGO-free binary (`modernc.org/sqlite`, pure Go).
-- SQLite open with mandated pragmas (`WAL`, `busy_timeout`, `foreign_keys`, `synchronous=NORMAL`) and `INCREMENTAL auto_vacuum` set on a fresh database.
-- Embedded migration runner (`schema_migrations`-tracked) applying the initial schema.
-- `chi` HTTP router with structured `log/slog` logging, graceful shutdown, and a `GET /healthz` liveness endpoint.
-- `skra serve` CLI command.
+**Phase 0 (skeleton)** — single static CGO-free binary; SQLite open with mandated pragmas (`WAL`, `busy_timeout`, `foreign_keys`, `synchronous=NORMAL`) and `INCREMENTAL auto_vacuum` on a fresh database; embedded migration runner (`schema_migrations`-tracked); `chi` router with `log/slog` logging, graceful shutdown, and `GET /healthz`; `skra serve`.
+
+**Phase 1 (data & auth)** — argon2id password hashing (PHC-encoded, with lazy rehash on login); server-side sessions with HttpOnly/SameSite cookies whose `Secure` flag is config-driven; double-submit CSRF on the auth forms; the `can(user, book, action)` RBAC resolver with 404-not-403 semantics; random `public_id` generation; serialized SQLite writes; a contact-photo endpoint with strong ETag and conditional-GET (304); and `skra create-admin` first-run bootstrap.
 
 See [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) for the full specification and roadmap.
 
@@ -31,12 +29,17 @@ CGO_ENABLED=0 go build -o skra .
 cp skra.env.example skra.env
 set -a && . ./skra.env && set +a
 
+# Create the initial admin account (first run only; refuses if users exist).
+./skra create-admin
+
 # Run.
 ./skra serve
 
 # Liveness check.
 curl http://127.0.0.1:3000/healthz
 ```
+
+Then open `/login` and sign in with the bootstrapped admin credentials.
 
 ## Configuration
 
@@ -46,8 +49,9 @@ All configuration comes from the environment; there are no fallback defaults, so
 |---|---|---|
 | `SKRA_LISTEN` | `127.0.0.1:3000` | Internal bind address (localhost-only behind a proxy) |
 | `SKRA_DB_PATH` | `/var/lib/skra/skra.db` | SQLite file location (created on first run) |
+| `SKRA_COOKIE_SECURE` | `true` | `Secure` cookie flag; drive from the external scheme, must be `true`/`false` |
 
-Additional `SKRA_*` variables (external URL, session key, trusted proxies, etc.) arrive in later phases.
+`skra create-admin` additionally reads `SKRA_ADMIN_USERNAME`, `SKRA_ADMIN_EMAIL`, and `SKRA_ADMIN_PASSWORD` (used once, then removable). Additional `SKRA_*` variables (external URL, session signing key, trusted proxies, etc.) arrive in later phases.
 
 ## Docker
 
@@ -56,6 +60,7 @@ docker build -t skra .
 docker run --rm -p 3000:3000 \
   -e SKRA_LISTEN=0.0.0.0:3000 \
   -e SKRA_DB_PATH=/var/lib/skra/skra.db \
+  -e SKRA_COOKIE_SECURE=false \
   -v skra-data:/var/lib/skra \
   skra
 ```
@@ -72,14 +77,20 @@ go test ./...
 
 ```
 skra/
-├── main.go                 # CLI dispatch (`skra serve`)
+├── main.go                 # CLI dispatch (serve, create-admin)
 ├── Dockerfile
 └── internal/
     ├── config/             # SKRA_* env loading + validation
-    ├── db/                 # open, pragmas, auto_vacuum, embedded migrations
+    ├── ids/                # public_id / session / token generation
+    ├── db/                 # open, pragmas, auto_vacuum, migrations, write serialization
     │   └── migrations/     # *.sql applied by the runner
+    ├── auth/               # argon2id, sessions, cookies, CSRF, middleware
+    ├── rbac/               # can(user, book, action) resolver
+    ├── models/             # users, grants, contact photos (data access)
+    ├── testutil/           # shared test helpers
     └── web/                # chi router, server lifecycle
-        └── handlers/       # HTTP handlers (/healthz)
+        ├── handlers/       # HTTP handlers (healthz, login/logout, photo)
+        └── templates/      # embedded html/template
 ```
 
 ## License

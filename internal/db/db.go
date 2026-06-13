@@ -9,9 +9,19 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"sync"
 
 	_ "modernc.org/sqlite"
 )
+
+// DB wraps the connection pool with a write mutex. SQLite is single-writer;
+// reads run concurrently against the pool (WAL), while every write goes through
+// Write/ExecWrite, which serialize via writeMu to avoid "database is locked"
+// contention. Read methods are promoted from the embedded *sql.DB.
+type DB struct {
+	*sql.DB
+	writeMu sync.Mutex
+}
 
 // connectionPragmas are applied to every connection in the pool via the DSN.
 // journal_mode is persisted in the database header; the others are per-connection
@@ -30,8 +40,8 @@ var connectionPragmas = []string{
 
 // Open opens (creating if absent) the SQLite database at path, applies pragmas,
 // sets INCREMENTAL auto_vacuum on a brand-new database, and runs all pending
-// migrations. The returned *sql.DB is ready for use; the caller owns closing it.
-func Open(path string) (*sql.DB, error) {
+// migrations. The caller owns closing the returned DB.
+func Open(path string) (*DB, error) {
 	if path == "" {
 		return nil, fmt.Errorf("db path must not be empty")
 	}
@@ -41,38 +51,64 @@ func Open(path string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	db, err := sql.Open("sqlite", dsn(path))
+	pool, err := sql.Open("sqlite", dsn(path))
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
 
-	if err := db.Ping(); err != nil {
-		db.Close()
+	if err := pool.Ping(); err != nil {
+		pool.Close()
 		return nil, fmt.Errorf("ping sqlite: %w", err)
 	}
 
 	if fresh {
-		if err := initAutoVacuum(db); err != nil {
-			db.Close()
+		if err := initAutoVacuum(pool); err != nil {
+			pool.Close()
 			return nil, err
 		}
 	}
 
-	if err := migrate(db); err != nil {
-		db.Close()
+	if err := migrate(pool); err != nil {
+		pool.Close()
 		return nil, fmt.Errorf("migrate: %w", err)
 	}
 
-	return db, nil
+	return &DB{DB: pool}, nil
+}
+
+// Write runs fn inside a serialized write transaction. The mutex guarantees a
+// single application writer at a time; the transaction is rolled back on error
+// and committed otherwise.
+func (d *DB) Write(ctx context.Context, fn func(*sql.Tx) error) error {
+	d.writeMu.Lock()
+	defer d.writeMu.Unlock()
+
+	tx, err := d.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin write tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	if err := fn(tx); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// ExecWrite runs a single serialized write statement.
+func (d *DB) ExecWrite(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	d.writeMu.Lock()
+	defer d.writeMu.Unlock()
+	return d.DB.ExecContext(ctx, query, args...)
 }
 
 // initAutoVacuum sets INCREMENTAL auto_vacuum and forces it into the database
 // header with a VACUUM. Both statements must run on the same connection, so a
 // single connection is pinned for the operation. VACUUM persists the mode even
 // though the DSN has already switched the file to WAL.
-func initAutoVacuum(db *sql.DB) error {
+func initAutoVacuum(pool *sql.DB) error {
 	ctx := context.Background()
-	conn, err := db.Conn(ctx)
+	conn, err := pool.Conn(ctx)
 	if err != nil {
 		return fmt.Errorf("pin connection for auto_vacuum: %w", err)
 	}
