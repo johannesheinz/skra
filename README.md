@@ -24,6 +24,8 @@ Early development.
 
 **Rich contact fields** — contacts hold first/last name, multiple typed emails/phones, multiple postal addresses, links, organization, title, birthday, and note. The edit form has repeatable rows (htmx); everything round-trips through `vcard_raw` (the source of truth) with the structured columns kept as a listing/search cache, so editing no longer drops imported multi-value data.
 
+**Phase 5c (backups & ops)** — `skra backup --out <path>` writes a consistent `VACUUM INTO` snapshot; startup auto-snapshots an existing database before applying pending migrations; `GET /readyz` adds a DB readiness check next to `/healthz`. Rotation/encryption/offsite/systemd/monitoring are documented in [`docs/02_skra-operations.md`](docs/02_skra-operations.md).
+
 See [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) for the full specification and roadmap, and [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md) for conventions.
 
 ## Requirements
