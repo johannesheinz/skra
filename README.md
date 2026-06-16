@@ -91,15 +91,21 @@ The image is a non-root `distroless/static` runtime containing only the binary.
 go test ./...
 ```
 
-## Demo data
+## Local development
 
-Seed a throwaway database with users, books, and rich contacts (for demos/development only — never against production):
+One command builds the binary, resets and seeds a demo database, prints the credentials, and starts the server:
+
+```sh
+./scripts/dev.sh
+```
+
+Then open http://127.0.0.1:3000 and sign in as `admin` (or `alice`/`bob`/`carol`/`dave`), password `demo-password-123`. Each run resets the demo data; override any setting by exporting it first (e.g. `SKRA_LISTEN=127.0.0.1:4000 SKRA_DEMO_CONTACTS=300 ./scripts/dev.sh`). Dev-only — cookies aren't Secure and the session key is a well-known value.
+
+To seed a database without running the server:
 
 ```sh
 go run ./scripts/seed --db skra-demo.db
 ```
-
-It prints the demo credentials and a ready-to-run `skra serve` command. Logins: `admin` / `alice` / `bob`, password `demo-password-123`.
 
 ## Project layout
 
