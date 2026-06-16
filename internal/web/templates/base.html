@@ -4,27 +4,51 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
   <title>{{block "title" .}}Skrá{{end}}</title>
   <link rel="icon" type="image/svg+xml" href="{{static "img/skra-favicon.svg"}}">
+  <script src="{{static "js/theme.js"}}"></script>
   <link rel="stylesheet" href="{{static "css/app.css"}}">
   <script src="{{static "js/htmx-v2.0.9.min.js"}}" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="appbar">
-    <a class="brand" href="/">Skrá</a>
-    {{with .User}}
-    <nav class="appnav">
-      <a href="/books">Address books</a>
-      {{if eq .Role "admin"}}<a href="/admin/users">Users</a>{{end}}
-      <a href="/account/password">{{.Username}}</a>
-      <form method="post" action="/logout">
-        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
-        <button class="btn-secondary" type="submit">Sign out</button>
-      </form>
-    </nav>
-    {{end}}
+    <a class="brand" href="/" aria-label="Skrá — home">
+      <svg class="brand-mark" viewBox="0 0 104 80" fill="none" aria-hidden="true">
+        <rect x="6" y="10" width="92" height="60" rx="12" fill="none" stroke="currentColor" stroke-width="4"/>
+        <circle cx="26" cy="35" r="8" fill="currentColor"/>
+        <path d="M14 58 Q14 46 26 46 Q38 46 38 58 Z" fill="currentColor"/>
+        <g transform="translate(8.226,108.107) scale(0.1050,-0.1050)" fill="currentColor">
+          <path d="M216.899169921875 553.39990234375 292.299072265625 695.80029296875H411.20068359375L310.100341796875 553.39990234375Z"/>
+        </g>
+        <rect x="60" y="31" width="30" height="5" rx="2.5" fill="currentColor"/>
+        <rect x="60" y="43" width="22" height="5" rx="2.5" fill="currentColor"/>
+        <rect x="60" y="55" width="26" height="5" rx="2.5" fill="currentColor"/>
+      </svg>
+      <span class="brand-word">Skrá</span>
+    </a>
+    <div class="appbar-right">
+      {{with .User}}
+      <nav class="appnav">
+        <a href="/books">Address books</a>
+        {{if eq .Role "admin"}}<a href="/admin/users">Users</a>{{end}}
+        <a href="/account/password">{{.Username}}</a>
+        <form method="post" action="/logout">
+          <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+          <button class="btn-secondary" type="submit">Sign out</button>
+        </form>
+      </nav>
+      {{end}}
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light or dark theme" title="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 3a9 9 0 000 18z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
   </header>
-  <main class="container stack">
+  <main id="main" class="container stack">
     {{block "content" .}}{{end}}
   </main>
 </body>
