@@ -207,6 +207,53 @@ func GetContactByPublicID(ctx context.Context, d *db.DB, publicID string) (Conta
 	return c, err
 }
 
+// RecentContact is a recently-added contact with its book, for the dashboard.
+type RecentContact struct {
+	PublicID     string
+	FullName     string
+	HasPhoto     bool
+	BookName     string
+	BookPublicID string
+}
+
+// RecentContactsForUser returns the most recently created contacts across the
+// books a user may see (admins see all), newest first.
+func RecentContactsForUser(ctx context.Context, d *db.DB, user User, limit int) ([]RecentContact, error) {
+	const base = `SELECT c.public_id, c.full_name, c.has_photo, ab.name, ab.public_id
+		FROM contacts c JOIN address_books ab ON ab.id = c.address_book_id`
+	var (
+		rows *sql.Rows
+		err  error
+	)
+	if user.Role == RoleAdmin {
+		rows, err = d.QueryContext(ctx, base+` ORDER BY c.created_at DESC, c.id DESC LIMIT ?`, limit)
+	} else {
+		rows, err = d.QueryContext(ctx, base+`
+			WHERE ab.owner_id = ?
+			   OR EXISTS (SELECT 1 FROM address_book_members m WHERE m.address_book_id = ab.id AND m.user_id = ?)
+			ORDER BY c.created_at DESC, c.id DESC LIMIT ?`, user.ID, user.ID, limit)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("models: recent contacts: %w", err)
+	}
+	defer rows.Close()
+
+	var out []RecentContact
+	for rows.Next() {
+		var rc RecentContact
+		var hasPhoto int64
+		if err := rows.Scan(&rc.PublicID, &rc.FullName, &hasPhoto, &rc.BookName, &rc.BookPublicID); err != nil {
+			return nil, fmt.Errorf("models: scan recent contact: %w", err)
+		}
+		rc.HasPhoto = hasPhoto != 0
+		out = append(out, rc)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("models: iterate recent contacts: %w", err)
+	}
+	return out, nil
+}
+
 // GetContactByID resolves a contact by its internal id.
 func GetContactByID(ctx context.Context, d *db.DB, id int64) (Contact, error) {
 	c, err := scanContact(d.QueryRowContext(ctx,

@@ -1,6 +1,47 @@
 {{define "title"}}Skrá{{end}}
 {{define "content"}}
-<h1>Welcome</h1>
-<p class="muted">Signed in as {{.User.Username}} ({{.User.Role}}).</p>
-<p><a class="btn" href="/books">Go to address books</a></p>
+<h1>Welcome, {{.User.Username}}</h1>
+
+<div class="stats">
+  <div class="stat"><span class="stat-num">{{.TotalContacts}}</span><span class="stat-label">Contacts</span></div>
+  <div class="stat"><span class="stat-num">{{.BookCount}}</span><span class="stat-label">Address books</span></div>
+</div>
+
+<div class="actions">
+  <a class="btn" href="/books/new">{{icon "plus"}} New address book</a>
+  <a class="btn btn-secondary" href="/books">{{icon "book-open"}} All address books</a>
+</div>
+
+<h2>Your address books</h2>
+{{if .Books}}
+<ul class="card-grid">
+  {{range .Books}}
+  <li class="contact-card">
+    <a class="contact-card-head" href="/books/{{.PublicID}}">{{icon "book-open"}} <span class="contact-card-name">{{.Name}}</span></a>
+    <span class="muted">{{.ContactCount}} contact{{if ne .ContactCount 1}}s{{end}}</span>
+  </li>
+  {{end}}
+</ul>
+{{else}}
+<p class="muted">No address books yet. <a href="/books/new">Create your first</a>.</p>
+{{end}}
+
+{{if .Recent}}
+<h2>Recently added</h2>
+<ul class="recent-list">
+  {{range .Recent}}
+  <li>
+    <a class="recent-item" href="/contacts/{{.PublicID}}">
+      {{if .HasPhoto}}
+      <img class="avatar avatar-sm" src="/contacts/{{.PublicID}}/photo" alt="" width="52" height="52">
+      {{else}}
+      <span class="avatar avatar-sm avatar-placeholder" aria-hidden="true">{{initial .FullName}}</span>
+      {{end}}
+      <span class="recent-name">{{.FullName}}</span>
+    </a>
+    <a class="muted" href="/books/{{.BookPublicID}}">{{.BookName}}</a>
+  </li>
+  {{end}}
+</ul>
+{{end}}
 {{end}}

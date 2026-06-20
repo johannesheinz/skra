@@ -81,13 +81,36 @@ func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-// Home is the authenticated landing page (GET /).
+// Home is the authenticated landing dashboard (GET /): the user's books with
+// contact counts, a total, quick actions, and recently added contacts.
 func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
-	if _, ok := auth.UserFromContext(r.Context()); !ok {
+	user, ok := auth.UserFromContext(r.Context())
+	if !ok {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	h.render(w, r, http.StatusOK, "home.html", nil)
+	books, err := models.ListAddressBooks(r.Context(), h.DB, user)
+	if err != nil {
+		h.Logger.Error("dashboard books failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	total := 0
+	for _, b := range books {
+		total += b.ContactCount
+	}
+	recent, err := models.RecentContactsForUser(r.Context(), h.DB, user, 6)
+	if err != nil {
+		h.Logger.Error("dashboard recent failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	h.render(w, r, http.StatusOK, "home.html", map[string]any{
+		"Books":         books,
+		"BookCount":     len(books),
+		"TotalContacts": total,
+		"Recent":        recent,
+	})
 }
 
 func (h *Handlers) rehashIfNeeded(r *http.Request, user models.User, password string) {

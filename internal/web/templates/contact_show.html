@@ -1,16 +1,37 @@
 {{define "title"}}{{.Contact.FullName}} · Skrá{{end}}
 {{define "content"}}
 <p><a class="backlink" href="/books/{{.Book.PublicID}}">{{icon "arrow-left"}} {{.Book.Name}}</a></p>
-<h1>{{.Contact.FullName}}</h1>
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 
-{{if .Contact.HasPhoto}}
-<img class="avatar" src="/contacts/{{.Contact.PublicID}}/photo" alt="" width="160" height="160">
-{{end}}
-
-{{if or .Details.Title .Details.Org}}
-<p class="muted">{{.Details.Title}}{{if and .Details.Title .Details.Org}} · {{end}}{{.Details.Org}}</p>
-{{end}}
+<div class="contact-header">
+  <div class="photo-edit">
+    {{if .Contact.HasPhoto}}
+    <img class="avatar avatar-lg" id="contact-avatar" src="/contacts/{{.Contact.PublicID}}/photo" alt="" width="128" height="128">
+    {{else}}
+    <span class="avatar avatar-lg avatar-placeholder" id="contact-avatar" aria-hidden="true">{{initial .Contact.FullName}}</span>
+    {{end}}
+    {{if .CanManage}}
+    <form class="photo-form" method="post" action="/contacts/{{.Contact.PublicID}}/photo" enctype="multipart/form-data" data-photo-form>
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <input class="visually-hidden" type="file" id="photo-input" name="photo" accept="image/jpeg,image/png" data-photo-input required>
+      <label class="btn btn-secondary btn-sm" for="photo-input">{{icon "camera"}} Change photo</label>
+      <button class="btn btn-sm" type="submit">{{icon "check"}} Save</button>
+      {{if .Contact.HasPhoto}}<button class="btn btn-secondary btn-sm" type="submit" form="remove-photo">{{icon "x"}} Remove</button>{{end}}
+    </form>
+    {{if .Contact.HasPhoto}}
+    <form id="remove-photo" method="post" action="/contacts/{{.Contact.PublicID}}/photo/delete">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    </form>
+    {{end}}
+    {{end}}
+  </div>
+  <div class="contact-headings">
+    <h1>{{.Contact.FullName}}</h1>
+    {{if or .Details.Title .Details.Org}}
+    <p class="muted">{{.Details.Title}}{{if and .Details.Title .Details.Org}} · {{end}}{{.Details.Org}}</p>
+    {{end}}
+  </div>
+</div>
 
 <dl class="details">
   {{range .Details.Emails}}
@@ -41,20 +62,5 @@
     <button class="btn-danger" type="submit">{{icon "trash-2"}} Delete</button>
   </form>
 </div>
-
-<h2>Photo</h2>
-<form class="stack" method="post" action="/contacts/{{.Contact.PublicID}}/photo" enctype="multipart/form-data">
-  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <label>Upload (JPEG or PNG; auto-resized)
-    <input type="file" name="photo" accept="image/jpeg,image/png" required>
-  </label>
-  <button type="submit">{{icon "image"}} Upload photo</button>
-</form>
-{{if .Contact.HasPhoto}}
-<form method="post" action="/contacts/{{.Contact.PublicID}}/photo/delete">
-  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <button class="btn-secondary" type="submit">{{icon "x"}} Remove photo</button>
-</form>
-{{end}}
 {{end}}
 {{end}}

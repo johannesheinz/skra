@@ -339,9 +339,18 @@ legend { padding: 0 var(--space-2); }
 .contact-card-head:hover { color: var(--accent); }
 .contact-card-name { overflow-wrap: anywhere; }
 
+/* ---- Contact header + photo control ---- */
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.contact-header { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-5); margin-bottom: var(--space-5); }
+.contact-headings h1 { margin-bottom: var(--space-1); }
+.photo-edit { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.photo-form { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); max-width: 15rem; }
+.btn-sm { min-height: 2rem; padding: var(--space-1) var(--space-3); font-size: 0.85rem; }
+
 /* ---- Avatars ---- */
 .avatar { border-radius: 50%; object-fit: cover; border: 1px solid var(--border); background: var(--surface-sunken); }
 .avatar-sm { width: 52px; height: 52px; flex: 0 0 auto; }
+.avatar-lg { width: 128px; height: 128px; flex: 0 0 auto; font-size: 2.75rem; }
 .avatar-placeholder {
   display: inline-flex;
   align-items: center;
@@ -386,6 +395,22 @@ td form { margin: 0; }
   .field-row select, .field-row input { width: 100%; }
   th, td { padding: var(--space-2); }
 }
+
+/* ---- Dashboard ---- */
+.stats { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-5); }
+.stat {
+  display: flex; flex-direction: column;
+  min-width: 8rem; padding: var(--space-4) var(--space-5);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.stat-num { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; line-height: 1; color: var(--accent); }
+.stat-label { margin-top: var(--space-1); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+
+.recent-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.recent-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--border); }
+.recent-list li:first-child { border-top: none; }
+.recent-item { display: flex; align-items: center; gap: var(--space-3); text-decoration: none; color: var(--ink); font-weight: 700; }
+.recent-item:hover { color: var(--accent); }
 
 /* ---- Account settings ---- */
 .notice { color: var(--accent-strong); font-weight: 700; }
