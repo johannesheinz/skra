@@ -1,6 +1,6 @@
 {{define "title"}}{{.Contact.FullName}} · Skrá{{end}}
 {{define "content"}}
-<p><a href="/books/{{.Book.PublicID}}">← {{.Book.Name}}</a></p>
+<p><a class="backlink" href="/books/{{.Book.PublicID}}">{{icon "arrow-left"}} {{.Book.Name}}</a></p>
 <h1>{{.Contact.FullName}}</h1>
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 
@@ -30,15 +30,15 @@
   {{with .Details.Note}}<dt>Note</dt><dd>{{.}}</dd>{{end}}
 </dl>
 
-<p><a href="/contacts/{{.Contact.PublicID}}/export.vcf">Download vCard</a></p>
+<p><a class="backlink" href="/contacts/{{.Contact.PublicID}}/export.vcf">{{icon "download"}} Download vCard</a></p>
 
 {{if .CanManage}}
 <div class="actions">
-  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/edit">Edit</a>
-  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/shares">Manage sharing</a>
+  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/edit">{{icon "pencil"}} Edit</a>
+  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/shares">{{icon "share-2"}} Manage sharing</a>
   <form method="post" action="/contacts/{{.Contact.PublicID}}/delete">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    <button class="btn-danger" type="submit">Delete</button>
+    <button class="btn-danger" type="submit">{{icon "trash-2"}} Delete</button>
   </form>
 </div>
 
@@ -48,12 +48,12 @@
   <label>Upload (JPEG or PNG; auto-resized)
     <input type="file" name="photo" accept="image/jpeg,image/png" required>
   </label>
-  <button type="submit">Upload photo</button>
+  <button type="submit">{{icon "image"}} Upload photo</button>
 </form>
 {{if .Contact.HasPhoto}}
 <form method="post" action="/contacts/{{.Contact.PublicID}}/photo/delete">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <button class="btn-secondary" type="submit">Remove photo</button>
+  <button class="btn-secondary" type="submit">{{icon "x"}} Remove photo</button>
 </form>
 {{end}}
 {{end}}

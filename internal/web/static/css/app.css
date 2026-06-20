@@ -101,6 +101,9 @@ img, svg { max-width: 100%; height: auto; }
 a { color: var(--accent); text-underline-offset: 2px; }
 a:hover { color: var(--accent-strong); }
 
+/* Inline icons (Lucide): size to the current text, align to the baseline. */
+.lucide { width: 1.15em; height: 1.15em; flex-shrink: 0; vertical-align: -0.18em; }
+
 /* Recorded data reads as the ledger's record: monospaced. */
 code, .data, a[href^="mailto:"], a[href^="tel:"] {
   font-family: var(--font-mono);
@@ -164,7 +167,7 @@ p { margin: 0 0 var(--space-3); }
 }
 .appbar-right { display: flex; align-items: center; gap: var(--space-4); }
 .appnav { display: flex; align-items: center; gap: var(--space-4); }
-.appnav a { color: var(--ink); text-decoration: none; }
+.appnav a { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--ink); text-decoration: none; }
 .appnav a:hover { color: var(--accent); }
 .appnav form { margin: 0; }
 
@@ -202,6 +205,7 @@ p { margin: 0 0 var(--space-3); }
   font: inherit;
   font-weight: 700;
   line-height: 1.2;
+  gap: var(--space-2);
   cursor: pointer;
   padding: var(--space-2) var(--space-4);
   min-height: 2.5rem;
@@ -309,6 +313,10 @@ legend { padding: 0 var(--space-2); }
 .details dt { padding: var(--space-3) 0 var(--space-1); border-top: 1px solid var(--border); align-self: end; }
 .details dd { margin: 0; padding: var(--space-3) 0 var(--space-1); border-top: 1px solid var(--border); overflow-wrap: anywhere; }
 .details dt:first-of-type, .details dd:first-of-type { border-top: none; }
+
+/* Back link. */
+.backlink { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--muted); text-decoration: none; }
+.backlink:hover { color: var(--accent); }
 
 /* ---- Pager ---- */
 .pager { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-5); }

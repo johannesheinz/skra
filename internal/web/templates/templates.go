@@ -13,6 +13,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/johannesheinz/skra/internal/web/icons"
 	"github.com/johannesheinz/skra/internal/web/static"
 )
 
@@ -22,6 +23,7 @@ var files embed.FS
 var funcs = template.FuncMap{
 	"static":  static.URL,
 	"initial": initial,
+	"icon":    icons.Inline,
 }
 
 // initial returns the uppercased first letter of s for avatar placeholders.

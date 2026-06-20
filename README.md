@@ -131,12 +131,13 @@ skra/
 
 ## Vendored assets
 
-Frontend assets are self-hosted and embedded in the binary — no CDNs, no third-party origins (see [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md)). They are vendored under `internal/web/static/` and updated manually; Dependabot cannot track them (it only covers manifest ecosystems, and adding `package.json` purely for htmx would reintroduce the npm surface we avoid).
+Frontend assets are self-hosted and embedded in the binary — no CDNs, no third-party origins (see [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md)). They are vendored under `internal/web/static/` (and `internal/web/icons/` for the icon set) and updated manually; Dependabot cannot track them (it only covers manifest ecosystems, and adding `package.json` purely for htmx would reintroduce the npm surface we avoid).
 
 | Asset | Version | Source |
 |---|---|---|
 | htmx | 2.0.9 | https://github.com/bigskysoftware/htmx |
 | Space Grotesk | 2.0.0 | https://github.com/floriankarsten/space-grotesk |
+| Lucide icons | 1.22.0 | https://github.com/lucide-icons/lucide (subset, inlined) |
 
 To update: replace the files under `internal/web/static/{js,fonts}/`, bump the version here, and re-run the tests.
 

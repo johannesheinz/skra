@@ -31,12 +31,12 @@
     <div class="appbar-right">
       {{with .User}}
       <nav class="appnav">
-        <a href="/books">Address books</a>
-        {{if eq .Role "admin"}}<a href="/admin/users">Users</a>{{end}}
-        <a href="/account/password">{{.Username}}</a>
+        <a href="/books">{{icon "book-open"}} Address books</a>
+        {{if eq .Role "admin"}}<a href="/admin/users">{{icon "users"}} Users</a>{{end}}
+        <a href="/account/password">{{icon "user"}} {{.Username}}</a>
         <form method="post" action="/logout">
+          <button class="btn-secondary" type="submit">{{icon "log-out"}} Sign out</button>
           <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
-          <button class="btn-secondary" type="submit">Sign out</button>
         </form>
       </nav>
       {{end}}
