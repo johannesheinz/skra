@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en"{{with .Theme}}{{if .Mode}} data-theme="{{.Mode}}"{{end}}{{if .Flavor}} data-flavor="{{.Flavor}}"{{end}}{{if .Accent}} data-accent="{{.Accent}}"{{end}}{{end}}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,7 +33,7 @@
       <nav class="appnav">
         <a href="/books">{{icon "book-open"}} Address books</a>
         {{if eq .Role "admin"}}<a href="/admin/users">{{icon "users"}} Users</a>{{end}}
-        <a href="/account/password">{{icon "user"}} {{.Username}}</a>
+        <a href="/account">{{icon "settings"}} {{.Username}}</a>
         <form method="post" action="/logout">
           <button class="btn-secondary" type="submit">{{icon "log-out"}} Sign out</button>
           <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">

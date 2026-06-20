@@ -1,0 +1,79 @@
+{{define "title"}}Account · Skrá{{end}}
+{{define "content"}}
+<h1>Account</h1>
+
+<section class="card stack">
+  <h2>Profile</h2>
+  {{if .ProfileError}}<p role="alert">{{.ProfileError}}</p>{{end}}
+  {{if .ProfileNotice}}<p class="notice">{{.ProfileNotice}}</p>{{end}}
+  <form class="stack" method="post" action="/account/profile">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <label>Username <input type="text" value="{{.User.Username}}" disabled></label>
+    <label>Email <input type="email" name="email" value="{{.Email}}" required></label>
+    <button type="submit">{{icon "check"}} Save profile</button>
+  </form>
+</section>
+
+<section class="card stack">
+  <h2>Appearance</h2>
+  {{if .AppearanceError}}<p role="alert">{{.AppearanceError}}</p>{{end}}
+  {{if .AppearanceNotice}}<p class="notice">{{.AppearanceNotice}}</p>{{end}}
+  <form class="stack" method="post" action="/account/appearance" data-theme-form>
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <label>Mode
+      <select name="mode">
+        <option value="" {{if eq .Theme.Mode ""}}selected{{end}}>System default</option>
+        <option value="light" {{if eq .Theme.Mode "light"}}selected{{end}}>Light</option>
+        <option value="dark" {{if eq .Theme.Mode "dark"}}selected{{end}}>Dark</option>
+      </select>
+    </label>
+    <label>Flavor
+      <select name="flavor">
+        <option value="" {{if eq .Theme.Flavor ""}}selected{{end}}>Default</option>
+        <option value="solarized" {{if eq .Theme.Flavor "solarized"}}selected{{end}}>Solarized</option>
+      </select>
+    </label>
+    <fieldset>
+      <legend>Accent</legend>
+      <div class="swatches">
+        {{range .Accents}}
+        <label class="swatch">
+          <input type="radio" name="accent" value="{{.Value}}" {{if eq $.Theme.Accent .Value}}checked{{end}}>
+          <span class="swatch-chip" data-accent-swatch="{{if .Value}}{{.Value}}{{else}}pine{{end}}"></span>
+          <span class="swatch-label">{{.Label}}</span>
+        </label>
+        {{end}}
+      </div>
+    </fieldset>
+    <button type="submit">{{icon "check"}} Save appearance</button>
+  </form>
+</section>
+
+<section class="card stack">
+  <h2>Memberships</h2>
+  {{if .Memberships}}
+  <table>
+    <thead><tr><th>Address book</th><th>Access</th></tr></thead>
+    <tbody>
+    {{range .Memberships}}
+    <tr><td><a href="/books/{{.BookPublicID}}">{{.BookName}}</a></td><td>{{.Level}}</td></tr>
+    {{end}}
+    </tbody>
+  </table>
+  {{else}}
+  <p class="muted">You don't belong to any address books yet.</p>
+  {{end}}
+</section>
+
+<section class="card stack">
+  <h2>Security</h2>
+  {{if .PasswordError}}<p role="alert">{{.PasswordError}}</p>{{end}}
+  {{if .PasswordNotice}}<p class="notice">{{.PasswordNotice}}</p>{{end}}
+  <form class="stack" method="post" action="/account/password" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <label>Current password <input type="password" name="current_password" required></label>
+    <label>New password <input type="password" name="new_password" required></label>
+    <button type="submit">{{icon "key-round"}} Change password</button>
+  </form>
+</section>
+{{end}}

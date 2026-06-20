@@ -6,6 +6,7 @@ import (
 
 	"github.com/johannesheinz/skra/internal/auth"
 	"github.com/johannesheinz/skra/internal/db"
+	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/sharing"
 	"github.com/johannesheinz/skra/internal/web/templates"
 )
@@ -54,6 +55,11 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, pa
 	}
 	if user, ok := auth.UserFromContext(r.Context()); ok {
 		data["User"] = user
+		if _, set := data["Theme"]; !set {
+			if prefs, err := models.GetPreferences(r.Context(), h.DB, user.ID); err == nil {
+				data["Theme"] = prefs.Theme
+			}
+		}
 	}
 	token, err := auth.IssueCSRF(w, h.CookieSecure)
 	if err != nil {

@@ -153,7 +153,7 @@ func TestAccountPasswordChange(t *testing.T) {
 	session := sessionCookieFor(t, d, user.ID)
 
 	// Wrong current password.
-	_, token, csrf := authedGet(t, router, session, "/account/password")
+	_, token, csrf := authedGet(t, router, session, "/account")
 	wrong := authedPostForm(router, session, csrf, "/account/password", url.Values{
 		auth.CSRFFormField: {token}, "current_password": {"nope"}, "new_password": {"longenough1"},
 	})
@@ -162,7 +162,7 @@ func TestAccountPasswordChange(t *testing.T) {
 	}
 
 	// Correct current password, valid new one.
-	_, t2, c2 := authedGet(t, router, session, "/account/password")
+	_, t2, c2 := authedGet(t, router, session, "/account")
 	ok := authedPostForm(router, session, c2, "/account/password", url.Values{
 		auth.CSRFFormField: {t2}, "current_password": {"pw"}, "new_password": {"longenough1"},
 	})

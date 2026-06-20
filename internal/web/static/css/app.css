@@ -35,8 +35,9 @@
   --accent: #2f5d50;
   --accent-strong: #244a40;
   --accent-fg: #ffffff;
-  --accent-wash: #e7efec;
   --danger: #b3261e;
+  /* Derived from the (possibly overridden) accent, so it adapts to any accent + surface. */
+  --accent-wash: color-mix(in srgb, var(--accent) 14%, var(--surface));
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -52,9 +53,11 @@
   --ring: 0 0 0 3px var(--accent-wash);
 }
 
-/* Dark palette: shared block applied both when the OS asks for dark (unless the
-   user forced light) and when the user explicitly chose dark. */
-:root[data-theme="dark"] {
+/* Default dark palette: applied when the OS asks for dark (unless the user
+   forced light) or when the user explicitly chose dark. Scoped away from the
+   Solarized flavor, which brings its own dark palette below. */
+:root[data-theme="dark"]:not([data-flavor="solarized"]),
+:root[data-flavor="default"][data-theme="dark"] {
   --paper: #14161a;
   --surface: #1c2024;
   --surface-sunken: #171a1d;
@@ -65,11 +68,10 @@
   --accent: #63b9a3;
   --accent-strong: #7ccbb5;
   --accent-fg: #0c1310;
-  --accent-wash: #1e2f2a;
   --danger: #ef6b62;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"]):not([data-flavor="solarized"]) {
     --paper: #14161a;
     --surface: #1c2024;
     --surface-sunken: #171a1d;
@@ -80,10 +82,52 @@
     --accent: #63b9a3;
     --accent-strong: #7ccbb5;
     --accent-fg: #0c1310;
-    --accent-wash: #1e2f2a;
     --danger: #ef6b62;
   }
 }
+
+/* ---- Solarized flavor (Ethan Schoonover's palette) ---- */
+:root[data-flavor="solarized"] {
+  --paper: #fdf6e3;      /* base3  */
+  --surface: #fbf1d8;
+  --surface-sunken: #eee8d5; /* base2 */
+  --ink: #40525b;
+  --muted: #93a1a1;      /* base1 */
+  --border: #e6dfc6;
+  --border-strong: #d9d0b4;
+}
+:root[data-flavor="solarized"][data-theme="dark"] {
+  --paper: #002b36;      /* base03 */
+  --surface: #073642;    /* base02 */
+  --surface-sunken: #00252e;
+  --ink: #93a1a1;        /* base1  */
+  --muted: #6b7f88;      /* ~base00 */
+  --border: #0f4553;
+  --border-strong: #16576a;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-flavor="solarized"]:not([data-theme="light"]) {
+    --paper: #002b36;
+    --surface: #073642;
+    --surface-sunken: #00252e;
+    --ink: #93a1a1;
+    --muted: #6b7f88;
+    --border: #0f4553;
+    --border-strong: #16576a;
+  }
+}
+
+/* ---- Accent presets (orthogonal to mode/flavor). --accent-wash derives. ----
+   Brand tones use white text; the vivid neons and soft pastels use dark text
+   for contrast on the accent. */
+:root[data-accent="slate"]    { --accent: #3f5566; --accent-strong: #33475a; --accent-fg: #ffffff; }
+:root[data-accent="indigo"]   { --accent: #4f46e5; --accent-strong: #4338ca; --accent-fg: #ffffff; }
+:root[data-accent="lime"]     { --accent: #a3e635; --accent-strong: #84cc16; --accent-fg: #14210a; }
+:root[data-accent="magenta"]  { --accent: #f0f; --accent-strong: #d400d4; --accent-fg: #1a001a; }
+:root[data-accent="cyan"]     { --accent: #22d3ee; --accent-strong: #06b6d4; --accent-fg: #062a31; }
+:root[data-accent="rose"]     { --accent: #f9a8d4; --accent-strong: #f472b6; --accent-fg: #4a1130; }
+:root[data-accent="peach"]    { --accent: #fdba74; --accent-strong: #fb923c; --accent-fg: #3a1e07; }
+:root[data-accent="lavender"] { --accent: #c4b5fd; --accent-strong: #a78bfa; --accent-fg: #241a4a; }
 
 /* ---- Reset & base ---- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -342,6 +386,23 @@ td form { margin: 0; }
   .field-row select, .field-row input { width: 100%; }
   th, td { padding: var(--space-2); }
 }
+
+/* ---- Account settings ---- */
+.notice { color: var(--accent-strong); font-weight: 700; }
+section.card + section.card { margin-top: var(--space-5); }
+.swatches { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.swatch { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; font-size: 0.9rem; }
+.swatch input { width: auto; margin: 0; }
+.swatch-chip { width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 1px solid var(--border-strong); }
+.swatch-chip[data-accent-swatch="pine"]     { background: #2f5d50; }
+.swatch-chip[data-accent-swatch="slate"]    { background: #3f5566; }
+.swatch-chip[data-accent-swatch="indigo"]   { background: #4f46e5; }
+.swatch-chip[data-accent-swatch="lime"]     { background: #a3e635; }
+.swatch-chip[data-accent-swatch="magenta"]  { background: #f0f; }
+.swatch-chip[data-accent-swatch="cyan"]     { background: #22d3ee; }
+.swatch-chip[data-accent-swatch="rose"]     { background: #f9a8d4; }
+.swatch-chip[data-accent-swatch="peach"]    { background: #fdba74; }
+.swatch-chip[data-accent-swatch="lavender"] { background: #c4b5fd; }
 
 /* ---- Motion preference ---- */
 @media (prefers-reduced-motion: reduce) {

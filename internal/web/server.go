@@ -71,8 +71,13 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Use(authenticator.RequireAuth)
 		r.Get("/", h.Home)
 
-		r.Get("/account/password", h.AccountPasswordForm)
+		r.Get("/account", h.AccountPage)
+		r.Post("/account/profile", h.AccountProfileUpdate)
+		r.Post("/account/appearance", h.AccountAppearanceUpdate)
 		r.Post("/account/password", h.AccountPasswordUpdate)
+		r.Get("/account/password", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/account", http.StatusMovedPermanently)
+		})
 
 		r.Get("/ui/rows/{kind}", h.ContactRowFragment)
 

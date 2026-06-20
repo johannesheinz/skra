@@ -51,7 +51,7 @@ var pageFiles = []string{
 	"admin_users_list.html",
 	"admin_user_form.html",
 	"members.html",
-	"account_password.html",
+	"account.html",
 	"import_form.html",
 	"import_preview.html",
 	"import_result.html",
