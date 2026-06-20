@@ -91,6 +91,33 @@ func TestAccountProfileUpdatesEmail(t *testing.T) {
 	}
 }
 
+func TestAccountThemeTogglePersists(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	user := seedUser(t, d, "alice", "pw", models.RoleUser)
+	session := sessionCookieFor(t, d, user.ID)
+
+	// The header toggle is a form on every authenticated page.
+	_, token, csrf := authedGet(t, router, session, "/")
+	toggle := func() int {
+		return authedPostForm(router, session, csrf, "/account/theme", url.Values{auth.CSRFFormField: {token}}).Code
+	}
+	if code := toggle(); code != http.StatusSeeOther {
+		t.Fatalf("toggle = %d, want 303", code)
+	}
+	// From the default (system) it flips to dark, persisted to the DB.
+	prefs, _ := models.GetPreferences(ctx, d, user.ID)
+	if prefs.Theme.Mode != "dark" {
+		t.Errorf("after toggle mode = %q, want dark", prefs.Theme.Mode)
+	}
+	// And it shows on the authenticated page + stays consistent with settings.
+	home, _, _ := authedGet(t, router, session, "/")
+	if !strings.Contains(home.Body.String(), `data-theme="dark"`) || !strings.Contains(home.Body.String(), "data-theme-managed") {
+		t.Error("home should render data-theme=dark and data-theme-managed after toggle")
+	}
+}
+
 func TestAccountPasswordRedirect(t *testing.T) {
 	d := testutil.NewDB(t)
 	router := testRouter(t, d)

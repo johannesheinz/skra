@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/johannesheinz/skra/internal/auth"
@@ -123,6 +124,54 @@ func (h *Handlers) AccountPasswordUpdate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	h.renderAccount(w, r, http.StatusOK, map[string]any{"PasswordNotice": "Password changed."})
+}
+
+// AccountThemeToggle flips the saved light/dark mode from the header control
+// (POST /account/theme) and returns to the current page. Persisting to the
+// account keeps the toggle and the Appearance settings consistent.
+func (h *Handlers) AccountThemeToggle(w http.ResponseWriter, r *http.Request) {
+	user, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	if !h.checkForm(w, r) {
+		return
+	}
+	prefs, err := models.GetPreferences(r.Context(), h.DB, user.ID)
+	if err != nil {
+		h.Logger.Error("get preferences failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	if prefs.Theme.Mode == "dark" {
+		prefs.Theme.Mode = "light"
+	} else {
+		prefs.Theme.Mode = "dark"
+	}
+	if err := models.UpdatePreferences(r.Context(), h.DB, user.ID, prefs); err != nil {
+		h.Logger.Error("update preferences failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, sameOriginPath(r.Referer()), http.StatusSeeOther)
+}
+
+// sameOriginPath extracts just the path+query from a referer, so redirecting
+// back can never become an open redirect. Falls back to "/".
+func sameOriginPath(referer string) string {
+	if referer == "" {
+		return "/"
+	}
+	u, err := url.Parse(referer)
+	if err != nil || u.Path == "" {
+		return "/"
+	}
+	dest := u.Path
+	if u.RawQuery != "" {
+		dest += "?" + u.RawQuery
+	}
+	return dest
 }
 
 // renderAccount renders the settings page with the user's profile, memberships,

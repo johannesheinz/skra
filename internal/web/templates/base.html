@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"{{with .Theme}}{{if .Mode}} data-theme="{{.Mode}}"{{end}}{{if .Flavor}} data-flavor="{{.Flavor}}"{{end}}{{if .Accent}} data-accent="{{.Accent}}"{{end}}{{end}}>
+<html lang="en"{{if .User}} data-theme-managed{{end}}{{with .Theme}}{{if .Mode}} data-theme="{{.Mode}}"{{end}}{{if .Flavor}} data-flavor="{{.Flavor}}"{{end}}{{if .Accent}} data-accent="{{.Accent}}"{{end}}{{end}}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -41,12 +41,24 @@
         </form>
       </nav>
       {{end}}
+      {{if .User}}
+      <form method="post" action="/account/theme" class="theme-toggle-form">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <button class="theme-toggle" type="submit" aria-label="Toggle light or dark theme" title="Toggle light/dark (saved to your account)">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 3a9 9 0 000 18z" fill="currentColor"/>
+          </svg>
+        </button>
+      </form>
+      {{else}}
       <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light or dark theme" title="Toggle theme">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
           <path d="M12 3a9 9 0 000 18z" fill="currentColor"/>
         </svg>
       </button>
+      {{end}}
     </div>
   </header>
   <main id="main" class="container stack">
