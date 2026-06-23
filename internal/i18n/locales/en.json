@@ -112,6 +112,7 @@
   "contact_form.org": "Organization",
   "contact_form.title": "Title",
   "contact_form.birthday": "Birthday",
+  "contact_form.no_year": "No year",
   "contact_form.note": "Note",
 
   "contact.change_photo": "Change photo",

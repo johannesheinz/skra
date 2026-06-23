@@ -309,6 +309,9 @@ input, select, textarea {
   padding: var(--space-2) var(--space-3);
 }
 input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--muted) 80%, transparent); }
+/* Inline checkbox row (e.g. birthday "no year"): box beside its label, not full-width. */
+label.checkbox { display: flex; flex-direction: row; align-items: center; gap: var(--space-2); font-weight: 500; }
+label.checkbox input { width: auto; margin-top: 0; }
 /* Non-editable fields (e.g. the fixed username) read as locked on hover. */
 input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; color: var(--muted); background: var(--surface-sunken); }
 

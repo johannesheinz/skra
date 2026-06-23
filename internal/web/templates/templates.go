@@ -44,6 +44,7 @@ func localeFuncs(tr *i18n.Translator) template.FuncMap {
 		"num":              tr.Num,
 		"monthday":         tr.MonthDay,
 		"isodate":          tr.ISODate,
+		"birthday":         tr.BirthdayLabel,
 		"typelabel":        tr.TypeLabel,
 		"postalBeforeCity": tr.PostalBeforeCity,
 	}

@@ -291,13 +291,39 @@ func contactInputFromForm(r *http.Request) models.ContactInput {
 		FamilyName: r.PostFormValue("family_name"),
 		Org:        r.PostFormValue("org"),
 		Title:      r.PostFormValue("title"),
-		Birthday:   r.PostFormValue("birthday"),
+		Birthday:   birthdayFromForm(r.PostFormValue("birthday"), r.PostFormValue("birthday_no_year") != ""),
 		Note:       r.PostFormValue("note"),
 		Emails:     typedFromForm(r.PostForm["email_type"], r.PostForm["email_value"]),
 		Phones:     typedFromForm(r.PostForm["phone_type"], r.PostForm["phone_value"]),
 		Addresses:  addressesFromForm(r),
 		URLs:       nonEmptyValues(r.PostForm["url_value"]),
 	}
+}
+
+// birthdayFromForm turns the date-input value into the stored birthday. When
+// "no year" is chosen, the year is dropped to the vCard year-less form
+// (--MM-DD); otherwise the YYYY-MM-DD value passes through.
+func birthdayFromForm(date string, noYear bool) string {
+	date = strings.TrimSpace(date)
+	if noYear && len(date) == 10 { // YYYY-MM-DD -> --MM-DD
+		return "--" + date[5:]
+	}
+	return date
+}
+
+// splitBirthday prepares a stored birthday for the date input: a value suitable
+// for <input type="date"> (a placeholder year is supplied for year-less
+// birthdays so the control can show the month/day) and whether the year is
+// omitted.
+func splitBirthday(raw string) (dateValue string, noYear bool) {
+	norm := models.NormalizeBirthday(raw) // "YYYY-MM-DD" or "" (year 0000 = year-less)
+	if norm == "" {
+		return "", false
+	}
+	if norm[:4] == "0000" {
+		return "2000" + norm[4:], true
+	}
+	return norm, false
 }
 
 // typedFromForm pairs parallel type/value arrays into typed values, dropping
@@ -363,12 +389,15 @@ func nonEmptyValues(values []string) []string {
 }
 
 func (h *Handlers) renderContactForm(w http.ResponseWriter, r *http.Request, status int, headingKey, action, cancelURL string, details vcardio.Details, errMsg string) {
+	birthdayDate, noYear := splitBirthday(details.Birthday)
 	h.render(w, r, status, "contact_form.html", map[string]any{
-		"HeadingKey": headingKey,
-		"FormAction": action,
-		"CancelURL":  cancelURL,
-		"D":          details,
-		"Error":      errMsg,
+		"HeadingKey":     headingKey,
+		"FormAction":     action,
+		"CancelURL":      cancelURL,
+		"D":              details,
+		"BirthdayDate":   birthdayDate,
+		"BirthdayNoYear": noYear,
+		"Error":          errMsg,
 	})
 }
 

@@ -58,7 +58,7 @@
   {{range .Details.URLs}}
   <dt>{{t "contact.link"}}</dt><dd><a href="{{.}}" rel="noopener noreferrer">{{.}}</a></dd>
   {{end}}
-  {{with .Details.Birthday}}<dt>{{t "contact.birthday"}}</dt><dd>{{isodate .}}</dd>{{end}}
+  {{with .Details.Birthday}}<dt>{{t "contact.birthday"}}</dt><dd>{{birthday .}}</dd>{{end}}
   {{with .Details.Note}}<dt>{{t "contact.note"}}</dt><dd>{{.}}</dd>{{end}}
 </dl>
 

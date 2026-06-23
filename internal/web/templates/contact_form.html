@@ -11,30 +11,31 @@
   <fieldset>
     <legend>{{t "contact_form.emails"}}</legend>
     <div id="emails">{{range .D.Emails}}{{template "email_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary" hx-get="/ui/rows/email" hx-target="#emails" hx-swap="beforeend">{{t "contact_form.add_email"}}</button>
+    <button type="button" class="btn-secondary btn-add" hx-get="/ui/rows/email" hx-target="#emails" hx-swap="beforeend">{{icon "plus"}} {{t "contact_form.add_email"}}</button>
   </fieldset>
 
   <fieldset>
     <legend>{{t "contact_form.phones"}}</legend>
     <div id="phones">{{range .D.Phones}}{{template "phone_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary" hx-get="/ui/rows/phone" hx-target="#phones" hx-swap="beforeend">{{t "contact_form.add_phone"}}</button>
+    <button type="button" class="btn-secondary btn-add" hx-get="/ui/rows/phone" hx-target="#phones" hx-swap="beforeend">{{icon "plus"}} {{t "contact_form.add_phone"}}</button>
   </fieldset>
 
   <fieldset>
     <legend>{{t "contact_form.addresses"}}</legend>
     <div id="addresses">{{range .D.Addresses}}{{template "address_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary" hx-get="/ui/rows/address" hx-target="#addresses" hx-swap="beforeend">{{t "contact_form.add_address"}}</button>
+    <button type="button" class="btn-secondary btn-add" hx-get="/ui/rows/address" hx-target="#addresses" hx-swap="beforeend">{{icon "plus"}} {{t "contact_form.add_address"}}</button>
   </fieldset>
 
   <fieldset>
     <legend>{{t "contact_form.links"}}</legend>
     <div id="urls">{{range .D.URLs}}{{template "url_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary" hx-get="/ui/rows/url" hx-target="#urls" hx-swap="beforeend">{{t "contact_form.add_link"}}</button>
+    <button type="button" class="btn-secondary btn-add" hx-get="/ui/rows/url" hx-target="#urls" hx-swap="beforeend">{{icon "plus"}} {{t "contact_form.add_link"}}</button>
   </fieldset>
 
   <label>{{t "contact_form.org"}} <input name="org" value="{{.D.Org}}"></label>
   <label>{{t "contact_form.title"}} <input name="title" value="{{.D.Title}}"></label>
-  <label>{{t "contact_form.birthday"}} <input type="date" name="birthday" value="{{.D.Birthday}}"></label>
+  <label>{{t "contact_form.birthday"}} <input type="date" name="birthday" value="{{.BirthdayDate}}"></label>
+  <label class="checkbox"><input type="checkbox" name="birthday_no_year" value="1"{{if .BirthdayNoYear}} checked{{end}}> {{t "contact_form.no_year"}}</label>
   <label>{{t "contact_form.note"}} <textarea name="note" rows="3">{{.D.Note}}</textarea></label>
 
   <div class="actions">

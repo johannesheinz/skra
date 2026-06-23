@@ -13,6 +13,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -243,6 +244,25 @@ func (t *Translator) ISODate(s string) string {
 		return s
 	}
 	return t.Date(tm)
+}
+
+// BirthdayLabel formats a stored birthday for display: a full YYYY-MM-DD renders
+// as a locale date; a year-less birthday (vCard --MMDD / --MM-DD) renders as a
+// locale month+day; anything else is returned unchanged.
+func (t *Translator) BirthdayLabel(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if tm, err := time.Parse("2006-01-02", raw); err == nil {
+		return t.Date(tm)
+	}
+	digits := strings.ReplaceAll(strings.TrimPrefix(raw, "--"), "-", "")
+	if len(digits) == 4 {
+		m, err1 := strconv.Atoi(digits[0:2])
+		d, err2 := strconv.Atoi(digits[2:4])
+		if err1 == nil && err2 == nil && m >= 1 && m <= 12 && d >= 1 && d <= 31 {
+			return t.MonthDay(time.Month(m), d)
+		}
+	}
+	return raw
 }
 
 // TypeLabel translates a known type tag (home/work/mobile/other), falling back
