@@ -44,7 +44,7 @@ func (h *Handlers) shareDirectory(w http.ResponseWriter, r *http.Request, link m
 		h.shareTargetError(w, r, err)
 		return
 	}
-	contacts, _, err := models.ListContacts(r.Context(), h.DB, book.ID, "", shareDirectoryLimit, 0)
+	contacts, _, err := models.ListContacts(r.Context(), h.DB, book.ID, "", "", shareDirectoryLimit, 0)
 	if err != nil {
 		h.Logger.Error("share directory list failed", "err", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

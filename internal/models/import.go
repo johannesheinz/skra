@@ -11,6 +11,7 @@ import (
 
 	"github.com/johannesheinz/skra/internal/db"
 	"github.com/johannesheinz/skra/internal/ids"
+	"github.com/johannesheinz/skra/internal/vcardio"
 )
 
 // ErrImportUploadNotFound is returned when a staged upload token is unknown.
@@ -134,12 +135,20 @@ func ImportContacts(ctx context.Context, d *db.DB, addressBookID int64, records 
 			if len(rec.PhotoJPEG) > 0 {
 				hasPhoto = 1
 			}
+			// Derive the denormalized sort keys from the canonical card so imported
+			// contacts sort correctly immediately (not only after a restart's backfill).
+			var given, family, postal, country string
+			if details, err := vcardio.Parse(rec.VCardRaw); err == nil {
+				given, family, postal, country = sortKeysFromDetails(details)
+			}
 			res, err := tx.ExecContext(ctx,
 				`INSERT INTO contacts
-				   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag, birthday)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag,
+				    birthday, given_name, family_name, postal_code, country)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				publicID, addressBookID, rec.FullName, nullString(rec.Org), nullString(rec.Email),
-				nullString(rec.Phone), hasPhoto, rec.VCardRaw, rec.UID, etag, NormalizeBirthday(rec.Birthday))
+				nullString(rec.Phone), hasPhoto, rec.VCardRaw, rec.UID, etag,
+				NormalizeBirthday(rec.Birthday), given, family, postal, country)
 			if err != nil {
 				return fmt.Errorf("insert contact: %w", err)
 			}

@@ -68,33 +68,62 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	prefs, err := models.GetPreferences(r.Context(), h.DB, user.ID)
+	if err != nil {
+		h.Logger.Error("get preferences failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	sort := prefs.List.SortKey()
+	limit, showAll := prefs.List.PageLimit()
+	// The size the selector should show as chosen: the "all" sentinel, or the
+	// effective limit (so the default 0 shows as its real value, e.g. 25).
+	selectedSize := limit
+	if showAll {
+		selectedSize = -1
+	}
+
 	query := r.URL.Query().Get("q")
 	page := parsePage(r.URL.Query().Get("page"))
-	contacts, total, err := models.ListContacts(r.Context(), h.DB, book.ID, query, contactsPageSize, (page-1)*contactsPageSize)
+	offset := (page - 1) * limit
+	if showAll {
+		page, offset = 1, 0
+	}
+	contacts, total, err := models.ListContacts(r.Context(), h.DB, book.ID, query, sort, limit, offset)
 	if err != nil {
 		h.Logger.Error("list contacts failed", "err", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	totalPages := (total + contactsPageSize - 1) / contactsPageSize
 
 	cards := buildContactCards(contacts,
 		func(pid string) string { return "/contacts/" + pid },
 		func(pid string) string { return "/contacts/" + pid + "/photo" })
 
 	data := map[string]any{
-		"Book":      book,
-		"CanManage": canManage.Allow,
-		"Cards":     cards,
-		"Query":     query,
-		"Total":     total,
-		"Page":      page,
+		"Book":         book,
+		"CanManage":    canManage.Allow,
+		"Cards":        cards,
+		"Query":        query,
+		"Total":        total,
+		"Page":         page,
+		"Sort":         sort,
+		"SelectedSize": selectedSize,
+		"ShowAll":      showAll,
+		"SortOptions":  models.AllowedSorts,
+		"PageSizes":    models.AllowedPageSizes,
+		// Where the list-prefs form returns to: this book with its current search,
+		// reset to page 1 (page offsets change when size/sort change).
+		"ListPrefsReturn": bookContactsURL(book.PublicID, query, 1),
 	}
-	if page > 1 {
-		data["PrevURL"] = bookContactsURL(book.PublicID, query, page-1)
-	}
-	if page < totalPages {
-		data["NextURL"] = bookContactsURL(book.PublicID, query, page+1)
+	if !showAll {
+		totalPages := (total + limit - 1) / limit
+		if page > 1 {
+			data["PrevURL"] = bookContactsURL(book.PublicID, query, page-1)
+		}
+		if page < totalPages {
+			data["NextURL"] = bookContactsURL(book.PublicID, query, page+1)
+		}
 	}
 	h.render(w, r, http.StatusOK, "book_show.html", data)
 }

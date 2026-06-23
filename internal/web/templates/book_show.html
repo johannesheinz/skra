@@ -31,10 +31,25 @@
 </div>
 
 {{if .Cards}}
+<form class="list-prefs" method="post" action="/account/list-prefs">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <input type="hidden" name="return" value="{{.ListPrefsReturn}}">
+  <label>Sort
+    <select name="sort">
+      {{range .SortOptions}}<option value="{{.Key}}"{{if eq .Key $.Sort}} selected{{end}}>{{.Label}}</option>{{end}}
+    </select>
+  </label>
+  <label>Show
+    <select name="size">
+      {{range .PageSizes}}<option value="{{.}}"{{if eq . $.SelectedSize}} selected{{end}}>{{if eq . -1}}All{{else}}{{.}}{{end}}</option>{{end}}
+    </select>
+  </label>
+  <button class="btn-secondary" type="submit">Apply</button>
+</form>
 {{template "contact_cards" .Cards}}
 <nav class="pager">
   {{if .PrevURL}}<a class="btn btn-secondary" href="{{.PrevURL}}">{{icon "chevron-left"}} Previous</a>{{end}}
-  <span class="muted">Page {{.Page}}</span>
+  <span class="muted">{{if .ShowAll}}All {{.Total}}{{else}}Page {{.Page}}{{end}}</span>
   {{if .NextURL}}<a class="btn btn-secondary" href="{{.NextURL}}">Next {{icon "chevron-right"}}</a>{{end}}
 </nav>
 {{else}}

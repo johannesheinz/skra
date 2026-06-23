@@ -16,11 +16,59 @@ type ThemePrefs struct {
 	Accent string `json:"accent,omitempty"` // "" | "pine" | "lime" | ...
 }
 
+// ListPrefs is the user's contact-list display choice: how many rows per page
+// and the sort order. A zero PageSize means the default; -1 means "all". An
+// empty Sort means the default order.
+type ListPrefs struct {
+	PageSize int    `json:"pageSize,omitempty"` // 0 = default, -1 = all, else the page size
+	Sort     string `json:"sort,omitempty"`     // "" | "first" | "last" | "age" | "location"
+}
+
+// DefaultPageSize is used when the user has not chosen one.
+const DefaultPageSize = 25
+
+// AllowedPageSizes are the selectable page sizes; -1 renders every row.
+var AllowedPageSizes = []int{10, 25, 50, 100, -1}
+
+// AllowedSorts are the selectable sort keys mapped to their menu labels, in
+// display order. The empty key is the default (equivalent to "first").
+var AllowedSorts = []struct{ Key, Label string }{
+	{"first", "First name"},
+	{"last", "Last name"},
+	{"age", "Age (oldest first)"},
+	{"location", "Location"},
+}
+
+// PageLimit returns the SQL LIMIT for the chosen page size and whether the
+// choice is "all" (no paging). An unrecognized size falls back to the default.
+func (l ListPrefs) PageLimit() (limit int, all bool) {
+	if l.PageSize == -1 {
+		return -1, true // SQLite treats LIMIT -1 as no limit
+	}
+	for _, s := range AllowedPageSizes {
+		if s == l.PageSize && s > 0 {
+			return s, false
+		}
+	}
+	return DefaultPageSize, false
+}
+
+// SortKey returns the validated sort key, defaulting to "first".
+func (l ListPrefs) SortKey() string {
+	for _, s := range AllowedSorts {
+		if s.Key == l.Sort {
+			return s.Key
+		}
+	}
+	return "first"
+}
+
 // UIPreferences is the user's stored UI preferences blob. It is intentionally
 // extensible — locale and accessibility settings can be added as sibling fields
 // without a migration.
 type UIPreferences struct {
 	Theme ThemePrefs `json:"theme"`
+	List  ListPrefs  `json:"list"`
 }
 
 // GetPreferences loads a user's UI preferences. A missing or malformed blob
