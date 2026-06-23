@@ -57,8 +57,8 @@ func TestListContactsSortOrders(t *testing.T) {
 	mk("Amy", "Zephyr", "1950-06-15", "10001", "Canada")
 	mk("Mia", "Brown", "", "", "") // no birthday, no address
 
-	names := func(sort string) []string {
-		cs, _, err := models.ListContacts(ctx, d, book.ID, "", sort, 50, 0)
+	names := func(sort string, desc bool) []string {
+		cs, _, err := models.ListContacts(ctx, d, book.ID, "", sort, desc, 50, 0)
 		if err != nil {
 			t.Fatalf("ListContacts(%q): %v", sort, err)
 		}
@@ -69,19 +69,28 @@ func TestListContactsSortOrders(t *testing.T) {
 		return out
 	}
 
-	if got := names("first"); got[0] != "Amy Zephyr" || got[2] != "Zed Adams" {
+	if got := names("first", false); got[0] != "Amy Zephyr" || got[2] != "Zed Adams" {
 		t.Errorf("first-name order = %v", got)
 	}
-	if got := names("last"); got[0] != "Zed Adams" || got[1] != "Mia Brown" || got[2] != "Amy Zephyr" {
+	if got := names("last", false); got[0] != "Zed Adams" || got[1] != "Mia Brown" || got[2] != "Amy Zephyr" {
 		t.Errorf("last-name order = %v", got)
 	}
 	// Age: oldest (earliest birthday) first; the birthday-less contact sorts last.
-	if got := names("age"); got[0] != "Amy Zephyr" || got[1] != "Zed Adams" || got[2] != "Mia Brown" {
+	if got := names("age", false); got[0] != "Amy Zephyr" || got[1] != "Zed Adams" || got[2] != "Mia Brown" {
 		t.Errorf("age order = %v", got)
 	}
 	// Location: country then postal; the address-less contact sorts last.
-	if got := names("location"); got[0] != "Amy Zephyr" || got[1] != "Zed Adams" || got[2] != "Mia Brown" {
+	if got := names("location", false); got[0] != "Amy Zephyr" || got[1] != "Zed Adams" || got[2] != "Mia Brown" {
 		t.Errorf("location order = %v", got)
+	}
+
+	// Descending flips the value order but keeps missing values last.
+	if got := names("last", true); got[0] != "Amy Zephyr" || got[2] != "Zed Adams" {
+		t.Errorf("last-name desc order = %v", got)
+	}
+	// Age desc = youngest (latest birthday) first; unknown still last.
+	if got := names("age", true); got[0] != "Zed Adams" || got[1] != "Amy Zephyr" || got[2] != "Mia Brown" {
+		t.Errorf("age desc order = %v", got)
 	}
 }
 

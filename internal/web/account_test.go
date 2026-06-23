@@ -144,13 +144,33 @@ func TestAccountListPrefsPersist(t *testing.T) {
 		t.Errorf("stored list prefs = %+v", prefs.List)
 	}
 
+	// The direction toggle sets Desc.
+	_, td, cd := authedGet(t, router, session, "/account")
+	authedPostForm(router, session, cd, "/account/list-prefs", url.Values{
+		auth.CSRFFormField: {td}, "size": {"50"}, "sort": {"last"}, "dir": {"desc"}, "return": {"/"},
+	})
+	prefs, _ = models.GetPreferences(ctx, d, user.ID)
+	if !prefs.List.Desc {
+		t.Errorf("dir=desc not stored: %+v", prefs.List)
+	}
+
+	// A plain sort/size change (no dir field) preserves the stored direction.
+	_, tp, cp := authedGet(t, router, session, "/account")
+	authedPostForm(router, session, cp, "/account/list-prefs", url.Values{
+		auth.CSRFFormField: {tp}, "size": {"25"}, "sort": {"first"}, "return": {"/"},
+	})
+	prefs, _ = models.GetPreferences(ctx, d, user.ID)
+	if !prefs.List.Desc {
+		t.Errorf("direction not preserved when dir omitted: %+v", prefs.List)
+	}
+
 	// Invalid values are coerced to defaults, not stored verbatim.
 	_, t2, c2 := authedGet(t, router, session, "/account")
 	authedPostForm(router, session, c2, "/account/list-prefs", url.Values{
-		auth.CSRFFormField: {t2}, "size": {"7"}, "sort": {"bogus"}, "return": {"/"},
+		auth.CSRFFormField: {t2}, "size": {"7"}, "sort": {"bogus"}, "dir": {"asc"}, "return": {"/"},
 	})
 	prefs, _ = models.GetPreferences(ctx, d, user.ID)
-	if prefs.List.PageSize != 0 || prefs.List.Sort != "" {
+	if prefs.List.PageSize != 0 || prefs.List.Sort != "" || prefs.List.Desc {
 		t.Errorf("invalid values not coerced: %+v", prefs.List)
 	}
 }

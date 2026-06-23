@@ -525,30 +525,37 @@ func GetContactByID(ctx context.Context, d *db.DB, id int64) (Contact, error) {
 	return c, err
 }
 
-// contactOrderBy maps a user-facing sort key to a SQL ORDER BY clause. The key
-// is whitelisted here (never interpolated from user input), so it is safe to
-// concatenate. Empty/unknown values always sort last; an unrecognized key falls
-// back to given-name order.
-func contactOrderBy(sort string) string {
+// contactOrderBy maps a user-facing sort key and direction to a SQL ORDER BY
+// clause. Both are whitelisted here (never interpolated from user input), so it
+// is safe to concatenate. The "empties last" guard is always ascending so
+// missing values stay at the bottom in both directions; only the value columns
+// take the chosen direction, with full_name as a stable ascending tiebreaker.
+// An unrecognized key falls back to given-name order.
+func contactOrderBy(sort string, desc bool) string {
+	dir := "ASC"
+	if desc {
+		dir = "DESC"
+	}
 	const byName = "full_name COLLATE NOCASE"
 	switch sort {
 	case "last":
-		return "(family_name IS NULL OR family_name = ''), family_name COLLATE NOCASE, " + byName
+		return "(family_name IS NULL OR family_name = ''), family_name COLLATE NOCASE " + dir + ", " + byName
 	case "age":
-		// Oldest first by birth date; unknown (NULL/empty/year-less) sort last.
-		return "(birthday IS NULL OR birthday = '' OR substr(birthday,1,4) = '0000'), birthday, " + byName
+		// birthday ascending = earliest date = oldest person; unknown sorts last.
+		return "(birthday IS NULL OR birthday = '' OR substr(birthday,1,4) = '0000'), birthday " + dir + ", " + byName
 	case "location":
-		return "(country IS NULL OR country = ''), country COLLATE NOCASE, postal_code COLLATE NOCASE, " + byName
+		return "(country IS NULL OR country = ''), country COLLATE NOCASE " + dir + ", postal_code COLLATE NOCASE " + dir + ", " + byName
 	default: // "first" and the default
-		return "(given_name IS NULL OR given_name = ''), given_name COLLATE NOCASE, " + byName
+		return "(given_name IS NULL OR given_name = ''), given_name COLLATE NOCASE " + dir + ", " + byName
 	}
 }
 
 // ListContacts returns a page of contacts in a book, optionally filtered by a
 // case-insensitive substring across the structured columns and ordered by the
-// given (whitelisted) sort key, plus the total matching count for pagination.
-// A limit of -1 returns every matching row (SQLite treats LIMIT -1 as no limit).
-func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query, sort string, limit, offset int) ([]Contact, int, error) {
+// given (whitelisted) sort key and direction, plus the total matching count for
+// pagination. A limit of -1 returns every matching row (SQLite treats LIMIT -1
+// as no limit).
+func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query, sort string, desc bool, limit, offset int) ([]Contact, int, error) {
 	where := "address_book_id = ?"
 	args := []any{addressBookID}
 	if q := strings.TrimSpace(query); q != "" {
@@ -566,7 +573,7 @@ func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query, sor
 	rows, err := d.QueryContext(ctx,
 		`SELECT id, public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, uid, etag
 		 FROM contacts WHERE `+where+`
-		 ORDER BY `+contactOrderBy(sort)+` LIMIT ? OFFSET ?`, pageArgs...)
+		 ORDER BY `+contactOrderBy(sort, desc)+` LIMIT ? OFFSET ?`, pageArgs...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("models: list contacts: %w", err)
 	}

@@ -75,6 +75,7 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sort := prefs.List.SortKey()
+	desc := prefs.List.Desc
 	limit, showAll := prefs.List.PageLimit()
 	// The size the selector should show as chosen: the "all" sentinel, or the
 	// effective limit (so the default 0 shows as its real value, e.g. 25).
@@ -89,7 +90,7 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 	if showAll {
 		page, offset = 1, 0
 	}
-	contacts, total, err := models.ListContacts(r.Context(), h.DB, book.ID, query, sort, limit, offset)
+	contacts, total, err := models.ListContacts(r.Context(), h.DB, book.ID, query, sort, desc, limit, offset)
 	if err != nil {
 		h.Logger.Error("list contacts failed", "err", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -108,6 +109,7 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 		"Total":        total,
 		"Page":         page,
 		"Sort":         sort,
+		"Desc":         desc,
 		"SelectedSize": selectedSize,
 		"ShowAll":      showAll,
 		"SortOptions":  models.AllowedSorts,

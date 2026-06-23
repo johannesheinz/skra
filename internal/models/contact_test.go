@@ -102,7 +102,7 @@ func TestListContactsSearchAndPagination(t *testing.T) {
 	}
 
 	// Search.
-	results, total, err := models.ListContacts(ctx, d, book.ID, "alice", "", 10, 0)
+	results, total, err := models.ListContacts(ctx, d, book.ID, "alice", "", false, 10, 0)
 	if err != nil {
 		t.Fatalf("ListContacts search: %v", err)
 	}
@@ -111,14 +111,14 @@ func TestListContactsSearchAndPagination(t *testing.T) {
 	}
 
 	// Pagination: page size 2 over 4 contacts.
-	page1, total, err := models.ListContacts(ctx, d, book.ID, "", "", 2, 0)
+	page1, total, err := models.ListContacts(ctx, d, book.ID, "", "", false, 2, 0)
 	if err != nil {
 		t.Fatalf("ListContacts page1: %v", err)
 	}
 	if total != 4 || len(page1) != 2 {
 		t.Errorf("page1 total=%d len=%d, want 4/2", total, len(page1))
 	}
-	page2, _, _ := models.ListContacts(ctx, d, book.ID, "", "", 2, 2)
+	page2, _, _ := models.ListContacts(ctx, d, book.ID, "", "", false, 2, 2)
 	if len(page2) != 2 {
 		t.Errorf("page2 len=%d, want 2", len(page2))
 	}

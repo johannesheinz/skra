@@ -68,7 +68,7 @@ func TestImportVCardFlow(t *testing.T) {
 	}
 
 	// Contacts now exist in the book.
-	contacts, total, _ := models.ListContacts(ctx, d, book.ID, "", "", 50, 0)
+	contacts, total, _ := models.ListContacts(ctx, d, book.ID, "", "", false, 50, 0)
 	if total != 2 || len(contacts) != 2 {
 		t.Errorf("after import total=%d, want 2", total)
 	}

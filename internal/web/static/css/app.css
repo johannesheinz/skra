@@ -400,6 +400,9 @@ legend { padding: 0 var(--space-2); }
 /* ---- List preferences (sort + page size) ---- */
 .list-prefs { display: flex; flex-wrap: wrap; align-items: end; justify-content: flex-end; gap: var(--space-3); margin-bottom: var(--space-4); }
 .list-prefs label { display: inline-flex; flex-direction: column; gap: var(--space-1); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+.sort-control { display: inline-flex; gap: var(--space-2); margin-top: var(--space-1); }
+.sort-control select { margin-top: 0; }
+.sort-control .btn-icon { min-height: 2.5rem; }
 
 /* ---- Pager ---- */
 .pager { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-5); }

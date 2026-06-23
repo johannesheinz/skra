@@ -22,6 +22,7 @@ type ThemePrefs struct {
 type ListPrefs struct {
 	PageSize int    `json:"pageSize,omitempty"` // 0 = default, -1 = all, else the page size
 	Sort     string `json:"sort,omitempty"`     // "" | "first" | "last" | "age" | "location"
+	Desc     bool   `json:"desc,omitempty"`     // false = ascending, true = descending
 }
 
 // DefaultPageSize is used when the user has not chosen one.
@@ -35,7 +36,7 @@ var AllowedPageSizes = []int{10, 25, 50, 100, -1}
 var AllowedSorts = []struct{ Key, Label string }{
 	{"first", "First name"},
 	{"last", "Last name"},
-	{"age", "Age (oldest first)"},
+	{"age", "Age"},
 	{"location", "Location"},
 }
 

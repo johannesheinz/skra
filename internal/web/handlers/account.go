@@ -159,7 +159,17 @@ func (h *Handlers) AccountListPrefsUpdate(w http.ResponseWriter, r *http.Request
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	prefs.List = models.ListPrefs{PageSize: size, Sort: sort}
+	// Direction is only submitted by the asc/desc toggle button; a plain
+	// sort/size change (auto-submitted <select>) omits it, so preserve the
+	// stored value in that case rather than resetting to ascending.
+	desc := prefs.List.Desc
+	switch r.PostFormValue("dir") {
+	case "asc":
+		desc = false
+	case "desc":
+		desc = true
+	}
+	prefs.List = models.ListPrefs{PageSize: size, Sort: sort, Desc: desc}
 	if err := models.UpdatePreferences(r.Context(), h.DB, user.ID, prefs); err != nil {
 		h.Logger.Error("update preferences failed", "err", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

@@ -31,20 +31,25 @@
 </div>
 
 {{if .Cards}}
-<form class="list-prefs" method="post" action="/account/list-prefs">
+<form class="list-prefs" method="post" action="/account/list-prefs" data-autosubmit>
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
   <input type="hidden" name="return" value="{{.ListPrefsReturn}}">
   <label>Sort
-    <select name="sort">
-      {{range .SortOptions}}<option value="{{.Key}}"{{if eq .Key $.Sort}} selected{{end}}>{{.Label}}</option>{{end}}
-    </select>
+    <span class="sort-control">
+      <select name="sort" data-autosubmit-control>
+        {{range .SortOptions}}<option value="{{.Key}}"{{if eq .Key $.Sort}} selected{{end}}>{{.Label}}</option>{{end}}
+      </select>
+      <button class="btn-secondary btn-icon" type="submit" name="dir" value="{{if .Desc}}asc{{else}}desc{{end}}"
+              aria-label="{{if .Desc}}Sorted descending — switch to ascending{{else}}Sorted ascending — switch to descending{{end}}"
+              title="{{if .Desc}}Descending{{else}}Ascending{{end}}">{{if .Desc}}{{icon "chevron-down"}}{{else}}{{icon "chevron-up"}}{{end}}</button>
+    </span>
   </label>
   <label>Show
-    <select name="size">
+    <select name="size" data-autosubmit-control>
       {{range .PageSizes}}<option value="{{.}}"{{if eq . $.SelectedSize}} selected{{end}}>{{if eq . -1}}All{{else}}{{.}}{{end}}</option>{{end}}
     </select>
   </label>
-  <button class="btn-secondary" type="submit">Apply</button>
+  <button class="btn-secondary" type="submit" data-js-hide>Apply</button>
 </form>
 {{template "contact_cards" .Cards}}
 <nav class="pager" aria-label="Pagination">
