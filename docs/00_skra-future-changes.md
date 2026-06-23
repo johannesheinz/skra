@@ -11,7 +11,11 @@ user profile pages, accessibility, and internationalization.
 
 ---
 
-## 1. Password hashing: salt and pepper
+## 1. Password hashing: salt and pepper — won't fix
+
+Decision: **won't fix.** Salting (§1a) is already handled correctly by argon2id via the stored PHC string, so there is nothing to add there. The optional pepper (§1b) and scheme versioning (§1c) are deliberately declined: a pepper's value hinges on keeping a secret out of the database, but this app ships as a single binary beside its SQLite file on the same host, so a compromise that reads the DB almost certainly reads the pepper too — it adds key-management burden and a rehash/rollout path for little real gain here. Revisit only if the deployment model changes (e.g. secret stored in an HSM/KMS separate from the DB).
+
+Original analysis retained below for reference.
 
 ### Important clarification first
 
@@ -320,7 +324,11 @@ Details to handle:
 
 Effort/risk: medium — a migration plus denormalization (and a backfill of existing rows from `vcard_raw`), one scoped query, and a small home-page widget. No new dependency.
 
-## 10. Theming (light / dark)
+## 10. Theming (light / dark) — implemented
+
+Shipped, and broader than the original sketch: a **Mode / Flavor / Accent** triplet stored per user in the `preferences` JSON blob (`UIPreferences.Theme`). Mode is light / dark / system; Flavor adds a Solarized palette; Accent is a preset from a curated neon/pastel set. The server stamps `data-theme` / `data-flavor` / `data-accent` on `<html>` from the saved preference (no flash, no schema migration beyond the existing `preferences` column). Logged-out visitors get a per-device choice via a self-hosted `theme.js` + `localStorage` (never inline, so `script-src 'self'` holds); logged-in pages are DB-authoritative (`data-theme-managed`) and the header toggle POSTs to persist. Appearance is editable on the account page; the header toggle is a compact contrast-icon button. Default accents are set explicitly per mode/flavor.
+
+Original notes retained below for reference.
 
 The stylesheet already defines both palettes via design tokens and switches on `prefers-color-scheme`, so the app follows the OS today. The addition is an explicit user choice — light / dark / system — that overrides the OS setting.
 
@@ -332,7 +340,11 @@ Approach that keeps the self-only CSP and avoids a flash of the wrong theme:
 
 Effort/risk: low. Tokens exist; it's a cookie, a server-set attribute, a couple of CSS rules, and a toggle.
 
-## 11. Richer user profile pages
+## 11. Richer user profile pages — implemented
+
+Shipped: the account page (`/account`) now has Profile (edit own email; username shown but immutable, with a not-allowed cursor), Appearance (the theming triplet from §10), Memberships (the address books you belong to and your access level, via `ListMembershipsForUser`), and Security (password change). Role stays admin-only. The same membership context is available to admins on the user-edit page. No schema change beyond the existing `email`/`preferences` columns.
+
+Original notes retained below for reference.
 
 Self-service today is limited to changing your own password (`/account/password`). Two gaps:
 
@@ -386,8 +398,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 
 | Change | Schema impact | Effort / risk | Recommendation |
 |---|---|---|---|
-| Verify argon2id salting (1a) | none | very low | Do it — it's verification |
-| Add pepper + scheme versioning (1b/1c) | optional 1 column | low, lazy migration | Add if a DB-leak threat model warrants it |
+| Password salt/pepper (§1) | none | — | 🚫 won't fix — argon2id already salts; pepper adds little on a single-host deploy |
 | Multi-book via move/duplicate (A) | none | low | Fine for occasional cross-filing |
 | Multi-book via M:N join (B) | join table + contacts rebuild | medium | Choose for true shared contacts; do it early |
 | Full-text search via FTS5 (§3) | new virtual table + triggers | low–medium | Add when `LIKE` search becomes a limitation |
@@ -397,7 +408,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Map address links (§7) | ✅ implemented | very low | OSM + Google Maps + directions link-outs (no embed); Region field dropped |
 | Responsive / mobile layout (§8) | none (CSS + minor templates) | low–medium | Deliberate small-screen pass; pairs with the design/colors pass |
 | Upcoming birthdays on landing (§9) | denormalized birthday column + backfill | medium | Needs a queryable birthday; then a small dashboard widget |
-| Theming light/dark (§10) | none (cookie) or 1 column (per-user) | low | Tokens exist; server-set data-theme, no flash, CSP-safe |
-| Richer user profiles (§11) | none | low–medium | Show memberships + let users edit their own email |
+| Theming light/dark (§10) | ✅ implemented | low | Per-user Mode/Flavor/Accent in preferences; server-set data-* attrs, no flash |
+| Richer user profiles (§11) | ✅ implemented | low–medium | Account page: email edit, memberships, appearance, password |
 | Accessibility (§12) | none (templates/CSS) | low–medium | a11y pass: labels, focus, aria-live, contrast; verify with axe |
 | Internationalization (§13) | none (catalogs + locale) | medium–high | Externalize strings, locale select, plurals/dates, RTL |
