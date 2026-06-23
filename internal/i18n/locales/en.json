@@ -253,5 +253,26 @@
   "msg.no_contacts_found": "No contacts found in that file.",
   "msg.enter_book_name": "Enter a name for the new address book.",
   "msg.book_create_failed": "Could not create the address book.",
-  "msg.login_failed": "Invalid username or password."
+  "msg.login_failed": "Invalid username or password.",
+
+  "msg.password_min": "Password must be at least 8 characters.",
+  "msg.username_email_required": "Username and email are required.",
+  "msg.invalid_role": "Choose a valid role.",
+  "msg.username_or_email_in_use": "Username or email already in use.",
+  "msg.email_role_required": "Email and a valid role are required.",
+  "msg.last_admin_demote": "Cannot demote the last admin.",
+  "msg.password_reset": "Password reset.",
+  "msg.delete_self": "You cannot delete your own account.",
+  "msg.last_admin_delete": "Cannot delete the last admin.",
+  "msg.user_owns_books": "This user owns address books; reassign or delete those first.",
+  "msg.user_delete_failed": "Could not delete this user.",
+  "msg.invalid_access_level": "Choose a valid access level.",
+  "msg.no_such_user": "No user with that username.",
+  "msg.username_email_taken": "That username or email is already taken.",
+  "msg.owner_access_locked": "The book owner's access cannot be removed.",
+  "msg.share_create_failed": "Could not create share link.",
+  "msg.invalid_share_mode": "Choose a valid share mode.",
+  "msg.gated_needs_secret": "A gated link requires a secret.",
+  "msg.max_uses_invalid": "Max uses must be a non-negative number.",
+  "msg.expiry_invalid": "Expiry must be a valid date."
 }

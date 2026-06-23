@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/johannesheinz/skra/internal/auth"
+	"github.com/johannesheinz/skra/internal/i18n"
 	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/rbac"
 	"github.com/johannesheinz/skra/internal/sharing"
@@ -131,7 +132,7 @@ func (h *Handlers) createShare(w http.ResponseWriter, r *http.Request, title, ba
 		params.SecretHash = hash
 	}
 	if _, err := models.CreateShareLink(r.Context(), h.DB, params); err != nil {
-		h.renderShares(w, r, http.StatusUnprocessableEntity, title, backURL, scope, targetID, "Could not create share link.")
+		h.renderShares(w, r, http.StatusUnprocessableEntity, title, backURL, scope, targetID, h.tr(r).T("msg.share_create_failed"))
 		return
 	}
 	http.Redirect(w, r, backURL+"/shares", http.StatusSeeOther)
@@ -176,19 +177,20 @@ func (h *Handlers) revokeShare(w http.ResponseWriter, r *http.Request, backURL, 
 // parseShareForm validates the creation form and returns the params or a
 // user-facing error message.
 func parseShareForm(r *http.Request, scope string, targetID, createdBy int64) (models.NewShareLinkParams, string) {
+	tr := i18n.For(i18n.FromContext(r.Context()))
 	mode := r.PostFormValue("mode")
 	if !sharing.ValidMode(mode) {
-		return models.NewShareLinkParams{}, "Choose a valid share mode."
+		return models.NewShareLinkParams{}, tr.T("msg.invalid_share_mode")
 	}
 	if mode == sharing.ModeGated && r.PostFormValue("secret") == "" {
-		return models.NewShareLinkParams{}, "A gated link requires a secret."
+		return models.NewShareLinkParams{}, tr.T("msg.gated_needs_secret")
 	}
 
 	var maxUses int64
 	if raw := r.PostFormValue("max_uses"); raw != "" {
 		n, err := strconv.ParseInt(raw, 10, 64)
 		if err != nil || n < 0 {
-			return models.NewShareLinkParams{}, "Max uses must be a non-negative number."
+			return models.NewShareLinkParams{}, tr.T("msg.max_uses_invalid")
 		}
 		maxUses = n
 	}
@@ -197,7 +199,7 @@ func parseShareForm(r *http.Request, scope string, targetID, createdBy int64) (m
 	if raw := r.PostFormValue("expires"); raw != "" {
 		day, err := time.Parse("2006-01-02", raw)
 		if err != nil {
-			return models.NewShareLinkParams{}, "Expiry must be a valid date."
+			return models.NewShareLinkParams{}, tr.T("msg.expiry_invalid")
 		}
 		expiresAt = time.Date(day.Year(), day.Month(), day.Day(), 23, 59, 59, 0, time.UTC).Format("2006-01-02 15:04:05")
 	}

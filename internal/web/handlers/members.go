@@ -41,13 +41,13 @@ func (h *Handlers) BookMemberAdd(w http.ResponseWriter, r *http.Request) {
 	username := strings.TrimSpace(r.PostFormValue("username"))
 	level := r.PostFormValue("level")
 	if !models.ValidAccessLevel(level) {
-		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, "Choose a valid access level.")
+		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, h.tr(r).T("msg.invalid_access_level"))
 		return
 	}
 	user, err := models.GetUserByUsername(r.Context(), h.DB, username)
 	if err != nil {
 		if errors.Is(err, models.ErrUserNotFound) {
-			h.renderMembers(w, r, http.StatusUnprocessableEntity, book, "No user with that username.")
+			h.renderMembers(w, r, http.StatusUnprocessableEntity, book, h.tr(r).T("msg.no_such_user"))
 			return
 		}
 		h.Logger.Error("member lookup failed", "err", err)
@@ -79,13 +79,13 @@ func (h *Handlers) BookMemberCreate(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case username == "" || email == "":
-		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, "Username and email are required.")
+		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, h.tr(r).T("msg.username_email_required"))
 		return
 	case !models.ValidAccessLevel(level):
-		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, "Choose a valid access level.")
+		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, h.tr(r).T("msg.invalid_access_level"))
 		return
 	case len(password) < MinPasswordLen:
-		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, "Password must be at least 8 characters.")
+		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, h.tr(r).T("msg.password_min"))
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *Handlers) BookMemberCreate(w http.ResponseWriter, r *http.Request) {
 	user, err := models.CreateUser(r.Context(), h.DB, username, email, hash, models.RoleUser)
 	if err != nil {
 		// Collisions are reported generically; managers must create new accounts.
-		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, "That username or email is already taken.")
+		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, h.tr(r).T("msg.username_email_taken"))
 		return
 	}
 	if err := models.AddOrUpdateMember(r.Context(), h.DB, book.ID, user.ID, level, current.ID); err != nil {
@@ -125,7 +125,7 @@ func (h *Handlers) BookMemberRevoke(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if user.ID == book.OwnerID {
-		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, "The book owner's access cannot be removed.")
+		h.renderMembers(w, r, http.StatusUnprocessableEntity, book, h.tr(r).T("msg.owner_access_locked"))
 		return
 	}
 	if err := models.RemoveMember(r.Context(), h.DB, book.ID, user.ID); err != nil {

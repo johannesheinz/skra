@@ -391,7 +391,7 @@ Shipped. A locale is a **language × region** pair; the language subtag picks th
 - **Formatting**: numbers grouped per locale (`1,500` vs `1.500`), dates per locale (`Jul 1, 2026` / `01.07.2026` / `1 Jul 2026`), and address line order (US `City 12345` vs European `12345 City`).
 - **Coverage guard**: a test fails the build if German is missing any English key.
 
-Admin/members/shares handler flash strings are the only bits still English (low-traffic admin surfaces); they degrade to English gracefully.
+All handler flash/validation messages — including the admin user-management, per-book members, and share-link screens — go through the pipeline; there are no hardcoded user-facing English strings left.
 
 **RTL: won't do for now.** All shipped and planned locales are left-to-right, so there is no `dir` handling and no RTL locale — carrying RTL scaffolding for an unused case is dead weight. The CSS already uses logical properties (`margin-inline`, etc.), so adding RTL later is mostly a matter of reintroducing a per-locale direction and an `<html dir>` attribute; revisit only when an actual RTL locale is on the table.
 
