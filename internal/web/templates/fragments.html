@@ -6,10 +6,15 @@
 <option value="other"{{if eq . "other"}} selected{{end}}>{{t "type.other"}}</option>
 {{- end}}
 
+{{define "row_remove" -}}
+<button type="button" class="row-remove" data-remove-row aria-label="{{t "common.remove"}}" title="{{t "common.remove"}}">{{icon "x"}}</button>
+{{- end}}
+
 {{define "email_row"}}
 <div class="field-row">
   <select name="email_type" aria-label="{{t "field.email_type"}}">{{template "type_options" .Type}}</select>
   <input type="email" name="email_value" value="{{.Value}}" placeholder="email@example.com">
+  {{template "row_remove"}}
 </div>
 {{end}}
 
@@ -17,12 +22,14 @@
 <div class="field-row">
   <select name="phone_type" aria-label="{{t "field.phone_type"}}">{{template "type_options" .Type}}</select>
   <input type="tel" name="phone_value" value="{{.Value}}" placeholder="+1 555 000 0000">
+  {{template "row_remove"}}
 </div>
 {{end}}
 
 {{define "url_row"}}
 <div class="field-row">
   <input type="url" name="url_value" value="{{.}}" placeholder="https://">
+  {{template "row_remove"}}
 </div>
 {{end}}
 
@@ -33,5 +40,6 @@
   <input name="adr_city" value="{{.City}}" placeholder="{{t "field.city"}}">
   <input name="adr_postal" value="{{.PostalCode}}" placeholder="{{t "field.postal"}}">
   <input name="adr_country" value="{{.Country}}" placeholder="{{t "field.country"}}">
+  {{template "row_remove"}}
 </fieldset>
 {{end}}

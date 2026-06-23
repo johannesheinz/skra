@@ -318,12 +318,14 @@ input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; color:
 fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); margin: 0; background: var(--surface-sunken); }
 legend { padding: 0 var(--space-2); }
 
-/* Repeatable field group: rows plus a floating material "+" in the bottom-right. */
-.field-group { position: relative; padding-bottom: var(--space-8); }
+/* Repeatable field group: rows plus a floating material "+" straddling the
+   bottom-right corner (translated so it sits over the border). */
+.field-group { position: relative; padding-bottom: var(--space-6); }
 .fab-add {
   position: absolute;
-  right: var(--space-3);
-  bottom: var(--space-3);
+  right: 0;
+  bottom: 0;
+  transform: translate(25%, 50%);
   width: 2.75rem;
   height: 2.75rem;
   min-height: 0;
@@ -337,10 +339,9 @@ legend { padding: 0 var(--space-2); }
   color: var(--accent-fg);
   cursor: pointer;
   box-shadow: 0 3px 10px -3px rgba(0, 0, 0, 0.45);
-  transition: background 0.12s ease, transform 0.05s ease, box-shadow 0.12s ease;
+  transition: background 0.12s ease, box-shadow 0.12s ease;
 }
 .fab-add:hover { background: var(--accent-strong); box-shadow: 0 5px 14px -3px rgba(0, 0, 0, 0.5); }
-.fab-add:active { transform: translateY(1px); }
 .fab-add svg { width: 1.4rem; height: 1.4rem; }
 
 /* Birthday: full date picker or month/day selects, plus the "no year" toggle. */
@@ -349,10 +350,30 @@ legend { padding: 0 var(--space-2); }
 .birthday-field select, .birthday-field input[type="date"] { width: auto; }
 
 /* Repeatable form rows (emails/phones/addresses/links). */
-.field-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2); }
+.field-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
 .field-row select { width: auto; }
 .field-row input { flex: 1; min-width: 8rem; }
 .address-row { flex-wrap: wrap; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3); background: var(--surface); }
+/* Per-row remove control, pushed to the row's trailing edge. */
+.row-remove {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.row-remove:hover { color: var(--danger); border-color: var(--danger); }
+.row-remove svg { width: 1.05rem; height: 1.05rem; }
 
 /* ---- Alerts ---- */
 [role="alert"] {

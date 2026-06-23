@@ -16,6 +16,7 @@
   "common.search": "Search",
   "common.revoke": "Revoke",
   "common.apply": "Apply",
+  "common.remove": "Remove",
 
   "login.title": "Sign in",
   "login.username": "Username",
