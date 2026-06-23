@@ -1,0 +1,62 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "schedule:weekly",
+    ":dependencyDashboard"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["gomod"],
+      "groupName": "go dependencies"
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "addLabels": ["vendored-assets"],
+      "prBodyNotes": [
+        "**Vendored asset — manual file refresh required.** Renovate only bumps the version string recorded in `README.md`; it does **not** replace the binary/asset files. After merging you must download the new upstream files, replace the vendored copies (see per-asset path below), and re-run the tests."
+      ]
+    },
+    {
+      "matchPackageNames": ["bigskysoftware/htmx"],
+      "prBodyNotes": [
+        "Replace `internal/web/static/js/htmx-v{{{newVersion}}}.min.js` (delete the old `htmx-v*.min.js`) and update the version comment in `internal/web/static/static.go`."
+      ]
+    },
+    {
+      "matchPackageNames": ["floriankarsten/space-grotesk"],
+      "prBodyNotes": [
+        "Re-subset the font at `{{{newVersion}}}` and replace `internal/web/static/fonts/SpaceGrotesk-{Regular,Medium,Bold}-{{{newVersion}}}.woff2`, then update the version comment in `internal/web/static/static.go`."
+      ]
+    },
+    {
+      "matchPackageNames": ["lucide-static"],
+      "prBodyNotes": [
+        "Re-extract the inlined SVG subset from lucide-static `{{{newVersion}}}` into `internal/web/icons/svg/` and bump `Version` in `internal/web/icons/icons.go`."
+      ]
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track hand-vendored htmx and Space Grotesk versions recorded in the README asset table (github-tags).",
+      "managerFilePatterns": ["/^README\\.md$/"],
+      "matchStrings": [
+        "\\|[^|]*\\|\\s*(?<currentValue>[0-9]+\\.[0-9]+\\.[0-9]+)\\s*\\|\\s*https://github\\.com/(?<packageName>bigskysoftware/htmx|floriankarsten/space-grotesk)\\b"
+      ],
+      "depNameTemplate": "{{{packageName}}}",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver-coerced"
+    },
+    {
+      "customType": "regex",
+      "description": "Track the vendored lucide-static release recorded in the README asset table (npm). The recorded version is the lucide-static package version, so npm is the correct datasource even though the Source column links the GitHub project.",
+      "managerFilePatterns": ["/^README\\.md$/"],
+      "matchStrings": [
+        "\\|\\s*Lucide icons\\s*\\|\\s*(?<currentValue>[0-9]+\\.[0-9]+\\.[0-9]+)\\s*\\|"
+      ],
+      "depNameTemplate": "lucide-static",
+      "datasourceTemplate": "npm"
+    }
+  ]
+}

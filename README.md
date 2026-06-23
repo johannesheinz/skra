@@ -131,7 +131,7 @@ skra/
 
 ## Vendored assets
 
-Frontend assets are self-hosted and embedded in the binary — no CDNs, no third-party origins (see [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md)). They are vendored under `internal/web/static/` (and `internal/web/icons/` for the icon set) and updated manually; Dependabot cannot track them (it only covers manifest ecosystems, and adding `package.json` purely for htmx would reintroduce the npm surface we avoid).
+Frontend assets are self-hosted and embedded in the binary — no CDNs, no third-party origins (see [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md)). They are vendored under `internal/web/static/` (and `internal/web/icons/` for the icon set); there is no `package.json` (adding one purely for htmx would reintroduce the npm surface we avoid). The binary files are refreshed by hand, but the recorded versions are watched automatically — [`renovate.json`](renovate.json) has regex custom-managers that read this table and open a PR bumping the version string when a new upstream release appears (htmx and Space Grotesk via `github-tags`; Lucide via the `lucide-static` npm package, which is where its version comes from). Each such PR carries a note with the exact repo path of the files to replace.
 
 | Asset | Version | Source |
 |---|---|---|
@@ -139,7 +139,7 @@ Frontend assets are self-hosted and embedded in the binary — no CDNs, no third
 | Space Grotesk | 2.0.0 | https://github.com/floriankarsten/space-grotesk |
 | Lucide icons | 1.22.0 | https://github.com/lucide-icons/lucide (subset, inlined) |
 
-To update: replace the files under `internal/web/static/{js,fonts}/`, bump the version here, and re-run the tests.
+To update: bump the version in this table (a Renovate PR does this step and links the paths), replace the corresponding files — htmx under `internal/web/static/js/`, the font under `internal/web/static/fonts/`, the Lucide subset under `internal/web/icons/svg/` (also bump `Version` in `internal/web/icons/icons.go`) — and re-run the tests.
 
 ## License
 
