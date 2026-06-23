@@ -225,7 +225,7 @@ p { margin: 0 0 var(--space-3); }
   border-bottom: 1px solid var(--border);
 }
 .appbar-right { display: flex; align-items: center; gap: var(--space-4); }
-.appnav { display: flex; align-items: center; gap: var(--space-4); }
+.appnav { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-4); }
 .appnav a { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--ink); text-decoration: none; }
 .appnav a:hover { color: var(--accent); }
 .appnav form { margin: 0; }
@@ -412,6 +412,9 @@ legend { padding: 0 var(--space-2); }
 
 /* ---- Cards & tables ---- */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-5) var(--space-6); }
+/* Wide tables scroll horizontally within their own container rather than
+   forcing the whole page to scroll sideways on small screens. */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: var(--space-3) var(--space-3); border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 th { padding-block: var(--space-2); }
@@ -422,7 +425,9 @@ td form { margin: 0; }
 @media (max-width: 40rem) {
   .container { padding: var(--space-5) var(--space-3) var(--space-8); }
   .appbar { flex-wrap: wrap; gap: var(--space-2) var(--space-3); }
-  .appnav { gap: var(--space-3); font-size: 0.95rem; }
+  /* Collapse the nav to icons; labels are exposed via aria-label/title. */
+  .appnav { gap: var(--space-4); font-size: 0.95rem; }
+  .appnav .nav-label { display: none; }
   .details { grid-template-columns: 1fr; gap: 0; }
   .details dt { padding-bottom: 0; }
   .details dd { padding-top: var(--space-1); border-top: none; }
@@ -430,6 +435,15 @@ td form { margin: 0; }
   .field-row { flex-direction: column; align-items: stretch; }
   .field-row select, .field-row input { width: 100%; }
   th, td { padding: var(--space-2); }
+  /* The toolbar's search and actions each take a full row. */
+  .toolbar > form[role="search"] { display: flex; width: 100%; }
+  .toolbar > form[role="search"] input { flex: 1; }
+}
+
+/* On touch devices, give interactive controls a comfortable tap target. */
+@media (pointer: coarse) {
+  .btn, button, select, input[type="file"] { min-height: 2.75rem; }
+  .appnav a, .appnav button { min-height: 2.75rem; }
 }
 
 /* ---- Dashboard ---- */
@@ -541,4 +555,45 @@ section.card + section.card { margin-top: var(--space-5); }
 /* ---- Motion preference ---- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+/* ---- Print ----
+   Strip the app chrome and interactive controls, render black-on-white, and let
+   the record itself (contact directory and contact detail) fill the page. */
+@media print {
+  @page { margin: 1.5cm; }
+  body { background: #fff; color: #000; }
+  a { color: #000; text-decoration: none; }
+
+  /* Chrome and interactive/decorative bits that don't belong on paper. */
+  .appbar, .skip-link, .toolbar, .list-prefs, .pager, .actions,
+  .backlink, .photo-form, .map-links, form, .btn, button {
+    display: none !important;
+  }
+
+  .container { max-width: none; margin: 0; padding: 0; }
+  h1 { font-size: 18pt; }
+  h2 { font-size: 14pt; }
+
+  /* Overview: contact/address-book cards print as a compact, unbroken list. */
+  .card-grid { display: block; }
+  .contact-card {
+    break-inside: avoid;
+    border: none;
+    border-bottom: 1px solid #999;
+    border-radius: 0;
+    padding: 0.15cm 0;
+    transform: none;
+  }
+  .contact-card:hover { transform: none; }
+
+  /* Contact detail: keep the photo modest and the record hairline-ruled. */
+  .contact-header { gap: 0.5cm; margin-bottom: 0.4cm; }
+  .avatar-lg { width: 2.4cm; height: 2.4cm; }
+  .details { break-inside: avoid; }
+  .details dt, .details dd { border-color: #999; }
+
+  /* Tables print in full (no scroll box needed on paper). */
+  .table-wrap { overflow: visible; }
+  th, td { border-color: #999; }
 }

@@ -3,7 +3,7 @@
 <h1>Users</h1>
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 <p><a class="btn" href="/admin/users/new">New user</a></p>
-<table>
+<div class="table-wrap"><table>
   <thead><tr><th>Username</th><th>Email</th><th>Role</th><th></th></tr></thead>
   <tbody>
   {{range .Users}}
@@ -15,5 +15,5 @@
   </tr>
   {{end}}
   </tbody>
-</table>
+</table></div>
 {{end}}

@@ -26,7 +26,7 @@
 
 <h2>Existing links</h2>
 {{if .Links}}
-<table>
+<div class="table-wrap"><table>
   <thead><tr><th>Mode</th><th>URL</th><th>Status</th><th>Uses</th><th></th></tr></thead>
   <tbody>
   {{range .Links}}
@@ -44,7 +44,7 @@
   </tr>
   {{end}}
   </tbody>
-</table>
+</table></div>
 {{else}}
 <p class="muted">No share links yet.</p>
 {{end}}

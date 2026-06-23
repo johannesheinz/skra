@@ -22,6 +22,8 @@ Shared conventions for working on Skrá. These complement the architecture rules
 - **Fonts: self-hosted Space Grotesk (OFL), WOFF2, subset and committed pre-built** (no font tooling in the build). Single weight unless more is genuinely needed; `font-display: swap` with a system-font fallback stack.
 - **htmx is self-hosted** (embedded), never loaded from a CDN.
 - Assets get content-hashed filenames and long immutable cache headers.
+- **Responsive by default — it has to look good and be usable on a mobile phone.** Every page must be comfortable on a small touch screen, not merely not-broken: no horizontal page scroll (wide content like tables scrolls inside its own container), tap targets are finger-sized on coarse pointers, inputs use `font-size: 16px` so iOS does not zoom, and the nav collapses gracefully. Breakpoints are plain token-driven `@media` rules — no framework. Verify layouts down to a ~360px-wide viewport when changing any page.
+- **Print stylesheet.** A `@media print` block keeps the record printable: it strips the app chrome (nav, toolbars, pagers, action buttons, forms, decorative links) and renders black-on-white. The address-book/contact overview and the contact detail page in particular must produce a clean printout / PDF.
 
 ## Documentation & commit messages
 

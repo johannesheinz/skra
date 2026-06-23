@@ -33,11 +33,11 @@
     <div class="appbar-right">
       {{with .User}}
       <nav class="appnav">
-        <a href="/books">{{icon "book-open"}} Address books</a>
-        {{if eq .Role "admin"}}<a href="/admin/users">{{icon "users"}} Users</a>{{end}}
-        <a href="/account">{{icon "settings"}} {{.Username}}</a>
+        <a href="/books" aria-label="Address books" title="Address books">{{icon "book-open"}} <span class="nav-label">Address books</span></a>
+        {{if eq .Role "admin"}}<a href="/admin/users" aria-label="Users" title="Users">{{icon "users"}} <span class="nav-label">Users</span></a>{{end}}
+        <a href="/account" aria-label="Account settings" title="{{.Username}}">{{icon "settings"}} <span class="nav-label">{{.Username}}</span></a>
         <form method="post" action="/logout">
-          <button class="btn-secondary" type="submit">{{icon "log-out"}} Sign out</button>
+          <button class="btn-secondary" type="submit" aria-label="Sign out" title="Sign out">{{icon "log-out"}} <span class="nav-label">Sign out</span></button>
           <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
         </form>
       </nav>

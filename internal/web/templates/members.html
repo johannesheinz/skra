@@ -5,7 +5,7 @@
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 
 {{if .Members}}
-<table>
+<div class="table-wrap"><table>
   <thead><tr><th>Username</th><th>Email</th><th>Access</th><th></th></tr></thead>
   <tbody>
   {{range .Members}}
@@ -24,7 +24,7 @@
   </tr>
   {{end}}
   </tbody>
-</table>
+</table></div>
 {{else}}
 <p class="muted">No members yet.</p>
 {{end}}
