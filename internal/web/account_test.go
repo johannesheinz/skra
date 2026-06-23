@@ -134,20 +134,20 @@ func TestAccountListPrefsPersist(t *testing.T) {
 
 	_, token, csrf := authedGet(t, router, session, "/account")
 	rec := authedPostForm(router, session, csrf, "/account/list-prefs", url.Values{
-		auth.CSRFFormField: {token}, "size": {"50"}, "sort": {"last"}, "return": {"/books/abc"},
+		auth.CSRFFormField: {token}, "size": {"48"}, "sort": {"last"}, "return": {"/books/abc"},
 	})
 	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/books/abc" {
 		t.Fatalf("list-prefs = %d %q, want 303 /books/abc", rec.Code, rec.Header().Get("Location"))
 	}
 	prefs, _ := models.GetPreferences(ctx, d, user.ID)
-	if prefs.List.PageSize != 50 || prefs.List.Sort != "last" {
+	if prefs.List.PageSize != 48 || prefs.List.Sort != "last" {
 		t.Errorf("stored list prefs = %+v", prefs.List)
 	}
 
 	// The direction toggle sets Desc.
 	_, td, cd := authedGet(t, router, session, "/account")
 	authedPostForm(router, session, cd, "/account/list-prefs", url.Values{
-		auth.CSRFFormField: {td}, "size": {"50"}, "sort": {"last"}, "dir": {"desc"}, "return": {"/"},
+		auth.CSRFFormField: {td}, "size": {"48"}, "sort": {"last"}, "dir": {"desc"}, "return": {"/"},
 	})
 	prefs, _ = models.GetPreferences(ctx, d, user.ID)
 	if !prefs.List.Desc {

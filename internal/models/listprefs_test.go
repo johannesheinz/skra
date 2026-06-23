@@ -15,10 +15,10 @@ func TestListPrefsPageLimitAndSort(t *testing.T) {
 		wantLimit int
 		wantAll   bool
 	}{
-		{0, 25, false},   // unset -> default
+		{0, 24, false},   // unset -> default
 		{-1, -1, true},   // all
-		{50, 50, false},  // valid
-		{999, 25, false}, // unknown -> default
+		{48, 48, false},  // valid
+		{999, 24, false}, // unknown -> default
 	}
 	for _, c := range cases {
 		l := models.ListPrefs{PageSize: c.size}

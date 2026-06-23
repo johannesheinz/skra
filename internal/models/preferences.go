@@ -26,10 +26,12 @@ type ListPrefs struct {
 }
 
 // DefaultPageSize is used when the user has not chosen one.
-const DefaultPageSize = 25
+const DefaultPageSize = 24
 
-// AllowedPageSizes are the selectable page sizes; -1 renders every row.
-var AllowedPageSizes = []int{10, 25, 50, 100, -1}
+// AllowedPageSizes are the selectable page sizes; -1 renders every row. They are
+// multiples of 12 so rows stay evenly filled across the responsive card grid
+// (2, 3, 4, or 6 columns).
+var AllowedPageSizes = []int{12, 24, 48, 96, -1}
 
 // AllowedSorts are the selectable sort keys mapped to their menu labels, in
 // display order. The empty key is the default (equivalent to "first").
