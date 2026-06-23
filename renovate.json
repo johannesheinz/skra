@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "schedule:weekly",
+    ":dependencyDashboard"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["gomod"],
+      "groupName": "go dependencies"
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "groupName": "vendored frontend assets",
+      "addLabels": ["vendored-assets"]
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track hand-vendored frontend assets (htmx, Space Grotesk) recorded in the README asset table. Renovate only bumps the version string; the binary/font files are still refreshed by hand per the README.",
+      "managerFilePatterns": ["/^README\\.md$/"],
+      "matchStrings": [
+        "\\|[^|]*\\|\\s*(?<currentValue>[0-9]+\\.[0-9]+\\.[0-9]+)\\s*\\|\\s*https://github\\.com/(?<packageName>bigskysoftware/htmx|floriankarsten/space-grotesk)\\b"
+      ],
+      "depNameTemplate": "{{{packageName}}}",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver-coerced"
+    }
+  ]
+}

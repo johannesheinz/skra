@@ -131,7 +131,7 @@ skra/
 
 ## Vendored assets
 
-Frontend assets are self-hosted and embedded in the binary — no CDNs, no third-party origins (see [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md)). They are vendored under `internal/web/static/` (and `internal/web/icons/` for the icon set) and updated manually; Dependabot cannot track them (it only covers manifest ecosystems, and adding `package.json` purely for htmx would reintroduce the npm surface we avoid).
+Frontend assets are self-hosted and embedded in the binary — no CDNs, no third-party origins (see [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md)). They are vendored under `internal/web/static/` (and `internal/web/icons/` for the icon set); there is no `package.json` (adding one purely for htmx would reintroduce the npm surface we avoid). The binary files are refreshed by hand, but the recorded versions are watched automatically — [`renovate.json`](renovate.json) has a regex custom-manager that reads this table and opens a PR bumping the version string when htmx or Space Grotesk cut a new tag.
 
 | Asset | Version | Source |
 |---|---|---|
@@ -139,7 +139,7 @@ Frontend assets are self-hosted and embedded in the binary — no CDNs, no third
 | Space Grotesk | 2.0.0 | https://github.com/floriankarsten/space-grotesk |
 | Lucide icons | 1.22.0 | https://github.com/lucide-icons/lucide (subset, inlined) |
 
-To update: replace the files under `internal/web/static/{js,fonts}/`, bump the version here, and re-run the tests.
+To update: replace the files under `internal/web/static/{js,fonts}/`, bump the version in this table (a Renovate PR does this step for htmx/Space Grotesk), and re-run the tests. Lucide is not auto-tracked — it ships as an inlined subset and its recorded version does not follow the upstream tag scheme, so it is updated entirely by hand.
 
 ## License
 

@@ -216,7 +216,11 @@ When search quality or volume warrants it, add an **FTS5 virtual table** as an e
 
 Effort/risk: low–medium. It is additive (new virtual table + triggers in a migration, swap the search query), needs no schema change to `contacts`, and can be introduced whenever the simple search becomes a limitation. Consider adding it together with the multi-book change (§2) so the search join accounts for `contact_books` membership.
 
-## 4. Dependency updates: migrate Dependabot → Renovate
+## 4. Dependency updates: migrate Dependabot → Renovate — implemented
+
+Shipped: `.github/dependabot.yml` is replaced by [`renovate.json`](../renovate.json). It extends `config:recommended` on a weekly schedule with a dependency dashboard, keeping the gomod / github-actions / docker coverage, and adds a regex custom-manager that reads the README "Vendored assets" table and bumps the recorded htmx and Space Grotesk versions from the `github-tags` datasource. Renovate only edits the version string; the vendored binaries and the font subset are still refreshed by hand. Lucide is intentionally not auto-tracked (inlined subset; its recorded version does not match the upstream tag scheme). Enabling it is an ops step: install the Renovate GitHub App on the repo, or run the self-hosted `renovatebot/github-action`.
+
+Original notes retained below for reference.
 
 Dependabot covers the manifest ecosystems (`gomod`, `github-actions`, `docker`) but cannot track the hand-vendored frontend assets — `htmx.min.js` and the Space Grotesk WOFF2 files — because they have no package manifest, and adding a `package.json` purely to satisfy it would reintroduce the npm supply-chain surface we deliberately avoid. Those assets are therefore updated by hand today (see the README "Vendored assets" section).
 
@@ -373,7 +377,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Multi-book via move/duplicate (A) | none | low | Fine for occasional cross-filing |
 | Multi-book via M:N join (B) | join table + contacts rebuild | medium | Choose for true shared contacts; do it early |
 | Full-text search via FTS5 (§3) | new virtual table + triggers | low–medium | Add when `LIKE` search becomes a limitation |
-| Dependabot → Renovate (§4) | config only (no app code) | low | Do it to also track the vendored htmx/font versions |
+| Dependabot → Renovate (§4) | ✅ implemented | low | `renovate.json` also tracks the vendored htmx/font versions |
 | Contact de-duplication (§5) | none (within-book) | medium | Add after rich fields; pairs with the multi-book change |
 | CSV import (§6) | none (staging exists) | medium | Follow-up to the vCard import; needs a parser + mapping UI |
 | OpenStreetMap address links (§7) | none | very low | Link out (don't embed) to keep the self-only CSP intact |
