@@ -8,34 +8,50 @@
   <label>{{t "contact_form.first_name"}} <input name="given_name" value="{{.D.GivenName}}" autofocus></label>
   <label>{{t "contact_form.last_name"}} <input name="family_name" value="{{.D.FamilyName}}"></label>
 
-  <fieldset>
+  <fieldset class="field-group">
     <legend>{{t "contact_form.emails"}}</legend>
     <div id="emails">{{range .D.Emails}}{{template "email_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary btn-add" hx-get="/ui/rows/email" hx-target="#emails" hx-swap="beforeend">{{icon "plus"}} {{t "contact_form.add_email"}}</button>
+    <button type="button" class="fab-add" hx-get="/ui/rows/email" hx-target="#emails" hx-swap="beforeend" aria-label="{{t "contact_form.add_email"}}" title="{{t "contact_form.add_email"}}">{{icon "plus"}}</button>
   </fieldset>
 
-  <fieldset>
+  <fieldset class="field-group">
     <legend>{{t "contact_form.phones"}}</legend>
     <div id="phones">{{range .D.Phones}}{{template "phone_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary btn-add" hx-get="/ui/rows/phone" hx-target="#phones" hx-swap="beforeend">{{icon "plus"}} {{t "contact_form.add_phone"}}</button>
+    <button type="button" class="fab-add" hx-get="/ui/rows/phone" hx-target="#phones" hx-swap="beforeend" aria-label="{{t "contact_form.add_phone"}}" title="{{t "contact_form.add_phone"}}">{{icon "plus"}}</button>
   </fieldset>
 
-  <fieldset>
+  <fieldset class="field-group">
     <legend>{{t "contact_form.addresses"}}</legend>
     <div id="addresses">{{range .D.Addresses}}{{template "address_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary btn-add" hx-get="/ui/rows/address" hx-target="#addresses" hx-swap="beforeend">{{icon "plus"}} {{t "contact_form.add_address"}}</button>
+    <button type="button" class="fab-add" hx-get="/ui/rows/address" hx-target="#addresses" hx-swap="beforeend" aria-label="{{t "contact_form.add_address"}}" title="{{t "contact_form.add_address"}}">{{icon "plus"}}</button>
   </fieldset>
 
-  <fieldset>
+  <fieldset class="field-group">
     <legend>{{t "contact_form.links"}}</legend>
     <div id="urls">{{range .D.URLs}}{{template "url_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary btn-add" hx-get="/ui/rows/url" hx-target="#urls" hx-swap="beforeend">{{icon "plus"}} {{t "contact_form.add_link"}}</button>
+    <button type="button" class="fab-add" hx-get="/ui/rows/url" hx-target="#urls" hx-swap="beforeend" aria-label="{{t "contact_form.add_link"}}" title="{{t "contact_form.add_link"}}">{{icon "plus"}}</button>
   </fieldset>
 
   <label>{{t "contact_form.org"}} <input name="org" value="{{.D.Org}}"></label>
   <label>{{t "contact_form.title"}} <input name="title" value="{{.D.Title}}"></label>
-  <label>{{t "contact_form.birthday"}} <input type="date" name="birthday" value="{{.BirthdayDate}}"></label>
-  <label class="checkbox"><input type="checkbox" name="birthday_no_year" value="1"{{if .BirthdayNoYear}} checked{{end}}> {{t "contact_form.no_year"}}</label>
+
+  <fieldset class="birthday-field">
+    <legend>{{t "contact_form.birthday"}}</legend>
+    <span data-birthday-date{{if .BirthdayNoYear}} hidden{{end}}>
+      <input type="date" name="birthday" value="{{.BirthdayDate}}">
+    </span>
+    <span class="birthday-md" data-birthday-md{{if not .BirthdayNoYear}} hidden{{end}}>
+      <select name="birthday_month" aria-label="{{t "contact_form.month"}}">
+        <option value="">{{t "contact_form.month"}}</option>
+        {{range seq 12}}<option value="{{.}}"{{if eq . $.BirthdayMonth}} selected{{end}}>{{.}}</option>{{end}}
+      </select>
+      <select name="birthday_day" aria-label="{{t "contact_form.day"}}">
+        <option value="">{{t "contact_form.day"}}</option>
+        {{range seq 31}}<option value="{{.}}"{{if eq . $.BirthdayDay}} selected{{end}}>{{.}}</option>{{end}}
+      </select>
+    </span>
+    <label class="checkbox"><input type="checkbox" name="birthday_no_year" value="1" data-birthday-noyear{{if .BirthdayNoYear}} checked{{end}}> {{t "contact_form.no_year"}}</label>
+  </fieldset>
   <label>{{t "contact_form.note"}} <textarea name="note" rows="3">{{.D.Note}}</textarea></label>
 
   <div class="actions">

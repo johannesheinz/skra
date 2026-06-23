@@ -23,6 +23,15 @@ import (
 //go:embed *.html
 var files embed.FS
 
+// seq returns [1, 2, …, n] for generating <option> ranges in templates.
+func seq(n int) []int {
+	out := make([]int, n)
+	for i := range out {
+		out[i] = i + 1
+	}
+	return out
+}
+
 // initial returns the uppercased first letter of s for avatar placeholders.
 func initial(s string) string {
 	for _, r := range strings.TrimSpace(s) {
@@ -38,6 +47,7 @@ func localeFuncs(tr *i18n.Translator) template.FuncMap {
 		"static":           static.URL,
 		"icon":             icons.Inline,
 		"initial":          initial,
+		"seq":              seq,
 		"t":                tr.T,
 		"tf":               tr.Tf,
 		"tn":               tr.Plural,

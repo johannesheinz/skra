@@ -113,6 +113,8 @@
   "contact_form.title": "Position",
   "contact_form.birthday": "Geburtstag",
   "contact_form.no_year": "Ohne Jahr",
+  "contact_form.month": "Monat",
+  "contact_form.day": "Tag",
   "contact_form.note": "Notiz",
 
   "contact.change_photo": "Foto ändern",

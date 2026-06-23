@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -291,7 +292,7 @@ func contactInputFromForm(r *http.Request) models.ContactInput {
 		FamilyName: r.PostFormValue("family_name"),
 		Org:        r.PostFormValue("org"),
 		Title:      r.PostFormValue("title"),
-		Birthday:   birthdayFromForm(r.PostFormValue("birthday"), r.PostFormValue("birthday_no_year") != ""),
+		Birthday:   birthdayFromForm(r),
 		Note:       r.PostFormValue("note"),
 		Emails:     typedFromForm(r.PostForm["email_type"], r.PostForm["email_value"]),
 		Phones:     typedFromForm(r.PostForm["phone_type"], r.PostForm["phone_value"]),
@@ -300,30 +301,36 @@ func contactInputFromForm(r *http.Request) models.ContactInput {
 	}
 }
 
-// birthdayFromForm turns the date-input value into the stored birthday. When
-// "no year" is chosen, the year is dropped to the vCard year-less form
-// (--MM-DD); otherwise the YYYY-MM-DD value passes through.
-func birthdayFromForm(date string, noYear bool) string {
-	date = strings.TrimSpace(date)
-	if noYear && len(date) == 10 { // YYYY-MM-DD -> --MM-DD
-		return "--" + date[5:]
+// birthdayFromForm builds the stored birthday from the form. With "no year"
+// ticked it reads the month/day selects into the vCard year-less form
+// (--MM-DD); otherwise it takes the full date input (YYYY-MM-DD).
+func birthdayFromForm(r *http.Request) string {
+	if r.PostFormValue("birthday_no_year") != "" {
+		m, _ := strconv.Atoi(r.PostFormValue("birthday_month"))
+		d, _ := strconv.Atoi(r.PostFormValue("birthday_day"))
+		if m >= 1 && m <= 12 && d >= 1 && d <= 31 {
+			return fmt.Sprintf("--%02d-%02d", m, d)
+		}
+		return ""
 	}
-	return date
+	return strings.TrimSpace(r.PostFormValue("birthday"))
 }
 
-// splitBirthday prepares a stored birthday for the date input: a value suitable
-// for <input type="date"> (a placeholder year is supplied for year-less
-// birthdays so the control can show the month/day) and whether the year is
-// omitted.
-func splitBirthday(raw string) (dateValue string, noYear bool) {
+// splitBirthday prepares a stored birthday for the two form controls: a value
+// for <input type="date"> (a placeholder year fills in for year-less birthdays),
+// the month and day for the year-less selects, and whether the year is omitted.
+// Both controls are prefilled so toggling "no year" client-side keeps the value.
+func splitBirthday(raw string) (dateValue string, month, day int, noYear bool) {
 	norm := models.NormalizeBirthday(raw) // "YYYY-MM-DD" or "" (year 0000 = year-less)
 	if norm == "" {
-		return "", false
+		return "", 0, 0, false
 	}
+	month, _ = strconv.Atoi(norm[5:7])
+	day, _ = strconv.Atoi(norm[8:10])
 	if norm[:4] == "0000" {
-		return "2000" + norm[4:], true
+		return "2000" + norm[4:], month, day, true
 	}
-	return norm, false
+	return norm, month, day, false
 }
 
 // typedFromForm pairs parallel type/value arrays into typed values, dropping
@@ -389,13 +396,15 @@ func nonEmptyValues(values []string) []string {
 }
 
 func (h *Handlers) renderContactForm(w http.ResponseWriter, r *http.Request, status int, headingKey, action, cancelURL string, details vcardio.Details, errMsg string) {
-	birthdayDate, noYear := splitBirthday(details.Birthday)
+	birthdayDate, bMonth, bDay, noYear := splitBirthday(details.Birthday)
 	h.render(w, r, status, "contact_form.html", map[string]any{
 		"HeadingKey":     headingKey,
 		"FormAction":     action,
 		"CancelURL":      cancelURL,
 		"D":              details,
 		"BirthdayDate":   birthdayDate,
+		"BirthdayMonth":  bMonth,
+		"BirthdayDay":    bDay,
 		"BirthdayNoYear": noYear,
 		"Error":          errMsg,
 	})
