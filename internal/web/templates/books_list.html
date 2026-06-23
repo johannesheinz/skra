@@ -17,4 +17,16 @@
 {{else}}
 <p class="muted">No address books yet.</p>
 {{end}}
+
+{{if eq .User.Role "admin"}}
+<h2 class="dash-heading">Import into a new address book</h2>
+<p class="muted">Upload a vCard (<code>.vcf</code>) file — including one with many contacts — to create a new address book and import them all at once.</p>
+<form class="stack" method="post" action="/books/import" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  {{if .ImportError}}<p role="alert">{{.ImportError}}</p>{{end}}
+  <label>Address book name <input type="text" name="name" required></label>
+  <label>vCard file <input type="file" name="file" accept=".vcf,text/vcard" required></label>
+  <button type="submit">{{icon "upload"}} Create &amp; import</button>
+</form>
+{{end}}
 {{end}}

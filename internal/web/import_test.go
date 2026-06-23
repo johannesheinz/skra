@@ -36,6 +36,73 @@ func uploadVCF(t *testing.T, router http.Handler, session, csrf *http.Cookie, ur
 	return rec
 }
 
+func uploadNewBookVCF(t *testing.T, router http.Handler, session, csrf *http.Cookie, token, name, body string) *httptest.ResponseRecorder {
+	t.Helper()
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+	_ = mw.WriteField(auth.CSRFFormField, token)
+	_ = mw.WriteField("name", name)
+	fw, _ := mw.CreateFormFile("file", "contacts.vcf")
+	_, _ = fw.Write([]byte(body))
+	mw.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/books/import", &buf)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.AddCookie(session)
+	req.AddCookie(csrf)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	return rec
+}
+
+func TestBookImportNewCreatesBookAndImports(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	admin := seedUser(t, d, "admin", "pw", models.RoleAdmin)
+	session := sessionCookieFor(t, d, admin.ID)
+
+	_, token, csrf := authedGet(t, router, session, "/books")
+	rec := uploadNewBookVCF(t, router, session, csrf, token, "Imported Team", importVCF)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Imported <strong>2</strong>") {
+		t.Fatalf("create+import = %d, body:\n%s", rec.Code, rec.Body.String())
+	}
+
+	// The book was created and holds both contacts.
+	books, _ := models.ListAddressBooks(ctx, d, admin)
+	var foundID int64
+	for i := range books {
+		if books[i].Name == "Imported Team" {
+			foundID = books[i].ID
+		}
+	}
+	if foundID == 0 {
+		t.Fatalf("new book not created; have %+v", books)
+	}
+	contacts, total, _ := models.ListContacts(ctx, d, foundID, "", "", false, 50, 0)
+	if total != 2 || len(contacts) != 2 {
+		t.Errorf("imported book total=%d, want 2", total)
+	}
+}
+
+func TestBookImportNewForbiddenForNonAdmin(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	user := seedUser(t, d, "alice", "pw", models.RoleUser)
+	session := sessionCookieFor(t, d, user.ID)
+
+	// The overview does not offer the control to non-admins...
+	page, token, csrf := authedGet(t, router, session, "/books")
+	if strings.Contains(page.Body.String(), "Import into a new address book") {
+		t.Error("non-admin should not see the create+import form")
+	}
+	// ...and the endpoint refuses them (404, not revealing the action).
+	rec := uploadNewBookVCF(t, router, session, csrf, token, "Sneaky", importVCF)
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("non-admin create+import = %d, want 404", rec.Code)
+	}
+}
+
 func TestImportVCardFlow(t *testing.T) {
 	d := testutil.NewDB(t)
 	router := testRouter(t, d)
