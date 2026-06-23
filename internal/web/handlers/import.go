@@ -173,7 +173,7 @@ func (h *Handlers) ImportCommit(w http.ResponseWriter, r *http.Request) {
 		}
 		prepared = append(prepared, models.PreparedImport{
 			FullName: rec.FullName, Org: rec.Org, Email: rec.Email, Phone: rec.Phone,
-			VCardRaw: raw, UID: uid, PhotoJPEG: jpeg,
+			Birthday: rec.Birthday, VCardRaw: raw, UID: uid, PhotoJPEG: jpeg,
 		})
 	}
 

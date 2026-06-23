@@ -69,6 +69,14 @@ func serve() error {
 	defer database.Close()
 	logger.Info("database ready", "path", cfg.DBPath)
 
+	// One-time (idempotent) backfill of the denormalized birthday column for
+	// contacts that predate it; a no-op once every row has been visited.
+	if n, err := models.BackfillBirthdays(context.Background(), database); err != nil {
+		return err
+	} else if n > 0 {
+		logger.Info("backfilled birthdays", "contacts", n)
+	}
+
 	server, err := web.New(cfg, database, logger)
 	if err != nil {
 		return err
