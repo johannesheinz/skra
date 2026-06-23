@@ -174,7 +174,7 @@ func generateContact(i int) (models.ContactInput, []byte) {
 	if i%4 == 0 {
 		in.Addresses = []vcardio.Address{{Type: "home",
 			Street: fmt.Sprintf("%d %s St", 10+i, last), City: cities[i%len(cities)],
-			Region: regions[i%len(regions)], PostalCode: fmt.Sprintf("%05d", 10000+i*37%89999), Country: "USA"}}
+			PostalCode: fmt.Sprintf("%05d", 10000+i*37%89999), Country: "USA"}}
 	}
 	if i%5 == 0 {
 		in.Birthday = fmt.Sprintf("19%02d-%02d-%02d", 60+i%39, 1+i%12, 1+i%28)
@@ -273,5 +273,4 @@ var (
 	orgs       = []string{"Acme", "Globex", "Initech", "Umbrella", "Hooli", "Soylent", "Stark Industries", "Wayne Enterprises"}
 	titles     = []string{"Engineer", "Designer", "Manager", "Analyst", "Director", "Consultant", "Researcher", "Coordinator"}
 	cities     = []string{"Portland", "Austin", "Denver", "Seattle", "Boston", "Atlanta", "Chicago", "Madison"}
-	regions    = []string{"OR", "TX", "CO", "WA", "MA", "GA", "IL", "WI"}
 )

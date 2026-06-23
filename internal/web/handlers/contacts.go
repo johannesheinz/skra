@@ -323,13 +323,12 @@ func typedFromForm(types, values []string) []vcardio.Typed {
 func addressesFromForm(r *http.Request) []vcardio.Address {
 	streets := r.PostForm["adr_street"]
 	cities := r.PostForm["adr_city"]
-	regions := r.PostForm["adr_region"]
 	postals := r.PostForm["adr_postal"]
 	countries := r.PostForm["adr_country"]
 	types := r.PostForm["adr_type"]
 
 	n := len(streets)
-	for _, s := range [][]string{cities, regions, postals, countries} {
+	for _, s := range [][]string{cities, postals, countries} {
 		if len(s) > n {
 			n = len(s)
 		}
@@ -345,7 +344,7 @@ func addressesFromForm(r *http.Request) []vcardio.Address {
 	for i := 0; i < n; i++ {
 		a := vcardio.Address{
 			Type: at(types, i), Street: at(streets, i), City: at(cities, i),
-			Region: at(regions, i), PostalCode: at(postals, i), Country: at(countries, i),
+			PostalCode: at(postals, i), Country: at(countries, i),
 		}
 		if !a.Empty() {
 			out = append(out, a)

@@ -42,7 +42,18 @@
   {{end}}
   {{range .Details.Addresses}}
   <dt>Address{{if .Type}} ({{.Type}}){{end}}</dt>
-  <dd>{{with .Street}}{{.}}<br>{{end}}{{.City}}{{if .Region}}, {{.Region}}{{end}} {{.PostalCode}}{{with .Country}}<br>{{.}}{{end}}</dd>
+  <dd>
+    {{with .Street}}{{.}}<br>{{end}}{{.City}} {{.PostalCode}}{{with .Country}}<br>{{.}}{{end}}
+    {{$q := .SingleLine}}
+    {{if $q}}
+    <span class="map-links">
+      {{icon "map-pin"}}
+      <a href="https://www.openstreetmap.org/search?query={{$q}}" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+      <a href="https://www.google.com/maps/search/?api=1&query={{$q}}" target="_blank" rel="noopener noreferrer">Google Maps</a>
+      <a href="https://www.google.com/maps/dir/?api=1&destination={{$q}}" target="_blank" rel="noopener noreferrer">Directions</a>
+    </span>
+    {{end}}
+  </dd>
   {{end}}
   {{range .Details.URLs}}
   <dt>Link</dt><dd><a href="{{.}}" rel="noopener noreferrer">{{.}}</a></dd>

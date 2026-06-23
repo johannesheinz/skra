@@ -22,14 +22,25 @@ type Address struct {
 	Type       string
 	Street     string
 	City       string
-	Region     string
 	PostalCode string
 	Country    string
 }
 
 // Empty reports whether the address has no content.
 func (a Address) Empty() bool {
-	return a.Street == "" && a.City == "" && a.Region == "" && a.PostalCode == "" && a.Country == ""
+	return a.Street == "" && a.City == "" && a.PostalCode == "" && a.Country == ""
+}
+
+// SingleLine renders the address as one comma-separated line of its non-empty
+// components, suitable as a free-text geocoding query for a map link.
+func (a Address) SingleLine() string {
+	parts := make([]string, 0, 4)
+	for _, p := range []string{a.Street, a.City, a.PostalCode, a.Country} {
+		if s := strings.TrimSpace(p); s != "" {
+			parts = append(parts, s)
+		}
+	}
+	return strings.Join(parts, ", ")
 }
 
 // Details is the rich, editable view of a contact.
@@ -98,7 +109,7 @@ func Encode(d Details, uid string) (string, error) {
 			continue
 		}
 		adr := &vcard.Address{
-			StreetAddress: a.Street, Locality: a.City, Region: a.Region,
+			StreetAddress: a.Street, Locality: a.City,
 			PostalCode: a.PostalCode, Country: a.Country,
 		}
 		if a.Type != "" {
@@ -152,7 +163,7 @@ func Parse(raw string) (Details, error) {
 	}
 	for _, a := range card.Addresses() {
 		addr := Address{
-			Street: a.StreetAddress, City: a.Locality, Region: a.Region,
+			Street: a.StreetAddress, City: a.Locality,
 			PostalCode: a.PostalCode, Country: a.Country,
 		}
 		if a.Field != nil {
