@@ -116,6 +116,13 @@ func TestAccountThemeTogglePersists(t *testing.T) {
 	if !strings.Contains(home.Body.String(), `data-theme="dark"`) || !strings.Contains(home.Body.String(), "data-theme-managed") {
 		t.Error("home should render data-theme=dark and data-theme-managed after toggle")
 	}
+
+	// It returns to the page it was clicked on (not the home page).
+	back := authedPostForm(router, session, csrf, "/account/theme",
+		url.Values{auth.CSRFFormField: {token}, "return": {"/books/abc?q=x"}})
+	if loc := back.Header().Get("Location"); loc != "/books/abc?q=x" {
+		t.Errorf("toggle redirect = %q, want the originating page", loc)
+	}
 }
 
 func TestAccountPasswordRedirect(t *testing.T) {

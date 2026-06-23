@@ -53,6 +53,7 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, pa
 	if data == nil {
 		data = map[string]any{}
 	}
+	data["Path"] = r.URL.RequestURI()
 	if user, ok := auth.UserFromContext(r.Context()); ok {
 		data["User"] = user
 		if _, set := data["Theme"]; !set {

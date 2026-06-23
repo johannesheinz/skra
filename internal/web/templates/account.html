@@ -39,7 +39,7 @@
         {{range .Accents}}
         <label class="swatch">
           <input type="radio" name="accent" value="{{.Value}}" {{if eq $.Theme.Accent .Value}}checked{{end}}>
-          <span class="swatch-chip" data-accent-swatch="{{if .Value}}{{.Value}}{{else}}pine{{end}}"></span>
+          <span class="swatch-chip" data-accent-swatch="{{if .Value}}{{.Value}}{{else}}default{{end}}"></span>
           <span class="swatch-label">{{.Label}}</span>
         </label>
         {{end}}

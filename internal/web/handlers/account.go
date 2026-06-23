@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/johannesheinz/skra/internal/auth"
@@ -17,7 +16,7 @@ type accentOption struct {
 }
 
 var accentOptions = []accentOption{
-	{"", "Default (pine)", "Brand"},
+	{"", "Default", "Brand"},
 	{"slate", "Slate", "Brand"},
 	{"indigo", "Indigo", "Brand"},
 	{"lime", "Lime", "Neon"},
@@ -154,24 +153,19 @@ func (h *Handlers) AccountThemeToggle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, sameOriginPath(r.Referer()), http.StatusSeeOther)
+	// Return to the page the toggle was clicked on. Referer is unusable because
+	// the app sends Referrer-Policy: no-referrer, so the current path is passed
+	// explicitly and validated to a same-origin path to avoid an open redirect.
+	http.Redirect(w, r, safeReturnPath(r.PostFormValue("return")), http.StatusSeeOther)
 }
 
-// sameOriginPath extracts just the path+query from a referer, so redirecting
-// back can never become an open redirect. Falls back to "/".
-func sameOriginPath(referer string) string {
-	if referer == "" {
-		return "/"
+// safeReturnPath accepts only an absolute, non-protocol-relative path; anything
+// else falls back to "/".
+func safeReturnPath(p string) string {
+	if strings.HasPrefix(p, "/") && !strings.HasPrefix(p, "//") {
+		return p
 	}
-	u, err := url.Parse(referer)
-	if err != nil || u.Path == "" {
-		return "/"
-	}
-	dest := u.Path
-	if u.RawQuery != "" {
-		dest += "?" + u.RawQuery
-	}
-	return dest
+	return "/"
 }
 
 // renderAccount renders the settings page with the user's profile, memberships,
