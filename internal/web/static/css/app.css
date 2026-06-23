@@ -232,10 +232,11 @@ p { margin: 0 0 var(--space-3); }
 .brand-mark { height: 1.75rem; width: auto; color: var(--accent); display: block; }
 .brand-word { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.01em; }
 
-/* Theme toggle. Uses button.theme-toggle so it beats the generic
-   button[type="submit"] styling when rendered as a form submit. */
+/* Theme toggle. Scoped under .appbar so it outranks the generic
+   button[type="submit"] styling when the logged-in toggle is a form submit
+   (same specificity otherwise, and the button rule comes later). */
 .theme-toggle-form { margin: 0; }
-button.theme-toggle {
+.appbar button.theme-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -249,7 +250,7 @@ button.theme-toggle {
   border-radius: 999px;
   cursor: pointer;
 }
-button.theme-toggle:hover { color: var(--accent); background: transparent; border-color: var(--border-strong); }
+.appbar button.theme-toggle:hover { color: var(--accent); background: transparent; border-color: var(--border-strong); }
 .theme-toggle svg { width: 1.15rem; height: 1.15rem; }
 
 /* ---- Action rows ---- */

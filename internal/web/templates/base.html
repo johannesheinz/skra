@@ -45,10 +45,10 @@
       <form method="post" action="/account/theme" class="theme-toggle-form">
         <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         <input type="hidden" name="return" value="{{.Path}}">
-        <button class="theme-toggle" type="submit" aria-label="Toggle light or dark theme" title="Toggle light/dark (saved to your account)">{{icon "moon"}}</button>
+        <button class="theme-toggle" type="submit" aria-label="Toggle light or dark theme" title="Toggle light/dark (saved to your account)">{{icon "contrast"}}</button>
       </form>
       {{else}}
-      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light or dark theme" title="Toggle theme">{{icon "moon"}}</button>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light or dark theme" title="Toggle theme">{{icon "contrast"}}</button>
       {{end}}
     </div>
   </header>
