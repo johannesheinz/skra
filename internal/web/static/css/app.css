@@ -80,20 +80,22 @@
   }
 }
 
-/* The default (unset) accent is dark-green pine, too dark on a dark background;
-   brighten it in dark mode. Only applies when no explicit accent is chosen, so
-   accent presets (which carry a data-accent value) are never overridden. */
-:root[data-theme="dark"]:not([data-accent]) {
-  --accent: #63b9a3;
-  --accent-strong: #7ccbb5;
-  --accent-fg: #0c1310;
+/* Default accent (no explicit accent chosen) is set explicitly per mode/flavor,
+   since inference across combinations is fragile. Base :root already gives the
+   light default (pine). Presets carry a data-accent value, so :not([data-accent])
+   keeps them from being overridden. */
+/* default flavor, dark */
+:root[data-theme="dark"]:not([data-flavor="solarized"]):not([data-accent]) {
+  --accent: #63b9a3; --accent-strong: #7ccbb5; --accent-fg: #0c1310;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]):not([data-accent]) {
-    --accent: #63b9a3;
-    --accent-strong: #7ccbb5;
-    --accent-fg: #0c1310;
+  :root:not([data-theme="light"]):not([data-flavor="solarized"]):not([data-accent]) {
+    --accent: #63b9a3; --accent-strong: #7ccbb5; --accent-fg: #0c1310;
   }
+}
+/* solarized flavor, both modes: the signature Solarized blue */
+:root[data-flavor="solarized"]:not([data-accent]) {
+  --accent: #268bd2; --accent-strong: #1f6fa8; --accent-fg: #ffffff;
 }
 
 /* ---- Solarized flavor (Ethan Schoonover's palette) ---- */
@@ -230,14 +232,16 @@ p { margin: 0 0 var(--space-3); }
 .brand-mark { height: 1.75rem; width: auto; color: var(--accent); display: block; }
 .brand-word { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.01em; }
 
-/* Theme toggle. */
+/* Theme toggle. Uses button.theme-toggle so it beats the generic
+   button[type="submit"] styling when rendered as a form submit. */
 .theme-toggle-form { margin: 0; }
-.theme-toggle {
+button.theme-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2.1rem;
   height: 2.1rem;
+  min-height: 0;
   padding: 0;
   color: var(--muted);
   background: transparent;
@@ -245,8 +249,8 @@ p { margin: 0 0 var(--space-3); }
   border-radius: 999px;
   cursor: pointer;
 }
-.theme-toggle:hover { color: var(--accent); border-color: var(--border-strong); }
-.theme-toggle svg { width: 1.05rem; height: 1.05rem; }
+button.theme-toggle:hover { color: var(--accent); background: transparent; border-color: var(--border-strong); }
+.theme-toggle svg { width: 1.15rem; height: 1.15rem; }
 
 /* ---- Action rows ---- */
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
@@ -444,10 +448,12 @@ section.card + section.card { margin-top: var(--space-5); }
 /* The "Default" preview follows the theme's default accent (pine in light,
    brightened in dark), so it changes with the chosen mode. */
 .swatch-chip[data-accent-swatch="default"]  { background: #2f5d50; }
-:root[data-theme="dark"] .swatch-chip[data-accent-swatch="default"] { background: #63b9a3; }
+:root[data-theme="dark"]:not([data-flavor="solarized"]) .swatch-chip[data-accent-swatch="default"] { background: #63b9a3; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .swatch-chip[data-accent-swatch="default"] { background: #63b9a3; }
+  :root:not([data-theme="light"]):not([data-flavor="solarized"]) .swatch-chip[data-accent-swatch="default"] { background: #63b9a3; }
 }
+/* Solarized default preview = Solarized blue (placed last so it wins in solarized+dark). */
+:root[data-flavor="solarized"] .swatch-chip[data-accent-swatch="default"] { background: #268bd2; }
 .swatch-chip[data-accent-swatch="pine"]     { background: #2f5d50; }
 .swatch-chip[data-accent-swatch="slate"]    { background: #3f5566; }
 .swatch-chip[data-accent-swatch="indigo"]   { background: #4f46e5; }

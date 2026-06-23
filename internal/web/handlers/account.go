@@ -194,6 +194,9 @@ func (h *Handlers) renderAccount(w http.ResponseWriter, r *http.Request, status 
 		"Memberships": memberships,
 		"Theme":       prefs.Theme,
 		"Accents":     accentOptions,
+		// The account page is always reachable via GET, even when this render is
+		// the result of a POST, so the header toggle returns here.
+		"Path": "/account",
 	}
 	for k, v := range extra {
 		data[k] = v

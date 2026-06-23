@@ -53,7 +53,16 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, pa
 	if data == nil {
 		data = map[string]any{}
 	}
-	data["Path"] = r.URL.RequestURI()
+	// Path is where the header theme toggle returns to. Only a GET URL is safe
+	// to return to; a POST-rendered page (a form result) would 405 on GET, so
+	// fall back to home unless the caller set an explicit GET path.
+	if _, set := data["Path"]; !set {
+		if r.Method == http.MethodGet {
+			data["Path"] = r.URL.RequestURI()
+		} else {
+			data["Path"] = "/"
+		}
+	}
 	if user, ok := auth.UserFromContext(r.Context()); ok {
 		data["User"] = user
 		if _, set := data["Theme"]; !set {
