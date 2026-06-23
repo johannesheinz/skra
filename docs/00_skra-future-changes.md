@@ -287,7 +287,19 @@ Important constraint — keep it a link, not an embed:
 
 Geocoding to real coordinates is out of scope; the link relies on OpenStreetMap's free-text search. Effort/risk: very low — a template link built from the address fields, no schema change. Make it unobtrusive since clicking it does disclose the address to OpenStreetMap.
 
-## 8. Responsive / mobile layout
+## 8. Responsive / mobile layout — implemented
+
+Shipped a deliberate small-screen pass on top of the existing fluid base:
+
+- **App bar:** the nav collapses to icons under 40rem (`.nav-label` hidden; every link/button carries an `aria-label`/`title`), and the bar wraps cleanly.
+- **Tables:** the user, members, shares, import-preview, membership, and books tables are wrapped in `.table-wrap` (`overflow-x: auto`), so wide tables scroll within their own box instead of pushing the page sideways.
+- **Forms:** `.field-row`/address inputs already stack at the breakpoint; inputs are `font-size: 16px` (no iOS zoom).
+- **Touch targets:** a `@media (pointer: coarse)` rule raises buttons, selects, file inputs, and nav controls to ~44px.
+- **Toolbar:** search takes a full row on phones with the input growing to fill it.
+
+Not done: a full "tables → stacked label/value cards" restyle (kept the scroll-wrapper approach, which is simpler and preserves the tabular reading), and a hamburger menu (icon collapse suffices for the small nav).
+
+Original notes retained below for reference.
 
 The current CSS is already fluid in places (a max-width container, the contact card grid auto-fills, the app bar and toolbars use flex-wrap, the viewport meta tag is set), but there has been no deliberate small-screen pass. A focused responsive phase would make Skrá comfortable on phones.
 
@@ -406,7 +418,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Contact de-duplication (§5) | none (within-book) | medium | Add after rich fields; pairs with the multi-book change |
 | CSV import (§6) | none (staging exists) | medium | Follow-up to the vCard import; needs a parser + mapping UI |
 | Map address links (§7) | ✅ implemented | very low | OSM + Google Maps + directions link-outs (no embed); Region field dropped |
-| Responsive / mobile layout (§8) | none (CSS + minor templates) | low–medium | Deliberate small-screen pass; pairs with the design/colors pass |
+| Responsive / mobile layout (§8) | ✅ implemented | low–medium | Icon-collapse nav, scrollable tables, coarse-pointer tap targets |
 | Upcoming birthdays on landing (§9) | denormalized birthday column + backfill | medium | Needs a queryable birthday; then a small dashboard widget |
 | Theming light/dark (§10) | ✅ implemented | low | Per-user Mode/Flavor/Accent in preferences; server-set data-* attrs, no flash |
 | Richer user profiles (§11) | ✅ implemented | low–medium | Account page: email edit, memberships, appearance, password |

@@ -3,7 +3,7 @@
 <h1>Address books</h1>
 <p><a class="btn" href="/books/new">{{icon "plus"}} New address book</a></p>
 {{if .Books}}
-<table>
+<div class="table-wrap"><table>
   <thead><tr><th>Name</th><th>Contacts</th></tr></thead>
   <tbody>
   {{range .Books}}
@@ -13,7 +13,7 @@
     </tr>
   {{end}}
   </tbody>
-</table>
+</table></div>
 {{else}}
 <p class="muted">No address books yet.</p>
 {{end}}

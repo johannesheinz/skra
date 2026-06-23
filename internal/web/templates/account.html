@@ -52,14 +52,14 @@
 <section class="card stack">
   <h2>Memberships</h2>
   {{if .Memberships}}
-  <table>
+  <div class="table-wrap"><table>
     <thead><tr><th>Address book</th><th>Access</th></tr></thead>
     <tbody>
     {{range .Memberships}}
     <tr><td><a href="/books/{{.BookPublicID}}">{{.BookName}}</a></td><td>{{.Level}}</td></tr>
     {{end}}
     </tbody>
-  </table>
+  </table></div>
   {{else}}
   <p class="muted">You don't belong to any address books yet.</p>
   {{end}}
