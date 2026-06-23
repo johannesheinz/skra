@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/johannesheinz/skra/internal/auth"
@@ -123,6 +124,48 @@ func (h *Handlers) AccountPasswordUpdate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	h.renderAccount(w, r, http.StatusOK, map[string]any{"PasswordNotice": "Password changed."})
+}
+
+// AccountListPrefsUpdate persists the contact-list page size and sort chosen
+// from the controls on a book page (POST /account/list-prefs), then returns to
+// that page. Values are validated against the allowed sets; anything else is
+// coerced to the default. The theme block is preserved.
+func (h *Handlers) AccountListPrefsUpdate(w http.ResponseWriter, r *http.Request) {
+	user, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	if !h.checkForm(w, r) {
+		return
+	}
+	size := 0 // 0 = default
+	if s, err := strconv.Atoi(r.PostFormValue("size")); err == nil {
+		for _, a := range models.AllowedPageSizes {
+			if a == s {
+				size = s
+			}
+		}
+	}
+	sort := ""
+	for _, o := range models.AllowedSorts {
+		if o.Key == r.PostFormValue("sort") {
+			sort = o.Key
+		}
+	}
+	prefs, err := models.GetPreferences(r.Context(), h.DB, user.ID)
+	if err != nil {
+		h.Logger.Error("get preferences failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	prefs.List = models.ListPrefs{PageSize: size, Sort: sort}
+	if err := models.UpdatePreferences(r.Context(), h.DB, user.ID, prefs); err != nil {
+		h.Logger.Error("update preferences failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, safeReturnPath(r.PostFormValue("return")), http.StatusSeeOther)
 }
 
 // AccountThemeToggle flips the saved light/dark mode from the header control

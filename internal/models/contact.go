@@ -111,12 +111,15 @@ func CreateContact(ctx context.Context, d *db.DB, addressBookID int64, in Contac
 		return Contact{}, fmt.Errorf("models: encode vcard: %w", err)
 	}
 
+	given, family, postal, country := sortKeysFromDetails(details)
 	res, err := d.ExecWrite(ctx,
 		`INSERT INTO contacts
-		   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag, birthday)
-		 VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
+		   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag,
+		    birthday, given_name, family_name, postal_code, country)
+		 VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		publicID, addressBookID, name, nullString(details.Org), nullString(details.PrimaryEmail()),
-		nullString(details.PrimaryPhone()), vcardRaw, uid, etag, NormalizeBirthday(details.Birthday))
+		nullString(details.PrimaryPhone()), vcardRaw, uid, etag,
+		NormalizeBirthday(details.Birthday), given, family, postal, country)
 	if err != nil {
 		return Contact{}, fmt.Errorf("models: insert contact: %w", err)
 	}
@@ -148,13 +151,16 @@ func UpdateContact(ctx context.Context, d *db.DB, contact Contact, in ContactInp
 	if err != nil {
 		return fmt.Errorf("models: encode vcard: %w", err)
 	}
+	given, family, postal, country := sortKeysFromDetails(details)
 	_, err = d.ExecWrite(ctx,
 		`UPDATE contacts
 		    SET full_name = ?, org = ?, primary_email = ?, primary_phone = ?,
-		        vcard_raw = ?, etag = ?, birthday = ?, updated_at = datetime('now')
+		        vcard_raw = ?, etag = ?, birthday = ?,
+		        given_name = ?, family_name = ?, postal_code = ?, country = ?,
+		        updated_at = datetime('now')
 		  WHERE id = ?`,
 		name, nullString(details.Org), nullString(details.PrimaryEmail()), nullString(details.PrimaryPhone()),
-		vcardRaw, etag, NormalizeBirthday(details.Birthday), contact.ID)
+		vcardRaw, etag, NormalizeBirthday(details.Birthday), given, family, postal, country, contact.ID)
 	if err != nil {
 		return fmt.Errorf("models: update contact: %w", err)
 	}
@@ -284,6 +290,21 @@ func NormalizeBirthday(s string) string {
 		return ""
 	}
 	return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
+}
+
+// sortKeysFromDetails derives the denormalized list sort keys: the name
+// components and the primary (first non-empty) address's postal code and
+// country. Empty values are stored as "" (known-empty, distinct from a NULL
+// not-yet-backfilled column).
+func sortKeysFromDetails(d vcardio.Details) (given, family, postal, country string) {
+	given = strings.TrimSpace(d.GivenName)
+	family = strings.TrimSpace(d.FamilyName)
+	for _, a := range d.Addresses {
+		if !a.Empty() {
+			return given, family, strings.TrimSpace(a.PostalCode), strings.TrimSpace(a.Country)
+		}
+	}
+	return given, family, "", ""
 }
 
 // atoi2 parses a run of digits, returning -1 on any non-numeric input so the
@@ -428,6 +449,54 @@ func BackfillBirthdays(ctx context.Context, d *db.DB) (int, error) {
 	return len(todo), nil
 }
 
+// BackfillSortKeys populates the denormalized list sort columns (given_name,
+// family_name, postal_code, country) for contacts that predate them
+// (family_name IS NULL) by parsing their stored vCard. Like BackfillBirthdays
+// it is idempotent — the NULL filter matches nothing once every row has been
+// visited — so it is safe to call on every startup. Returns the rows updated.
+func BackfillSortKeys(ctx context.Context, d *db.DB) (int, error) {
+	rows, err := d.QueryContext(ctx, `SELECT id, vcard_raw FROM contacts WHERE family_name IS NULL`)
+	if err != nil {
+		return 0, fmt.Errorf("models: backfill sort keys scan: %w", err)
+	}
+	type pending struct {
+		id                             int64
+		given, family, postal, country string
+	}
+	var todo []pending
+	for rows.Next() {
+		var (
+			id       int64
+			vcardRaw string
+		)
+		if err := rows.Scan(&id, &vcardRaw); err != nil {
+			rows.Close()
+			return 0, fmt.Errorf("models: backfill sort keys row: %w", err)
+		}
+		details, err := vcardio.Parse(vcardRaw)
+		if err != nil {
+			rows.Close()
+			return 0, fmt.Errorf("models: backfill sort keys parse contact %d: %w", id, err)
+		}
+		g, f, p, c := sortKeysFromDetails(details)
+		todo = append(todo, pending{id: id, given: g, family: f, postal: p, country: c})
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, fmt.Errorf("models: backfill sort keys iterate: %w", err)
+	}
+	rows.Close()
+
+	for _, p := range todo {
+		if _, err := d.ExecWrite(ctx,
+			`UPDATE contacts SET given_name = ?, family_name = ?, postal_code = ?, country = ? WHERE id = ?`,
+			p.given, p.family, p.postal, p.country, p.id); err != nil {
+			return 0, fmt.Errorf("models: backfill sort keys update contact %d: %w", p.id, err)
+		}
+	}
+	return len(todo), nil
+}
+
 // GetContactByID resolves a contact by its internal id.
 func GetContactByID(ctx context.Context, d *db.DB, id int64) (Contact, error) {
 	c, err := scanContact(d.QueryRowContext(ctx,
@@ -439,10 +508,30 @@ func GetContactByID(ctx context.Context, d *db.DB, id int64) (Contact, error) {
 	return c, err
 }
 
+// contactOrderBy maps a user-facing sort key to a SQL ORDER BY clause. The key
+// is whitelisted here (never interpolated from user input), so it is safe to
+// concatenate. Empty/unknown values always sort last; an unrecognized key falls
+// back to given-name order.
+func contactOrderBy(sort string) string {
+	const byName = "full_name COLLATE NOCASE"
+	switch sort {
+	case "last":
+		return "(family_name IS NULL OR family_name = ''), family_name COLLATE NOCASE, " + byName
+	case "age":
+		// Oldest first by birth date; unknown (NULL/empty/year-less) sort last.
+		return "(birthday IS NULL OR birthday = '' OR substr(birthday,1,4) = '0000'), birthday, " + byName
+	case "location":
+		return "(country IS NULL OR country = ''), country COLLATE NOCASE, postal_code COLLATE NOCASE, " + byName
+	default: // "first" and the default
+		return "(given_name IS NULL OR given_name = ''), given_name COLLATE NOCASE, " + byName
+	}
+}
+
 // ListContacts returns a page of contacts in a book, optionally filtered by a
-// case-insensitive substring across the structured columns, plus the total
-// matching count for pagination.
-func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query string, limit, offset int) ([]Contact, int, error) {
+// case-insensitive substring across the structured columns and ordered by the
+// given (whitelisted) sort key, plus the total matching count for pagination.
+// A limit of -1 returns every matching row (SQLite treats LIMIT -1 as no limit).
+func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query, sort string, limit, offset int) ([]Contact, int, error) {
 	where := "address_book_id = ?"
 	args := []any{addressBookID}
 	if q := strings.TrimSpace(query); q != "" {
@@ -460,7 +549,7 @@ func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query stri
 	rows, err := d.QueryContext(ctx,
 		`SELECT id, public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, uid, etag
 		 FROM contacts WHERE `+where+`
-		 ORDER BY full_name COLLATE NOCASE LIMIT ? OFFSET ?`, pageArgs...)
+		 ORDER BY `+contactOrderBy(sort)+` LIMIT ? OFFSET ?`, pageArgs...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("models: list contacts: %w", err)
 	}

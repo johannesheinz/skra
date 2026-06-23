@@ -361,6 +361,9 @@ legend { padding: 0 var(--space-2); }
 .photo-edit { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
 .photo-form { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); max-width: 15rem; }
 .btn-sm { min-height: 2rem; padding: var(--space-1) var(--space-3); font-size: 0.85rem; }
+/* Icon-only button: square, label carried by aria-label/title. */
+.btn-icon { padding: var(--space-2); min-width: 2.5rem; gap: 0; }
+.btn-icon svg { width: 1.15rem; height: 1.15rem; }
 
 /* ---- Avatars ---- */
 .avatar { border-radius: 50%; object-fit: cover; border: 1px solid var(--border); background: var(--surface-sunken); }
@@ -389,6 +392,10 @@ legend { padding: 0 var(--space-2); }
 /* Back link. */
 .backlink { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--muted); text-decoration: none; }
 .backlink:hover { color: var(--accent); }
+
+/* ---- List preferences (sort + page size) ---- */
+.list-prefs { display: flex; flex-wrap: wrap; align-items: end; justify-content: flex-end; gap: var(--space-3); margin-bottom: var(--space-4); }
+.list-prefs label { display: inline-flex; flex-direction: column; gap: var(--space-1); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
 
 /* ---- Pager ---- */
 .pager { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-5); }

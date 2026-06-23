@@ -69,12 +69,17 @@ func serve() error {
 	defer database.Close()
 	logger.Info("database ready", "path", cfg.DBPath)
 
-	// One-time (idempotent) backfill of the denormalized birthday column for
-	// contacts that predate it; a no-op once every row has been visited.
+	// One-time (idempotent) backfills of the denormalized columns for contacts
+	// that predate them; each is a no-op once every row has been visited.
 	if n, err := models.BackfillBirthdays(context.Background(), database); err != nil {
 		return err
 	} else if n > 0 {
 		logger.Info("backfilled birthdays", "contacts", n)
+	}
+	if n, err := models.BackfillSortKeys(context.Background(), database); err != nil {
+		return err
+	} else if n > 0 {
+		logger.Info("backfilled sort keys", "contacts", n)
 	}
 
 	server, err := web.New(cfg, database, logger)

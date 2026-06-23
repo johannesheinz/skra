@@ -18,8 +18,6 @@ import (
 	"github.com/johannesheinz/skra/internal/web/templates"
 )
 
-const contactsPageSize = 25
-
 // ContactCard is the view-model for one contact in a directory card grid. The
 // URLs are precomputed by the caller so the same card partial renders both the
 // authenticated browse and the public share (with share-scoped links).

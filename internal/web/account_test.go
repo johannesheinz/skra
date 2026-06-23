@@ -125,6 +125,36 @@ func TestAccountThemeTogglePersists(t *testing.T) {
 	}
 }
 
+func TestAccountListPrefsPersist(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	user := seedUser(t, d, "alice", "pw", models.RoleUser)
+	session := sessionCookieFor(t, d, user.ID)
+
+	_, token, csrf := authedGet(t, router, session, "/account")
+	rec := authedPostForm(router, session, csrf, "/account/list-prefs", url.Values{
+		auth.CSRFFormField: {token}, "size": {"50"}, "sort": {"last"}, "return": {"/books/abc"},
+	})
+	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/books/abc" {
+		t.Fatalf("list-prefs = %d %q, want 303 /books/abc", rec.Code, rec.Header().Get("Location"))
+	}
+	prefs, _ := models.GetPreferences(ctx, d, user.ID)
+	if prefs.List.PageSize != 50 || prefs.List.Sort != "last" {
+		t.Errorf("stored list prefs = %+v", prefs.List)
+	}
+
+	// Invalid values are coerced to defaults, not stored verbatim.
+	_, t2, c2 := authedGet(t, router, session, "/account")
+	authedPostForm(router, session, c2, "/account/list-prefs", url.Values{
+		auth.CSRFFormField: {t2}, "size": {"7"}, "sort": {"bogus"}, "return": {"/"},
+	})
+	prefs, _ = models.GetPreferences(ctx, d, user.ID)
+	if prefs.List.PageSize != 0 || prefs.List.Sort != "" {
+		t.Errorf("invalid values not coerced: %+v", prefs.List)
+	}
+}
+
 func TestAccountPasswordRedirect(t *testing.T) {
 	d := testutil.NewDB(t)
 	router := testRouter(t, d)

@@ -90,8 +90,8 @@ func TestMigrationsCreateSchema(t *testing.T) {
 	if err := database.QueryRow("SELECT MAX(version) FROM schema_migrations").Scan(&version); err != nil {
 		t.Fatalf("query schema_migrations: %v", err)
 	}
-	if version != 4 {
-		t.Errorf("max migration version = %d, want 4", version)
+	if version != 5 {
+		t.Errorf("max migration version = %d, want 5", version)
 	}
 }
 
@@ -115,8 +115,8 @@ func TestMigrationsAreIdempotent(t *testing.T) {
 	if err := second.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
 		t.Fatalf("count schema_migrations: %v", err)
 	}
-	if count != 4 {
-		t.Errorf("schema_migrations row count = %d, want 4", count)
+	if count != 5 {
+		t.Errorf("schema_migrations row count = %d, want 5", count)
 	}
 }
 
