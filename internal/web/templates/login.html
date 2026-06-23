@@ -1,15 +1,15 @@
-{{define "title"}}Sign in · Skrá{{end}}
+{{define "title"}}{{t "login.title"}} · Skrá{{end}}
 {{define "content"}}
-<h1>Sign in</h1>
+<h1>{{t "login.title"}}</h1>
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 <form class="stack" method="post" action="/login" autocomplete="off">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <label>Username
+  <label>{{t "login.username"}}
     <input type="text" name="username" value="{{.Username}}" required autofocus>
   </label>
-  <label>Password
+  <label>{{t "login.password"}}
     <input type="password" name="password" required>
   </label>
-  <button type="submit">Sign in</button>
+  <button type="submit">{{t "login.title"}}</button>
 </form>
 {{end}}

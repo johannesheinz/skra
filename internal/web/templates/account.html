@@ -1,79 +1,93 @@
-{{define "title"}}Account · Skrá{{end}}
+{{define "title"}}{{t "account.title"}} · Skrá{{end}}
 {{define "content"}}
-<h1>Account</h1>
+<h1>{{t "account.title"}}</h1>
 
 <section class="card stack">
-  <h2>Profile</h2>
+  <h2>{{t "account.profile"}}</h2>
   {{if .ProfileError}}<p role="alert">{{.ProfileError}}</p>{{end}}
   {{if .ProfileNotice}}<p class="notice">{{.ProfileNotice}}</p>{{end}}
   <form class="stack" method="post" action="/account/profile">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    <label>Username <input type="text" value="{{.User.Username}}" disabled></label>
-    <label>Email <input type="email" name="email" value="{{.Email}}" required></label>
-    <button type="submit">{{icon "check"}} Save profile</button>
+    <label>{{t "account.username"}} <input type="text" value="{{.User.Username}}" disabled></label>
+    <label>{{t "account.email"}} <input type="email" name="email" value="{{.Email}}" required></label>
+    <button type="submit">{{icon "check"}} {{t "account.save_profile"}}</button>
   </form>
 </section>
 
 <section class="card stack">
-  <h2>Appearance</h2>
+  <h2>{{t "account.language"}}</h2>
+  <form class="stack" method="post" action="/account/locale" data-autosubmit>
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <label>{{t "account.language"}}
+      <select name="locale" data-autosubmit-control>
+        <option value="" {{if eq .CurrentLocale ""}}selected{{end}}>{{t "account.language_auto"}}</option>
+        {{range .Locales}}<option value="{{.Code}}" {{if eq $.CurrentLocale .Code}}selected{{end}}>{{.Name}}</option>{{end}}
+      </select>
+    </label>
+    <button type="submit" data-js-hide>{{t "account.save_language"}}</button>
+  </form>
+</section>
+
+<section class="card stack">
+  <h2>{{t "account.appearance"}}</h2>
   {{if .AppearanceError}}<p role="alert">{{.AppearanceError}}</p>{{end}}
   {{if .AppearanceNotice}}<p class="notice">{{.AppearanceNotice}}</p>{{end}}
   <form class="stack" method="post" action="/account/appearance" data-theme-form>
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    <label>Mode
+    <label>{{t "account.mode"}}
       <select name="mode">
-        <option value="" {{if eq .Theme.Mode ""}}selected{{end}}>System default</option>
-        <option value="light" {{if eq .Theme.Mode "light"}}selected{{end}}>Light</option>
-        <option value="dark" {{if eq .Theme.Mode "dark"}}selected{{end}}>Dark</option>
+        <option value="" {{if eq .Theme.Mode ""}}selected{{end}}>{{t "account.mode_system"}}</option>
+        <option value="light" {{if eq .Theme.Mode "light"}}selected{{end}}>{{t "account.mode_light"}}</option>
+        <option value="dark" {{if eq .Theme.Mode "dark"}}selected{{end}}>{{t "account.mode_dark"}}</option>
       </select>
     </label>
-    <label>Flavor
+    <label>{{t "account.flavor"}}
       <select name="flavor">
-        <option value="" {{if eq .Theme.Flavor ""}}selected{{end}}>Default</option>
+        <option value="" {{if eq .Theme.Flavor ""}}selected{{end}}>{{t "account.flavor_default"}}</option>
         <option value="solarized" {{if eq .Theme.Flavor "solarized"}}selected{{end}}>Solarized</option>
       </select>
     </label>
     <fieldset>
-      <legend>Accent</legend>
+      <legend>{{t "account.accent"}}</legend>
       <div class="swatches">
         {{range .Accents}}
         <label class="swatch">
           <input type="radio" name="accent" value="{{.Value}}" {{if eq $.Theme.Accent .Value}}checked{{end}}>
           <span class="swatch-chip" data-accent-swatch="{{if .Value}}{{.Value}}{{else}}default{{end}}"></span>
-          <span class="swatch-label">{{.Label}}</span>
+          <span class="swatch-label">{{if .Value}}{{.Label}}{{else}}{{t "account.accent_default"}}{{end}}</span>
         </label>
         {{end}}
       </div>
     </fieldset>
-    <button type="submit">{{icon "check"}} Save appearance</button>
+    <button type="submit">{{icon "check"}} {{t "account.save_appearance"}}</button>
   </form>
 </section>
 
 <section class="card stack">
-  <h2>Memberships</h2>
+  <h2>{{t "account.memberships"}}</h2>
   {{if .Memberships}}
   <div class="table-wrap"><table>
-    <thead><tr><th>Address book</th><th>Access</th></tr></thead>
+    <thead><tr><th>{{t "account.col_book"}}</th><th>{{t "account.col_access"}}</th></tr></thead>
     <tbody>
     {{range .Memberships}}
-    <tr><td><a href="/books/{{.BookPublicID}}">{{.BookName}}</a></td><td>{{.Level}}</td></tr>
+    <tr><td><a href="/books/{{.BookPublicID}}">{{.BookName}}</a></td><td>{{t (printf "level.%s" .Level)}}</td></tr>
     {{end}}
     </tbody>
   </table></div>
   {{else}}
-  <p class="muted">You don't belong to any address books yet.</p>
+  <p class="muted">{{t "account.no_memberships"}}</p>
   {{end}}
 </section>
 
 <section class="card stack">
-  <h2>Security</h2>
+  <h2>{{t "account.security"}}</h2>
   {{if .PasswordError}}<p role="alert">{{.PasswordError}}</p>{{end}}
   {{if .PasswordNotice}}<p class="notice">{{.PasswordNotice}}</p>{{end}}
   <form class="stack" method="post" action="/account/password" autocomplete="off">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    <label>Current password <input type="password" name="current_password" required></label>
-    <label>New password <input type="password" name="new_password" required></label>
-    <button type="submit">{{icon "key-round"}} Change password</button>
+    <label>{{t "account.current_password"}} <input type="password" name="current_password" required></label>
+    <label>{{t "account.new_password"}} <input type="password" name="new_password" required></label>
+    <button type="submit">{{icon "key-round"}} {{t "account.change_password"}}</button>
   </form>
 </section>
 {{end}}

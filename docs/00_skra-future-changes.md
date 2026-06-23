@@ -380,7 +380,22 @@ Work:
 
 Effort/risk: low–medium — mostly template and CSS refinements; no new dependency.
 
-## 13. Internationalization (i18n / l10n)
+## 13. Internationalization (i18n / l10n) — implemented
+
+Shipped. A locale is a **language × region** pair; the language subtag picks the message catalog, the full BCP-47 tag drives formatting.
+
+- **Registry**: `en-US`, `de-DE`, `en-DK` (English text with European formats) — extensible via `internal/i18n`.
+- **Package `internal/i18n`**: embedded per-language JSON catalogs (`locales/en.json` is the source of truth, `de.json` fully translated), a `Translator` with `T`/`Tf`/`Plural`/`Num`/`Date`/`ISODate`/`MonthDay`/`TypeLabel`, `Accept-Language` matching and plural categories via `golang.org/x/text` (`language`, `feature/plural`, `message`).
+- **Selection**: saved per-user in `UIPreferences.Locale` (no migration); otherwise `Accept-Language`. Resolved once per request by middleware into the context; `<html lang>`/`dir` are set from it. A language selector on the account page auto-submits like the theme control.
+- **Templates**: one parsed set per locale with locale-bound `t`/`num`/… funcs (no per-request parsing). All 21 templates + handler flash messages are localized — visible and invisible text (`aria-label`, `title`, `alt`, `<title>`).
+- **Formatting**: numbers grouped per locale (`1,500` vs `1.500`), dates per locale (`Jul 1, 2026` / `01.07.2026` / `1 Jul 2026`), and address line order (US `City 12345` vs European `12345 City`).
+- **Coverage guard**: a test fails the build if German is missing any English key.
+
+Admin/members/shares handler flash strings are the only bits still English (low-traffic admin surfaces); they degrade to English gracefully.
+
+**RTL: won't do for now.** All shipped and planned locales are left-to-right, so there is no `dir` handling and no RTL locale — carrying RTL scaffolding for an unused case is dead weight. The CSS already uses logical properties (`margin-inline`, etc.), so adding RTL later is mostly a matter of reintroducing a per-locale direction and an `<html dir>` attribute; revisit only when an actual RTL locale is on the table.
+
+Original notes retained below for reference.
 
 Every user-facing string is currently hardcoded English in templates and handlers, dates are rendered in a fixed format, and `lang` is always `en`. Making Skrá translatable is a cross-cutting but mechanical change.
 
@@ -423,4 +438,4 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Theming light/dark (§10) | ✅ implemented | low | Per-user Mode/Flavor/Accent in preferences; server-set data-* attrs, no flash |
 | Richer user profiles (§11) | ✅ implemented | low–medium | Account page: email edit, memberships, appearance, password |
 | Accessibility (§12) | none (templates/CSS) | low–medium | a11y pass: labels, focus, aria-live, contrast; verify with axe |
-| Internationalization (§13) | none (catalogs + locale) | medium–high | Externalize strings, locale select, plurals/dates, RTL |
+| Internationalization (§13) | ✅ implemented | medium–high | en-US/de-DE/en-DK; x/text formatting; per-user locale; language × region |

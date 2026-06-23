@@ -1,23 +1,23 @@
-{{define "title"}}Members · Skrá{{end}}
+{{define "title"}}{{t "book.members"}} · Skrá{{end}}
 {{define "content"}}
 <p><a href="{{.BackURL}}">← {{.Book.Name}}</a></p>
-<h1>Members — {{.Book.Name}}</h1>
+<h1>{{tf "members.title" .Book.Name}}</h1>
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 
 {{if .Members}}
 <div class="table-wrap"><table>
-  <thead><tr><th>Username</th><th>Email</th><th>Access</th><th></th></tr></thead>
+  <thead><tr><th>{{t "members.col_username"}}</th><th>{{t "members.col_email"}}</th><th>{{t "members.col_access"}}</th><th></th></tr></thead>
   <tbody>
   {{range .Members}}
   <tr>
     <td>{{.Username}}</td>
     <td>{{.Email}}</td>
-    <td>{{.Level}}{{if .IsOwner}} (owner){{end}}</td>
+    <td>{{if .IsOwner}}{{t "members.owner"}}{{else}}{{t (printf "level.%s" .Level)}}{{end}}</td>
     <td>
       {{if not .IsOwner}}
       <form method="post" action="{{.RevokeURL}}">
         <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
-        <button class="btn-secondary" type="submit">Revoke</button>
+        <button class="btn-secondary" type="submit">{{t "common.revoke"}}</button>
       </form>
       {{end}}
     </td>
@@ -26,34 +26,34 @@
   </tbody>
 </table></div>
 {{else}}
-<p class="muted">No members yet.</p>
+<p class="muted">{{t "members.none"}}</p>
 {{end}}
 
-<h2>Grant access to an existing user</h2>
+<h2>{{t "members.grant_existing"}}</h2>
 <form class="stack" method="post" action="{{.AddURL}}" autocomplete="off">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <label>Username <input type="text" name="username" required></label>
-  <label>Access
+  <label>{{t "members.col_username"}} <input type="text" name="username" required></label>
+  <label>{{t "members.access"}}
     <select name="level">
-      <option value="viewer">viewer</option>
-      <option value="manager">manager</option>
+      <option value="viewer">{{t "level.viewer"}}</option>
+      <option value="manager">{{t "level.manager"}}</option>
     </select>
   </label>
-  <button type="submit">Grant access</button>
+  <button type="submit">{{t "members.grant"}}</button>
 </form>
 
-<h2>Create a new user for this book</h2>
+<h2>{{t "members.create_new"}}</h2>
 <form class="stack" method="post" action="{{.CreateURL}}" autocomplete="off">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <label>Username <input type="text" name="username" required></label>
-  <label>Email <input type="email" name="email" required></label>
-  <label>Password <input type="password" name="password" required></label>
-  <label>Access
+  <label>{{t "members.col_username"}} <input type="text" name="username" required></label>
+  <label>{{t "members.email"}} <input type="email" name="email" required></label>
+  <label>{{t "members.password"}} <input type="password" name="password" required></label>
+  <label>{{t "members.access"}}
     <select name="level">
-      <option value="viewer">viewer</option>
-      <option value="manager">manager</option>
+      <option value="viewer">{{t "level.viewer"}}</option>
+      <option value="manager">{{t "level.manager"}}</option>
     </select>
   </label>
-  <button type="submit">Create and grant</button>
+  <button type="submit">{{t "members.create_grant"}}</button>
 </form>
 {{end}}

@@ -14,9 +14,9 @@
     <form class="photo-form" method="post" action="/contacts/{{.Contact.PublicID}}/photo" enctype="multipart/form-data" data-photo-form>
       <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
       <input class="visually-hidden" type="file" id="photo-input" name="photo" accept="image/jpeg,image/png" data-photo-input required>
-      <label class="btn btn-secondary btn-sm" for="photo-input">{{icon "camera"}} Change photo</label>
-      <button class="btn btn-sm" type="submit">{{icon "check"}} Save</button>
-      {{if .Contact.HasPhoto}}<button class="btn btn-secondary btn-sm" type="submit" form="remove-photo">{{icon "x"}} Remove</button>{{end}}
+      <label class="btn btn-secondary btn-sm" for="photo-input">{{icon "camera"}} {{t "contact.change_photo"}}</label>
+      <button class="btn btn-sm" type="submit">{{icon "check"}} {{t "common.save"}}</button>
+      {{if .Contact.HasPhoto}}<button class="btn btn-secondary btn-sm" type="submit" form="remove-photo">{{icon "x"}} {{t "contact.remove_photo"}}</button>{{end}}
     </form>
     {{if .Contact.HasPhoto}}
     <form id="remove-photo" method="post" action="/contacts/{{.Contact.PublicID}}/photo/delete">
@@ -35,42 +35,42 @@
 
 <dl class="details">
   {{range .Details.Emails}}
-  <dt>Email{{if .Type}} ({{.Type}}){{end}}</dt><dd><a href="mailto:{{.Value}}">{{.Value}}</a></dd>
+  <dt>{{t "contact.email"}}{{if .Type}} ({{typelabel .Type}}){{end}}</dt><dd><a href="mailto:{{.Value}}">{{.Value}}</a></dd>
   {{end}}
   {{range .Details.Phones}}
-  <dt>Phone{{if .Type}} ({{.Type}}){{end}}</dt><dd><a href="tel:{{.Value}}">{{.Value}}</a></dd>
+  <dt>{{t "contact.phone"}}{{if .Type}} ({{typelabel .Type}}){{end}}</dt><dd><a href="tel:{{.Value}}">{{.Value}}</a></dd>
   {{end}}
   {{range .Details.Addresses}}
-  <dt>Address{{if .Type}} ({{.Type}}){{end}}</dt>
+  <dt>{{t "contact.address"}}{{if .Type}} ({{typelabel .Type}}){{end}}</dt>
   <dd>
-    {{with .Street}}{{.}}<br>{{end}}{{.City}} {{.PostalCode}}{{with .Country}}<br>{{.}}{{end}}
+    {{with .Street}}{{.}}<br>{{end}}{{if postalBeforeCity}}{{.PostalCode}} {{.City}}{{else}}{{.City}} {{.PostalCode}}{{end}}{{with .Country}}<br>{{.}}{{end}}
     {{$q := .SingleLine}}
     {{if $q}}
     <span class="map-links">
       {{icon "map-pin"}}
       <a href="https://www.openstreetmap.org/search?query={{$q}}" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
       <a href="https://www.google.com/maps/search/?api=1&query={{$q}}" target="_blank" rel="noopener noreferrer">Google Maps</a>
-      <a href="https://www.google.com/maps/dir/?api=1&destination={{$q}}" target="_blank" rel="noopener noreferrer">Directions</a>
+      <a href="https://www.google.com/maps/dir/?api=1&destination={{$q}}" target="_blank" rel="noopener noreferrer">{{t "contact.map_directions"}}</a>
     </span>
     {{end}}
   </dd>
   {{end}}
   {{range .Details.URLs}}
-  <dt>Link</dt><dd><a href="{{.}}" rel="noopener noreferrer">{{.}}</a></dd>
+  <dt>{{t "contact.link"}}</dt><dd><a href="{{.}}" rel="noopener noreferrer">{{.}}</a></dd>
   {{end}}
-  {{with .Details.Birthday}}<dt>Birthday</dt><dd>{{.}}</dd>{{end}}
-  {{with .Details.Note}}<dt>Note</dt><dd>{{.}}</dd>{{end}}
+  {{with .Details.Birthday}}<dt>{{t "contact.birthday"}}</dt><dd>{{isodate .}}</dd>{{end}}
+  {{with .Details.Note}}<dt>{{t "contact.note"}}</dt><dd>{{.}}</dd>{{end}}
 </dl>
 
-<p><a class="backlink" href="/contacts/{{.Contact.PublicID}}/export.vcf">{{icon "download"}} Download vCard</a></p>
+<p><a class="backlink" href="/contacts/{{.Contact.PublicID}}/export.vcf">{{icon "download"}} {{t "contact.download_vcard"}}</a></p>
 
 {{if .CanManage}}
 <div class="actions">
-  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/edit">{{icon "pencil"}} Edit</a>
-  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/shares">{{icon "share-2"}} Manage sharing</a>
+  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/edit">{{icon "pencil"}} {{t "contact.edit"}}</a>
+  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/shares">{{icon "share-2"}} {{t "contact.manage_sharing"}}</a>
   <form method="post" action="/contacts/{{.Contact.PublicID}}/delete">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    <button class="btn-danger" type="submit">{{icon "trash-2"}} Delete</button>
+    <button class="btn-danger" type="submit">{{icon "trash-2"}} {{t "common.delete"}}</button>
   </form>
 </div>
 {{end}}

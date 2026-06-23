@@ -1,32 +1,32 @@
-{{define "title"}}Address books · Skrá{{end}}
+{{define "title"}}{{t "books.title"}} · Skrá{{end}}
 {{define "content"}}
-<h1>Address books</h1>
-<p><a class="btn" href="/books/new">{{icon "plus"}} New address book</a></p>
+<h1>{{t "books.title"}}</h1>
+<p><a class="btn" href="/books/new">{{icon "plus"}} {{t "home.new_book"}}</a></p>
 {{if .Books}}
 <div class="table-wrap"><table>
-  <thead><tr><th>Name</th><th>Contacts</th></tr></thead>
+  <thead><tr><th>{{t "books.col_name"}}</th><th>{{t "books.col_contacts"}}</th></tr></thead>
   <tbody>
   {{range .Books}}
     <tr>
       <td><a href="/books/{{.PublicID}}">{{.Name}}</a></td>
-      <td>{{.ContactCount}}</td>
+      <td>{{num .ContactCount}}</td>
     </tr>
   {{end}}
   </tbody>
 </table></div>
 {{else}}
-<p class="muted">No address books yet.</p>
+<p class="muted">{{t "books.none"}}</p>
 {{end}}
 
 {{if eq .User.Role "admin"}}
-<h2 class="dash-heading">Import into a new address book</h2>
-<p class="muted">Upload a vCard (<code>.vcf</code>) file — including one with many contacts — to create a new address book and import them all at once.</p>
+<h2 class="dash-heading">{{t "books.import_heading"}}</h2>
+<p class="muted">{{t "books.import_desc"}}</p>
 <form class="stack" method="post" action="/books/import" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
   {{if .ImportError}}<p role="alert">{{.ImportError}}</p>{{end}}
-  <label>Address book name <input type="text" name="name" required></label>
-  <label>vCard file <input type="file" name="file" accept=".vcf,text/vcard" required></label>
-  <button type="submit">{{icon "upload"}} Create &amp; import</button>
+  <label>{{t "books.book_name"}} <input type="text" name="name" required></label>
+  <label>{{t "books.vcard_file"}} <input type="file" name="file" accept=".vcf,text/vcard" required></label>
+  <button type="submit">{{icon "upload"}} {{t "books.create_import"}}</button>
 </form>
 {{end}}
 {{end}}

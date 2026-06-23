@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/johannesheinz/skra/internal/auth"
+	"github.com/johannesheinz/skra/internal/i18n"
 	"github.com/johannesheinz/skra/internal/images"
 	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/rbac"
@@ -61,7 +62,7 @@ func (h *Handlers) ContactNew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Seed one blank email and phone row so the form shows a field to fill.
-	h.renderContactForm(w, r, http.StatusOK, "New contact",
+	h.renderContactForm(w, r, http.StatusOK, "contact_form.new",
 		"/books/"+book.PublicID+"/contacts", "/books/"+book.PublicID,
 		vcardio.Details{Emails: []vcardio.Typed{{}}, Phones: []vcardio.Typed{{}}}, "")
 }
@@ -78,8 +79,8 @@ func (h *Handlers) ContactCreate(w http.ResponseWriter, r *http.Request) {
 	in := contactInputFromForm(r)
 	contact, err := models.CreateContact(r.Context(), h.DB, book.ID, in)
 	if err != nil {
-		h.renderContactForm(w, r, http.StatusUnprocessableEntity, "New contact",
-			"/books/"+book.PublicID+"/contacts", "/books/"+book.PublicID, in.Details(), "A first or last name is required.")
+		h.renderContactForm(w, r, http.StatusUnprocessableEntity, "contact_form.new",
+			"/books/"+book.PublicID+"/contacts", "/books/"+book.PublicID, in.Details(), h.tr(r).T("msg.contact_needs_name"))
 		return
 	}
 	http.Redirect(w, r, "/contacts/"+contact.PublicID, http.StatusSeeOther)
@@ -123,7 +124,7 @@ func (h *Handlers) ContactEdit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	h.renderContactForm(w, r, http.StatusOK, "Edit contact",
+	h.renderContactForm(w, r, http.StatusOK, "contact_form.edit",
 		"/contacts/"+contact.PublicID+"/edit", "/contacts/"+contact.PublicID, details, "")
 }
 
@@ -138,8 +139,8 @@ func (h *Handlers) ContactUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	in := contactInputFromForm(r)
 	if err := models.UpdateContact(r.Context(), h.DB, contact, in); err != nil {
-		h.renderContactForm(w, r, http.StatusUnprocessableEntity, "Edit contact",
-			"/contacts/"+contact.PublicID+"/edit", "/contacts/"+contact.PublicID, in.Details(), "A first or last name is required.")
+		h.renderContactForm(w, r, http.StatusUnprocessableEntity, "contact_form.edit",
+			"/contacts/"+contact.PublicID+"/edit", "/contacts/"+contact.PublicID, in.Details(), h.tr(r).T("msg.contact_needs_name"))
 		return
 	}
 	http.Redirect(w, r, "/contacts/"+contact.PublicID, http.StatusSeeOther)
@@ -361,9 +362,9 @@ func nonEmptyValues(values []string) []string {
 	return out
 }
 
-func (h *Handlers) renderContactForm(w http.ResponseWriter, r *http.Request, status int, heading, action, cancelURL string, details vcardio.Details, errMsg string) {
+func (h *Handlers) renderContactForm(w http.ResponseWriter, r *http.Request, status int, headingKey, action, cancelURL string, details vcardio.Details, errMsg string) {
 	h.render(w, r, status, "contact_form.html", map[string]any{
-		"Heading":    heading,
+		"HeadingKey": headingKey,
 		"FormAction": action,
 		"CancelURL":  cancelURL,
 		"D":          details,
@@ -389,7 +390,7 @@ func (h *Handlers) ContactRowFragment(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if err := templates.RenderFragment(w, tmpl, data); err != nil {
+	if err := templates.RenderFragment(w, i18n.FromContext(r.Context()).Code, tmpl, data); err != nil {
 		h.Logger.Error("render row fragment failed", "err", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 	}

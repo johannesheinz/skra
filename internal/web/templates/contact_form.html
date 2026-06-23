@@ -1,45 +1,45 @@
-{{define "title"}}{{.Heading}} · Skrá{{end}}
+{{define "title"}}{{t .HeadingKey}} · Skrá{{end}}
 {{define "content"}}
-<h1>{{.Heading}}</h1>
+<h1>{{t .HeadingKey}}</h1>
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 <form class="stack" method="post" action="{{.FormAction}}">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
 
-  <label>First name <input name="given_name" value="{{.D.GivenName}}" autofocus></label>
-  <label>Last name <input name="family_name" value="{{.D.FamilyName}}"></label>
+  <label>{{t "contact_form.first_name"}} <input name="given_name" value="{{.D.GivenName}}" autofocus></label>
+  <label>{{t "contact_form.last_name"}} <input name="family_name" value="{{.D.FamilyName}}"></label>
 
   <fieldset>
-    <legend>Emails</legend>
+    <legend>{{t "contact_form.emails"}}</legend>
     <div id="emails">{{range .D.Emails}}{{template "email_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary" hx-get="/ui/rows/email" hx-target="#emails" hx-swap="beforeend">Add email</button>
+    <button type="button" class="btn-secondary" hx-get="/ui/rows/email" hx-target="#emails" hx-swap="beforeend">{{t "contact_form.add_email"}}</button>
   </fieldset>
 
   <fieldset>
-    <legend>Phones</legend>
+    <legend>{{t "contact_form.phones"}}</legend>
     <div id="phones">{{range .D.Phones}}{{template "phone_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary" hx-get="/ui/rows/phone" hx-target="#phones" hx-swap="beforeend">Add phone</button>
+    <button type="button" class="btn-secondary" hx-get="/ui/rows/phone" hx-target="#phones" hx-swap="beforeend">{{t "contact_form.add_phone"}}</button>
   </fieldset>
 
   <fieldset>
-    <legend>Addresses</legend>
+    <legend>{{t "contact_form.addresses"}}</legend>
     <div id="addresses">{{range .D.Addresses}}{{template "address_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary" hx-get="/ui/rows/address" hx-target="#addresses" hx-swap="beforeend">Add address</button>
+    <button type="button" class="btn-secondary" hx-get="/ui/rows/address" hx-target="#addresses" hx-swap="beforeend">{{t "contact_form.add_address"}}</button>
   </fieldset>
 
   <fieldset>
-    <legend>Links</legend>
+    <legend>{{t "contact_form.links"}}</legend>
     <div id="urls">{{range .D.URLs}}{{template "url_row" .}}{{end}}</div>
-    <button type="button" class="btn-secondary" hx-get="/ui/rows/url" hx-target="#urls" hx-swap="beforeend">Add link</button>
+    <button type="button" class="btn-secondary" hx-get="/ui/rows/url" hx-target="#urls" hx-swap="beforeend">{{t "contact_form.add_link"}}</button>
   </fieldset>
 
-  <label>Organization <input name="org" value="{{.D.Org}}"></label>
-  <label>Title <input name="title" value="{{.D.Title}}"></label>
-  <label>Birthday <input type="date" name="birthday" value="{{.D.Birthday}}"></label>
-  <label>Note <textarea name="note" rows="3">{{.D.Note}}</textarea></label>
+  <label>{{t "contact_form.org"}} <input name="org" value="{{.D.Org}}"></label>
+  <label>{{t "contact_form.title"}} <input name="title" value="{{.D.Title}}"></label>
+  <label>{{t "contact_form.birthday"}} <input type="date" name="birthday" value="{{.D.Birthday}}"></label>
+  <label>{{t "contact_form.note"}} <textarea name="note" rows="3">{{.D.Note}}</textarea></label>
 
   <div class="actions">
-    <button type="submit">Save</button>
-    <a class="btn btn-secondary" href="{{.CancelURL}}">Cancel</a>
+    <button type="submit">{{t "common.save"}}</button>
+    <a class="btn btn-secondary" href="{{.CancelURL}}">{{t "common.cancel"}}</a>
   </div>
 </form>
 {{end}}

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"{{if .User}} data-theme-managed{{end}}{{with .Theme}}{{if .Mode}} data-theme="{{.Mode}}"{{end}}{{if .Flavor}} data-flavor="{{.Flavor}}"{{end}}{{if .Accent}} data-accent="{{.Accent}}"{{end}}{{end}}>
+<html lang="{{.Lang}}"{{if .User}} data-theme-managed{{end}}{{with .Theme}}{{if .Mode}} data-theme="{{.Mode}}"{{end}}{{if .Flavor}} data-flavor="{{.Flavor}}"{{end}}{{if .Accent}} data-accent="{{.Accent}}"{{end}}{{end}}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,9 +14,9 @@
   <script src="{{static "js/prefs.js"}}" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main">{{t "skip_to_content"}}</a>
   <header class="appbar">
-    <a class="brand" href="/" aria-label="Skrá — home">
+    <a class="brand" href="/" aria-label="{{t "brand.home"}}">
       <svg class="brand-mark" viewBox="0 0 104 80" fill="none" aria-hidden="true">
         <rect x="6" y="10" width="92" height="60" rx="12" fill="none" stroke="currentColor" stroke-width="4"/>
         <circle cx="26" cy="35" r="8" fill="currentColor"/>
@@ -33,11 +33,11 @@
     <div class="appbar-right">
       {{with .User}}
       <nav class="appnav">
-        <a href="/books" aria-label="Address books" title="Address books">{{icon "book-open"}} <span class="nav-label">Address books</span></a>
-        {{if eq .Role "admin"}}<a href="/admin/users" aria-label="Users" title="Users">{{icon "users"}} <span class="nav-label">Users</span></a>{{end}}
-        <a href="/account" aria-label="Account settings" title="{{.Username}}">{{icon "settings"}} <span class="nav-label">{{.Username}}</span></a>
+        <a href="/books" aria-label="{{t "nav.address_books"}}" title="{{t "nav.address_books"}}">{{icon "book-open"}} <span class="nav-label">{{t "nav.address_books"}}</span></a>
+        {{if eq .Role "admin"}}<a href="/admin/users" aria-label="{{t "nav.users"}}" title="{{t "nav.users"}}">{{icon "users"}} <span class="nav-label">{{t "nav.users"}}</span></a>{{end}}
+        <a href="/account" aria-label="{{t "nav.account"}}" title="{{.Username}}">{{icon "settings"}} <span class="nav-label">{{.Username}}</span></a>
         <form method="post" action="/logout">
-          <button class="btn-secondary" type="submit" aria-label="Sign out" title="Sign out">{{icon "log-out"}} <span class="nav-label">Sign out</span></button>
+          <button class="btn-secondary" type="submit" aria-label="{{t "nav.sign_out"}}" title="{{t "nav.sign_out"}}">{{icon "log-out"}} <span class="nav-label">{{t "nav.sign_out"}}</span></button>
           <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
         </form>
       </nav>
@@ -46,10 +46,10 @@
       <form method="post" action="/account/theme" class="theme-toggle-form">
         <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         <input type="hidden" name="return" value="{{.Path}}">
-        <button class="theme-toggle" type="submit" aria-label="Toggle light or dark theme" title="Toggle light/dark (saved to your account)">{{icon "contrast"}}</button>
+        <button class="theme-toggle" type="submit" aria-label="{{t "nav.toggle_theme"}}" title="Toggle light/dark (saved to your account)">{{icon "contrast"}}</button>
       </form>
       {{else}}
-      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light or dark theme" title="Toggle theme">{{icon "contrast"}}</button>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="{{t "nav.toggle_theme"}}" title="Toggle theme">{{icon "contrast"}}</button>
       {{end}}
     </div>
   </header>

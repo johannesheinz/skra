@@ -64,7 +64,7 @@ func TestBookImportNewCreatesBookAndImports(t *testing.T) {
 
 	_, token, csrf := authedGet(t, router, session, "/books")
 	rec := uploadNewBookVCF(t, router, session, csrf, token, "Imported Team", importVCF)
-	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Imported <strong>2</strong>") {
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Imported 2 contacts") {
 		t.Fatalf("create+import = %d, body:\n%s", rec.Code, rec.Body.String())
 	}
 
@@ -119,7 +119,7 @@ func TestImportVCardFlow(t *testing.T) {
 		t.Fatalf("upload preview = %d, want 200", preview.Code)
 	}
 	body := preview.Body.String()
-	if !strings.Contains(body, "2 contact(s) parsed") || !strings.Contains(body, "Jane Doe") {
+	if !strings.Contains(body, "2 contacts parsed") || !strings.Contains(body, "Jane Doe") {
 		t.Fatalf("preview missing expected content:\n%s", body)
 	}
 	stageToken := extractHidden(t, body, "token")
@@ -130,7 +130,7 @@ func TestImportVCardFlow(t *testing.T) {
 	commit := authedPostForm(router, session, commitCSRF, importURL+"/commit", url.Values{
 		auth.CSRFFormField: {commitToken}, "token": {stageToken}, "action": {"skip"},
 	})
-	if commit.Code != http.StatusOK || !strings.Contains(commit.Body.String(), "Imported <strong>2</strong>") {
+	if commit.Code != http.StatusOK || !strings.Contains(commit.Body.String(), "Imported 2 contacts") {
 		t.Fatalf("commit = %d, body:\n%s", commit.Code, commit.Body.String())
 	}
 
@@ -159,7 +159,7 @@ func TestImportSkipsDuplicates(t *testing.T) {
 	_, token, csrf := authedGet(t, router, session, importURL)
 	preview := uploadVCF(t, router, session, csrf, importURL, token, importVCF)
 	body := preview.Body.String()
-	if !strings.Contains(body, "1</strong> new") || !strings.Contains(body, "1</strong> duplicate") {
+	if !strings.Contains(body, "1 new") || !strings.Contains(body, "1 duplicate") {
 		t.Errorf("preview should show 1 new / 1 duplicate:\n%s", body)
 	}
 	stageToken := extractHidden(t, body, "token")
@@ -168,7 +168,7 @@ func TestImportSkipsDuplicates(t *testing.T) {
 	commit := authedPostForm(router, session, commitCSRF, importURL+"/commit", url.Values{
 		auth.CSRFFormField: {commitToken}, "token": {stageToken}, "action": {"skip"},
 	})
-	if !strings.Contains(commit.Body.String(), "Imported <strong>1</strong>") {
+	if !strings.Contains(commit.Body.String(), "Imported 1 contact") {
 		t.Errorf("expected 1 imported, got:\n%s", commit.Body.String())
 	}
 }

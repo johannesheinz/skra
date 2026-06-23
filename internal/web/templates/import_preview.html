@@ -1,13 +1,13 @@
-{{define "title"}}Import preview · Skrá{{end}}
+{{define "title"}}{{t "import.preview"}} · Skrá{{end}}
 {{define "content"}}
-<h1>Import preview — {{.Book.Name}}</h1>
-<p>{{.Total}} contact(s) parsed: <strong>{{.New}}</strong> new, <strong>{{.Duplicate}}</strong> duplicate{{if .Malformed}}, {{.Malformed}} skipped (malformed){{end}}.</p>
+<h1>{{tf "import.preview_title" .Book.Name}}</h1>
+<p>{{tn "import.parsed" .Total}}: <strong>{{tf "import.new_count" .New}}</strong>, <strong>{{tn "import.dup_count" .Duplicate}}</strong>{{if .Malformed}}, {{tf "import.malformed_count" .Malformed}}{{end}}.</p>
 
 <div class="table-wrap"><table>
-  <thead><tr><th>Name</th><th>Email</th><th>Status</th></tr></thead>
+  <thead><tr><th>{{t "import.col_name"}}</th><th>{{t "import.col_email"}}</th><th>{{t "import.col_status"}}</th></tr></thead>
   <tbody>
   {{range .Rows}}
-  <tr><td>{{.Name}}</td><td>{{.Email}}</td><td>{{.Status}}</td></tr>
+  <tr><td>{{.Name}}</td><td>{{.Email}}</td><td>{{t (printf "status.%s" .Status)}}</td></tr>
   {{end}}
   </tbody>
 </table></div>
@@ -16,13 +16,13 @@
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
   <input type="hidden" name="token" value="{{.Token}}">
   <fieldset>
-    <legend>Duplicates</legend>
-    <label><input type="radio" name="action" value="skip" checked> Skip duplicates</label>
-    <label><input type="radio" name="action" value="create_new"> Import everything as new contacts</label>
+    <legend>{{t "import.duplicates_legend"}}</legend>
+    <label><input type="radio" name="action" value="skip" checked> {{t "import.skip_dupes"}}</label>
+    <label><input type="radio" name="action" value="create_new"> {{t "import.create_new"}}</label>
   </fieldset>
   <div class="actions">
-    <button type="submit">Import</button>
-    <a class="btn btn-secondary" href="{{.CancelURL}}">Cancel</a>
+    <button type="submit">{{t "import.do_import"}}</button>
+    <a class="btn btn-secondary" href="{{.CancelURL}}">{{t "common.cancel"}}</a>
   </div>
 </form>
 {{end}}

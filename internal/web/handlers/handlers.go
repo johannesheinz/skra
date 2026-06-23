@@ -6,6 +6,7 @@ import (
 
 	"github.com/johannesheinz/skra/internal/auth"
 	"github.com/johannesheinz/skra/internal/db"
+	"github.com/johannesheinz/skra/internal/i18n"
 	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/sharing"
 	"github.com/johannesheinz/skra/internal/web/templates"
@@ -71,6 +72,13 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, pa
 			}
 		}
 	}
+	// The request's locale drives <html lang>/<dir> and which localized template
+	// set renders.
+	loc := i18n.FromContext(r.Context())
+	data["Lang"] = loc.Lang()
+	if _, set := data["Locale"]; !set {
+		data["Locale"] = loc.Code
+	}
 	token, err := auth.IssueCSRF(w, h.CookieSecure)
 	if err != nil {
 		h.Logger.Error("issue csrf failed", "err", err)
@@ -78,7 +86,33 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, pa
 		return
 	}
 	data["CSRFToken"] = token
-	if err := templates.Render(w, status, page, data); err != nil {
+	if err := templates.Render(w, status, loc.Code, page, data); err != nil {
 		h.Logger.Error("render failed", "page", page, "err", err)
 	}
+}
+
+// ResolveLocale is middleware that resolves the request's locale (a saved user
+// preference, else the Accept-Language header) and stores it in the context.
+func (h *Handlers) ResolveLocale(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r.WithContext(i18n.WithLocale(r.Context(), h.localeFor(r))))
+	})
+}
+
+// localeFor picks the locale for a request: a signed-in user's saved locale wins,
+// otherwise the best match for Accept-Language.
+func (h *Handlers) localeFor(r *http.Request) i18n.Locale {
+	if user, ok := auth.UserFromContext(r.Context()); ok {
+		if prefs, err := models.GetPreferences(r.Context(), h.DB, user.ID); err == nil && prefs.Locale != "" {
+			if loc, ok := i18n.ByCode(prefs.Locale); ok {
+				return loc
+			}
+		}
+	}
+	return i18n.Match(r.Header.Get("Accept-Language"))
+}
+
+// tr returns a translator for the request's locale, for handler-side messages.
+func (h *Handlers) tr(r *http.Request) *i18n.Translator {
+	return i18n.For(i18n.FromContext(r.Context()))
 }
