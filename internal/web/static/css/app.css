@@ -426,10 +426,21 @@ td form { margin: 0; }
 /* ---- Account settings ---- */
 .notice { color: var(--accent-strong); font-weight: 700; }
 section.card + section.card { margin-top: var(--space-5); }
-.swatches { display: flex; flex-wrap: wrap; gap: var(--space-3); }
-.swatch { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; font-size: 0.9rem; }
-.swatch input { width: auto; margin: 0; }
-.swatch-chip { width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 1px solid var(--border-strong); }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); gap: var(--space-3); }
+.swatch { display: flex; flex-direction: column; gap: var(--space-2); cursor: pointer; font-size: 0.85rem; text-align: center; }
+/* Keep the radio accessible and focusable, but let the color tile be the UI. */
+.swatch input { position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; }
+.swatch-chip {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+.swatch input:checked ~ .swatch-chip,
+.swatch input:focus-visible ~ .swatch-chip { outline: 3px solid var(--accent); outline-offset: 2px; }
+.swatch-label { color: var(--muted); }
+.swatch input:checked ~ .swatch-label { color: var(--ink); font-weight: 700; }
 .swatch-chip[data-accent-swatch="pine"]     { background: #2f5d50; }
 .swatch-chip[data-accent-swatch="slate"]    { background: #3f5566; }
 .swatch-chip[data-accent-swatch="indigo"]   { background: #4f46e5; }
