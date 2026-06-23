@@ -1,21 +1,21 @@
 {{define "type_options" -}}
 <option value=""{{if eq . ""}} selected{{end}}>—</option>
-<option value="home"{{if eq . "home"}} selected{{end}}>home</option>
-<option value="work"{{if eq . "work"}} selected{{end}}>work</option>
-<option value="mobile"{{if eq . "mobile"}} selected{{end}}>mobile</option>
-<option value="other"{{if eq . "other"}} selected{{end}}>other</option>
+<option value="home"{{if eq . "home"}} selected{{end}}>{{t "type.home"}}</option>
+<option value="work"{{if eq . "work"}} selected{{end}}>{{t "type.work"}}</option>
+<option value="mobile"{{if eq . "mobile"}} selected{{end}}>{{t "type.mobile"}}</option>
+<option value="other"{{if eq . "other"}} selected{{end}}>{{t "type.other"}}</option>
 {{- end}}
 
 {{define "email_row"}}
 <div class="field-row">
-  <select name="email_type" aria-label="Email type">{{template "type_options" .Type}}</select>
+  <select name="email_type" aria-label="{{t "field.email_type"}}">{{template "type_options" .Type}}</select>
   <input type="email" name="email_value" value="{{.Value}}" placeholder="email@example.com">
 </div>
 {{end}}
 
 {{define "phone_row"}}
 <div class="field-row">
-  <select name="phone_type" aria-label="Phone type">{{template "type_options" .Type}}</select>
+  <select name="phone_type" aria-label="{{t "field.phone_type"}}">{{template "type_options" .Type}}</select>
   <input type="tel" name="phone_value" value="{{.Value}}" placeholder="+1 555 000 0000">
 </div>
 {{end}}
@@ -28,10 +28,10 @@
 
 {{define "address_row"}}
 <fieldset class="field-row address-row">
-  <select name="adr_type" aria-label="Address type">{{template "type_options" .Type}}</select>
-  <input name="adr_street" value="{{.Street}}" placeholder="Street">
-  <input name="adr_city" value="{{.City}}" placeholder="City">
-  <input name="adr_postal" value="{{.PostalCode}}" placeholder="Postal code">
-  <input name="adr_country" value="{{.Country}}" placeholder="Country">
+  <select name="adr_type" aria-label="{{t "field.address_type"}}">{{template "type_options" .Type}}</select>
+  <input name="adr_street" value="{{.Street}}" placeholder="{{t "field.street"}}">
+  <input name="adr_city" value="{{.City}}" placeholder="{{t "field.city"}}">
+  <input name="adr_postal" value="{{.PostalCode}}" placeholder="{{t "field.postal"}}">
+  <input name="adr_country" value="{{.Country}}" placeholder="{{t "field.country"}}">
 </fieldset>
 {{end}}

@@ -56,7 +56,7 @@ func (h *Handlers) ImportUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		h.importFormError(w, r, book, "Choose a .vcf file to import.")
+		h.importFormError(w, r, book, h.tr(r).T("msg.choose_vcf"))
 		return
 	}
 	defer file.Close()
@@ -69,7 +69,7 @@ func (h *Handlers) ImportUpload(w http.ResponseWriter, r *http.Request) {
 
 	records, malformed := importing.ParseVCards(data)
 	if len(records) == 0 {
-		h.importFormError(w, r, book, "No contacts found in that file.")
+		h.importFormError(w, r, book, h.tr(r).T("msg.no_contacts_found"))
 		return
 	}
 
@@ -235,12 +235,12 @@ func (h *Handlers) BookImportNew(w http.ResponseWriter, r *http.Request) {
 
 	name := strings.TrimSpace(r.PostFormValue("name"))
 	if name == "" {
-		h.booksListError(w, r, "Enter a name for the new address book.")
+		h.booksListError(w, r, h.tr(r).T("msg.enter_book_name"))
 		return
 	}
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		h.booksListError(w, r, "Choose a .vcf file to import.")
+		h.booksListError(w, r, h.tr(r).T("msg.choose_vcf"))
 		return
 	}
 	defer file.Close()
@@ -253,13 +253,13 @@ func (h *Handlers) BookImportNew(w http.ResponseWriter, r *http.Request) {
 
 	records, _ := importing.ParseVCards(data)
 	if len(records) == 0 {
-		h.booksListError(w, r, "No contacts found in that file.")
+		h.booksListError(w, r, h.tr(r).T("msg.no_contacts_found"))
 		return
 	}
 
 	book, err := models.CreateAddressBook(r.Context(), h.DB, user.ID, name, "")
 	if err != nil {
-		h.booksListError(w, r, "Could not create the address book.")
+		h.booksListError(w, r, h.tr(r).T("msg.book_create_failed"))
 		return
 	}
 	prepared, err := h.buildPreparedImports(records, map[string]bool{})

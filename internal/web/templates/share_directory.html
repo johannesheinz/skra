@@ -4,13 +4,13 @@
 {{if .Book.Description}}<p class="muted">{{.Book.Description}}</p>{{end}}
 
 <div class="actions">
-  <a class="btn btn-secondary" href="{{.ExportVCF}}">Export vCard</a>
-  <a class="btn btn-secondary" href="{{.ExportCSV}}">Export CSV</a>
+  <a class="btn btn-secondary" href="{{.ExportVCF}}">{{t "share.export_vcard"}}</a>
+  <a class="btn btn-secondary" href="{{.ExportCSV}}">{{t "share.export_csv"}}</a>
 </div>
 
 {{if .Cards}}
 {{template "contact_cards" .Cards}}
 {{else}}
-<p class="muted">No contacts.</p>
+<p class="muted">{{t "share.no_contacts"}}</p>
 {{end}}
 {{end}}

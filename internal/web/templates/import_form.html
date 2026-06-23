@@ -1,14 +1,14 @@
-{{define "title"}}Import · Skrá{{end}}
+{{define "title"}}{{t "import.title"}} · Skrá{{end}}
 {{define "content"}}
 <p><a href="/books/{{.Book.PublicID}}">← {{.Book.Name}}</a></p>
-<h1>Import contacts</h1>
+<h1>{{t "import.title"}}</h1>
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
-<p class="muted">Upload a vCard file (.vcf). You will see a preview before anything is saved.</p>
+<p class="muted">{{t "import.desc"}}</p>
 <form class="stack" method="post" action="{{.UploadURL}}" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <label>vCard file
+  <label>{{t "import.vcard_file"}}
     <input type="file" name="file" accept=".vcf,text/vcard" required>
   </label>
-  <button type="submit">Preview import</button>
+  <button type="submit">{{t "import.preview"}}</button>
 </form>
 {{end}}

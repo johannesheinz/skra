@@ -26,7 +26,7 @@ func (h *Handlers) BooksList(w http.ResponseWriter, r *http.Request) {
 // BookNew renders the create form (GET /books/new).
 func (h *Handlers) BookNew(w http.ResponseWriter, r *http.Request) {
 	h.render(w, r, http.StatusOK, "book_form.html", map[string]any{
-		"Heading":    "New address book",
+		"HeadingKey": "book_form.new",
 		"FormAction": "/books",
 	})
 }
@@ -43,11 +43,11 @@ func (h *Handlers) BookCreate(w http.ResponseWriter, r *http.Request) {
 	book, err := models.CreateAddressBook(r.Context(), h.DB, user.ID, name, description)
 	if err != nil {
 		h.render(w, r, http.StatusUnprocessableEntity, "book_form.html", map[string]any{
-			"Heading":     "New address book",
+			"HeadingKey":  "book_form.new",
 			"FormAction":  "/books",
 			"Name":        name,
 			"Description": description,
-			"Error":       "Name is required.",
+			"Error":       h.tr(r).T("msg.name_required"),
 		})
 		return
 	}
@@ -138,7 +138,7 @@ func (h *Handlers) BookEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.render(w, r, http.StatusOK, "book_form.html", map[string]any{
-		"Heading":     "Edit address book",
+		"HeadingKey":  "book_form.edit",
 		"FormAction":  "/books/" + book.PublicID + "/edit",
 		"Name":        book.Name,
 		"Description": book.Description,
@@ -159,11 +159,11 @@ func (h *Handlers) BookUpdate(w http.ResponseWriter, r *http.Request) {
 
 	if err := models.UpdateAddressBook(r.Context(), h.DB, book.ID, name, description); err != nil {
 		h.render(w, r, http.StatusUnprocessableEntity, "book_form.html", map[string]any{
-			"Heading":     "Edit address book",
+			"HeadingKey":  "book_form.edit",
 			"FormAction":  "/books/" + book.PublicID + "/edit",
 			"Name":        name,
 			"Description": description,
-			"Error":       "Name is required.",
+			"Error":       h.tr(r).T("msg.name_required"),
 		})
 		return
 	}

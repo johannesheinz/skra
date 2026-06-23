@@ -7,10 +7,10 @@
 {{end}}
 
 <dl class="details">
-  {{if .Contact.Org}}<dt>Organization</dt><dd>{{.Contact.Org}}</dd>{{end}}
-  {{if .Contact.PrimaryEmail}}<dt>Email</dt><dd><a href="mailto:{{.Contact.PrimaryEmail}}">{{.Contact.PrimaryEmail}}</a></dd>{{end}}
-  {{if .Contact.PrimaryPhone}}<dt>Phone</dt><dd><a href="tel:{{.Contact.PrimaryPhone}}">{{.Contact.PrimaryPhone}}</a></dd>{{end}}
+  {{if .Contact.Org}}<dt>{{t "contact.organization"}}</dt><dd>{{.Contact.Org}}</dd>{{end}}
+  {{if .Contact.PrimaryEmail}}<dt>{{t "contact.email"}}</dt><dd><a href="mailto:{{.Contact.PrimaryEmail}}">{{.Contact.PrimaryEmail}}</a></dd>{{end}}
+  {{if .Contact.PrimaryPhone}}<dt>{{t "contact.phone"}}</dt><dd><a href="tel:{{.Contact.PrimaryPhone}}">{{.Contact.PrimaryPhone}}</a></dd>{{end}}
 </dl>
 
-{{if .DownloadURL}}<p><a href="{{.DownloadURL}}">Download vCard</a></p>{{end}}
+{{if .DownloadURL}}<p><a href="{{.DownloadURL}}">{{t "share.download_vcard"}}</a></p>{{end}}
 {{end}}

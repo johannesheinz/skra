@@ -1,17 +1,17 @@
-{{define "title"}}Users · Skrá{{end}}
+{{define "title"}}{{t "admin.users"}} · Skrá{{end}}
 {{define "content"}}
-<h1>Users</h1>
+<h1>{{t "admin.users"}}</h1>
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
-<p><a class="btn" href="/admin/users/new">New user</a></p>
+<p><a class="btn" href="/admin/users/new">{{t "admin.new_user"}}</a></p>
 <div class="table-wrap"><table>
-  <thead><tr><th>Username</th><th>Email</th><th>Role</th><th></th></tr></thead>
+  <thead><tr><th>{{t "admin.col_username"}}</th><th>{{t "admin.col_email"}}</th><th>{{t "admin.col_role"}}</th><th></th></tr></thead>
   <tbody>
   {{range .Users}}
   <tr>
     <td>{{.Username}}</td>
     <td>{{.Email}}</td>
-    <td>{{.Role}}</td>
-    <td><a href="/admin/users/{{.PublicID}}/edit">Edit</a></td>
+    <td>{{t (printf "role.%s" .Role)}}</td>
+    <td><a href="/admin/users/{{.PublicID}}/edit">{{t "admin.edit"}}</a></td>
   </tr>
   {{end}}
   </tbody>

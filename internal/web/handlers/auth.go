@@ -8,8 +8,6 @@ import (
 	"github.com/johannesheinz/skra/internal/models"
 )
 
-const invalidCredentials = "Invalid username or password."
-
 // LoginForm renders the login page (GET /login). An already-authenticated user
 // is redirected home.
 func (h *Handlers) LoginForm(w http.ResponseWriter, r *http.Request) {
@@ -41,12 +39,12 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		if !errors.Is(err, models.ErrUserNotFound) {
 			h.Logger.Error("login user lookup failed", "err", err)
 		}
-		h.renderLogin(w, r, http.StatusUnauthorized, username, invalidCredentials)
+		h.renderLogin(w, r, http.StatusUnauthorized, username, h.tr(r).T("msg.login_failed"))
 		return
 	}
 
 	if err := auth.VerifyPassword(user.PasswordHash, password); err != nil {
-		h.renderLogin(w, r, http.StatusUnauthorized, username, invalidCredentials)
+		h.renderLogin(w, r, http.StatusUnauthorized, username, h.tr(r).T("msg.login_failed"))
 		return
 	}
 

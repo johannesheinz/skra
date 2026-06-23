@@ -1,33 +1,33 @@
-{{define "title"}}Sharing · Skrá{{end}}
+{{define "title"}}{{t "book.manage_sharing"}} · Skrá{{end}}
 {{define "content"}}
-<p><a href="{{.BackURL}}">← Back</a></p>
-<h1>Sharing — {{.Title}}</h1>
+<p><a href="{{.BackURL}}">← {{t "common.back"}}</a></p>
+<h1>{{tf "shares.title" .Title}}</h1>
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 
-<h2>Create a share link</h2>
+<h2>{{t "shares.create"}}</h2>
 <form class="stack" method="post" action="{{.CreateURL}}">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <label>Mode
+  <label>{{t "shares.mode"}}
     <select name="mode">
       {{range .Modes}}<option value="{{.}}">{{.}}</option>{{end}}
     </select>
   </label>
-  <label>Secret (required for gated_short only)
+  <label>{{t "shares.secret"}}
     <input type="password" name="secret" autocomplete="new-password">
   </label>
-  <label>Max uses (blank = unlimited)
+  <label>{{t "shares.max_uses"}}
     <input type="number" name="max_uses" min="0">
   </label>
-  <label>Expires (optional)
+  <label>{{t "shares.expires"}}
     <input type="date" name="expires">
   </label>
-  <button type="submit">Create link</button>
+  <button type="submit">{{t "shares.create_link"}}</button>
 </form>
 
-<h2>Existing links</h2>
+<h2>{{t "shares.existing"}}</h2>
 {{if .Links}}
 <div class="table-wrap"><table>
-  <thead><tr><th>Mode</th><th>URL</th><th>Status</th><th>Uses</th><th></th></tr></thead>
+  <thead><tr><th>{{t "shares.mode"}}</th><th>{{t "shares.col_url"}}</th><th>{{t "shares.col_status"}}</th><th>{{t "shares.col_uses"}}</th><th></th></tr></thead>
   <tbody>
   {{range .Links}}
   <tr>
@@ -38,7 +38,7 @@
     <td>
       <form method="post" action="{{.RevokeURL}}">
         <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
-        <button class="btn-secondary" type="submit">Revoke</button>
+        <button class="btn-secondary" type="submit">{{t "common.revoke"}}</button>
       </form>
     </td>
   </tr>
@@ -46,6 +46,6 @@
   </tbody>
 </table></div>
 {{else}}
-<p class="muted">No share links yet.</p>
+<p class="muted">{{t "shares.none"}}</p>
 {{end}}
 {{end}}

@@ -5,28 +5,28 @@
 
 {{if .CanManage}}
 <div class="actions">
-  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/edit">{{icon "pencil"}} Edit book</a>
-  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/members">{{icon "users"}} Members</a>
-  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/shares">{{icon "share-2"}} Manage sharing</a>
+  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/edit">{{icon "pencil"}} {{t "book.edit"}}</a>
+  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/members">{{icon "users"}} {{t "book.members"}}</a>
+  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/shares">{{icon "share-2"}} {{t "book.manage_sharing"}}</a>
   <form method="post" action="/books/{{.Book.PublicID}}/delete">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    <button class="btn-danger" type="submit">{{icon "trash-2"}} Delete book</button>
+    <button class="btn-danger" type="submit">{{icon "trash-2"}} {{t "book.delete"}}</button>
   </form>
 </div>
 {{end}}
 
-<h2>Contacts <span class="muted">({{.Total}})</span></h2>
+<h2>{{t "book.contacts"}} <span class="muted">({{num .Total}})</span></h2>
 
 <div class="toolbar">
   <form method="get" action="/books/{{.Book.PublicID}}" role="search">
-    <input type="search" name="q" value="{{.Query}}" placeholder="Search contacts">
-    <button class="btn-secondary" type="submit">{{icon "search"}} Search</button>
+    <input type="search" name="q" value="{{.Query}}" placeholder="{{t "book.search_placeholder"}}">
+    <button class="btn-secondary" type="submit">{{icon "search"}} {{t "common.search"}}</button>
   </form>
   <div class="actions">
-    {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">{{icon "plus"}} New contact</a>{{end}}
-    {{if .CanManage}}<a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/import">{{icon "upload"}} Import</a>{{end}}
-    <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/export.vcf">{{icon "download"}} Export vCard</a>
-    <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/export.csv">{{icon "download"}} Export CSV</a>
+    {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">{{icon "plus"}} {{t "book.new_contact"}}</a>{{end}}
+    {{if .CanManage}}<a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/import">{{icon "upload"}} {{t "book.import"}}</a>{{end}}
+    <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/export.vcf">{{icon "download"}} {{t "book.export_vcard"}}</a>
+    <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/export.csv">{{icon "download"}} {{t "book.export_csv"}}</a>
   </div>
 </div>
 
@@ -34,32 +34,32 @@
 <form class="list-prefs" method="post" action="/account/list-prefs" data-autosubmit>
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
   <input type="hidden" name="return" value="{{.ListPrefsReturn}}">
-  <label>Sort
+  <label>{{t "list.sort"}}
     <span class="sort-control">
       <select name="sort" data-autosubmit-control>
-        {{range .SortOptions}}<option value="{{.Key}}"{{if eq .Key $.Sort}} selected{{end}}>{{.Label}}</option>{{end}}
+        {{range .SortOptions}}<option value="{{.Key}}"{{if eq .Key $.Sort}} selected{{end}}>{{t (printf "sort.%s" .Key)}}</option>{{end}}
       </select>
       <button class="btn-secondary btn-icon" type="submit" name="dir" value="{{if .Desc}}asc{{else}}desc{{end}}"
-              aria-label="{{if .Desc}}Sorted descending — switch to ascending{{else}}Sorted ascending — switch to descending{{end}}"
-              title="{{if .Desc}}Descending{{else}}Ascending{{end}}">{{if .Desc}}{{icon "chevron-down"}}{{else}}{{icon "chevron-up"}}{{end}}</button>
+              aria-label="{{if .Desc}}{{t "list.sort_desc"}}{{else}}{{t "list.sort_asc"}}{{end}}"
+              title="{{if .Desc}}{{t "list.descending"}}{{else}}{{t "list.ascending"}}{{end}}">{{if .Desc}}{{icon "chevron-down"}}{{else}}{{icon "chevron-up"}}{{end}}</button>
     </span>
   </label>
-  <label>Show
+  <label>{{t "list.show"}}
     <select name="size" data-autosubmit-control>
-      {{range .PageSizes}}<option value="{{.}}"{{if eq . $.SelectedSize}} selected{{end}}>{{if eq . -1}}All{{else}}{{.}}{{end}}</option>{{end}}
+      {{range .PageSizes}}<option value="{{.}}"{{if eq . $.SelectedSize}} selected{{end}}>{{if eq . -1}}{{t "list.all"}}{{else}}{{num .}}{{end}}</option>{{end}}
     </select>
   </label>
-  <button class="btn-secondary" type="submit" data-js-hide>Apply</button>
+  <button class="btn-secondary" type="submit" data-js-hide>{{t "common.apply"}}</button>
 </form>
 {{template "contact_cards" .Cards}}
 {{if or .ShowAll (gt .TotalPages 1)}}
 <nav class="pager" aria-label="Pagination">
-  {{if .PrevURL}}<a class="btn btn-secondary btn-icon" href="{{.PrevURL}}" aria-label="Previous page" title="Previous page">{{icon "chevron-left"}}</a>{{end}}
-  <span class="muted">{{if .ShowAll}}All {{.Total}}{{else}}Page {{.Page}}{{end}}</span>
-  {{if .NextURL}}<a class="btn btn-secondary btn-icon" href="{{.NextURL}}" aria-label="Next page" title="Next page">{{icon "chevron-right"}}</a>{{end}}
+  {{if .PrevURL}}<a class="btn btn-secondary btn-icon" href="{{.PrevURL}}" aria-label="{{t "pager.previous"}}" title="{{t "pager.previous"}}">{{icon "chevron-left"}}</a>{{end}}
+  <span class="muted">{{if .ShowAll}}{{tf "pager.all" .Total}}{{else}}{{tf "pager.page" .Page}}{{end}}</span>
+  {{if .NextURL}}<a class="btn btn-secondary btn-icon" href="{{.NextURL}}" aria-label="{{t "pager.next"}}" title="{{t "pager.next"}}">{{icon "chevron-right"}}</a>{{end}}
 </nav>
 {{end}}
 {{else}}
-<p class="muted">{{if .Query}}No contacts match “{{.Query}}”.{{else}}No contacts yet.{{end}}</p>
+<p class="muted">{{if .Query}}{{tf "book.no_match" .Query}}{{else}}{{t "book.no_contacts"}}{{end}}</p>
 {{end}}
 {{end}}

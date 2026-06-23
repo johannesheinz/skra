@@ -70,8 +70,9 @@ func (l ListPrefs) SortKey() string {
 // extensible — locale and accessibility settings can be added as sibling fields
 // without a migration.
 type UIPreferences struct {
-	Theme ThemePrefs `json:"theme"`
-	List  ListPrefs  `json:"list"`
+	Theme  ThemePrefs `json:"theme"`
+	List   ListPrefs  `json:"list"`
+	Locale string     `json:"locale,omitempty"` // BCP-47 code, e.g. "de-DE"; empty = detect from Accept-Language
 }
 
 // GetPreferences loads a user's UI preferences. A missing or malformed blob

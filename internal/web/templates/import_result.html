@@ -1,6 +1,6 @@
-{{define "title"}}Import complete · Skrá{{end}}
+{{define "title"}}{{t "import.complete"}} · Skrá{{end}}
 {{define "content"}}
-<h1>Import complete</h1>
-<p>Imported <strong>{{.Inserted}}</strong> contact(s){{if .Skipped}}, skipped {{.Skipped}} duplicate(s){{end}}.</p>
-<p><a class="btn" href="/books/{{.Book.PublicID}}">Back to {{.Book.Name}}</a></p>
+<h1>{{t "import.complete"}}</h1>
+<p>{{tn "import.imported" .Inserted}}{{if .Skipped}}, {{tn "import.skipped" .Skipped}}{{end}}.</p>
+<p><a class="btn" href="/books/{{.Book.PublicID}}">{{tf "import.back_to" .Book.Name}}</a></p>
 {{end}}
