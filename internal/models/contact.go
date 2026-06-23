@@ -329,11 +329,24 @@ type UpcomingBirthday struct {
 	Day          int
 	Age          int // age reached on the upcoming birthday; only set when HasAge
 	HasAge       bool
+	DaysUntil    int // whole days until the next occurrence (0 = today)
 }
 
 // DateLabel renders the day and abbreviated month, e.g. "Apr 1".
 func (u UpcomingBirthday) DateLabel() string {
 	return fmt.Sprintf("%s %d", u.Month.String()[:3], u.Day)
+}
+
+// CountdownLabel renders the countdown to the next occurrence in words.
+func (u UpcomingBirthday) CountdownLabel() string {
+	switch u.DaysUntil {
+	case 0:
+		return "Today"
+	case 1:
+		return "Tomorrow"
+	default:
+		return fmt.Sprintf("%d days", u.DaysUntil)
+	}
 }
 
 // UpcomingBirthdaysForUser returns the contacts whose next birthday is soonest,
@@ -383,10 +396,14 @@ func UpcomingBirthdaysForUser(ctx context.Context, d *db.DB, user User, limit in
 		ub.HasPhoto = hasPhoto != 0
 		year, month, day := atoi2(birthday[0:4]), atoi2(birthday[5:7]), atoi2(birthday[8:10])
 		ub.Month, ub.Day = time.Month(month), day
+		occYear := occurrenceYear(now, month, day)
 		if year > 0 {
 			ub.HasAge = true
-			ub.Age = occurrenceYear(now, month, day) - year
+			ub.Age = occYear - year
 		}
+		next := time.Date(occYear, time.Month(month), day, 0, 0, 0, 0, now.Location())
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		ub.DaysUntil = int(next.Sub(today).Hours()/24 + 0.5)
 		out = append(out, ub)
 	}
 	if err := rows.Err(); err != nil {

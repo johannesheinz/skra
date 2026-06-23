@@ -368,6 +368,7 @@ legend { padding: 0 var(--space-2); }
 /* ---- Avatars ---- */
 .avatar { border-radius: 50%; object-fit: cover; border: 1px solid var(--border); background: var(--surface-sunken); }
 .avatar-sm { width: 52px; height: 52px; flex: 0 0 auto; }
+.avatar-md { width: 96px; height: 96px; flex: 0 0 auto; font-size: 2.25rem; }
 .avatar-lg { width: 128px; height: 128px; flex: 0 0 auto; font-size: 2.75rem; }
 .avatar-placeholder {
   display: inline-flex;
@@ -432,14 +433,60 @@ td form { margin: 0; }
 .stat-num { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; line-height: 1; color: var(--accent); }
 .stat-label { margin-top: var(--space-1); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
 
-.recent-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
-.recent-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--border); }
-.recent-list li:first-child { border-top: none; }
-.recent-item { display: flex; align-items: center; gap: var(--space-3); text-decoration: none; color: var(--ink); font-weight: 700; }
-.recent-item:hover { color: var(--accent); }
-.birthday-when { display: inline-flex; align-items: center; gap: var(--space-2); white-space: nowrap; font-weight: 700; color: var(--ink); }
-.birthday-when svg { color: var(--accent); }
-.birthday-when .muted { font-weight: 400; }
+/* Upcoming birthdays: a row of portrait cards, the countdown as the hero. */
+.bday-row { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.bday-card {
+  flex: 1 1 8rem;
+  min-width: 8rem;
+  max-width: 11rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3) var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.12s ease, transform 0.05s ease;
+}
+.bday-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.bday-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  background: var(--accent-wash);
+  color: var(--accent-strong);
+}
+.bday-count-num { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 700; line-height: 1; }
+.bday-count-unit, .bday-count-word { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.bday-count-word { font-size: 0.95rem; padding-block: 0.2rem; }
+.bday-name { font-weight: 700; overflow-wrap: anywhere; }
+.bday-date { display: inline-flex; align-items: center; gap: var(--space-1); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); }
+.bday-date svg { width: 0.95rem; height: 0.95rem; }
+
+/* Recently added: a distinct horizontal strip of compact pills. */
+.recent-strip { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.recent-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.12s ease;
+}
+.recent-pill:hover { border-color: var(--accent); }
+.recent-pill-text { display: flex; flex-direction: column; line-height: 1.25; }
+.recent-pill-name { font-weight: 700; }
+.recent-pill-book { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 
 /* ---- Account settings ---- */
 .notice { color: var(--accent-strong); font-weight: 700; }
