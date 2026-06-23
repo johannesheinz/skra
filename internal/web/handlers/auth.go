@@ -99,7 +99,7 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 	for _, b := range books {
 		total += b.ContactCount
 	}
-	recent, err := models.RecentContactsForUser(r.Context(), h.DB, user, 6)
+	recent, err := models.RecentContactsForUser(r.Context(), h.DB, user, 8)
 	if err != nil {
 		h.Logger.Error("dashboard recent failed", "err", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

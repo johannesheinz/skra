@@ -433,6 +433,9 @@ td form { margin: 0; }
 .stat-num { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; line-height: 1; color: var(--accent); }
 .stat-label { margin-top: var(--space-1); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
 
+/* Dashboard section headings get extra breathing room above them. */
+.dash-heading { margin-top: var(--space-8); }
+
 /* Upcoming birthdays: a row of portrait cards, the countdown as the hero. */
 .bday-row { display: flex; flex-wrap: wrap; gap: var(--space-4); }
 .bday-card {
@@ -481,11 +484,12 @@ td form { margin: 0; }
   border-radius: 999px;
   text-decoration: none;
   color: var(--ink);
+  max-width: 16rem;
   transition: border-color 0.12s ease;
 }
 .recent-pill:hover { border-color: var(--accent); }
-.recent-pill-text { display: flex; flex-direction: column; line-height: 1.25; }
-.recent-pill-name { font-weight: 700; }
+.recent-pill-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; overflow-wrap: anywhere; }
+.recent-pill-name { font-weight: 700; overflow-wrap: anywhere; }
 .recent-pill-book { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 
 /* ---- Account settings ---- */
