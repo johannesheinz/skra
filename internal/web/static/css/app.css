@@ -426,6 +426,9 @@ td form { margin: 0; }
 .recent-list li:first-child { border-top: none; }
 .recent-item { display: flex; align-items: center; gap: var(--space-3); text-decoration: none; color: var(--ink); font-weight: 700; }
 .recent-item:hover { color: var(--accent); }
+.birthday-when { display: inline-flex; align-items: center; gap: var(--space-2); white-space: nowrap; font-weight: 700; color: var(--ink); }
+.birthday-when svg { color: var(--accent); }
+.birthday-when .muted { font-weight: 400; }
 
 /* ---- Account settings ---- */
 .notice { color: var(--accent-strong); font-weight: 700; }

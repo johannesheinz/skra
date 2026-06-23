@@ -279,7 +279,15 @@ Work:
 
 This is pure CSS plus minor template structure (e.g. wrapping wide tables); no Go, no schema, no new dependency. Effort/risk: low–medium, mostly iteration against real screens. A good companion to the eventual design/colors pass.
 
-## 9. Upcoming birthdays on the landing page
+## 9. Upcoming birthdays on the landing page — implemented
+
+Shipped: the dashboard shows the next 5 upcoming birthdays across the books the signed-in user may see, with the age each person turns when the birth year is known. Implementation notes:
+
+- Migration `0004` adds a denormalized `birthday` column (indexed on `(address_book_id, birthday)`), stored normalized as `YYYY-MM-DD` with year `0000` for year-less vCard birthdays; empty string means "no birthday", NULL means "not yet backfilled".
+- Populated on create/update/import (`models.NormalizeBirthday`); existing rows are backfilled once from `vcard_raw` at startup via the idempotent `models.BackfillBirthdays` (a no-op on later boots).
+- Ordering is a scoped SQL query computing the next calendar occurrence (this year, else next); age is derived in Go. Year-less birthdays sort by month-day and show no age. Leap-day is handled loosely (string ordering; no special Feb 29 rule).
+
+Original notes retained below for reference.
 
 The landing page (`/`) is currently a near-empty welcome. It could show the next ~5 contacts with an upcoming birthday, with each person's age, across the books the signed-in user can see — a small, friendly dashboard.
 

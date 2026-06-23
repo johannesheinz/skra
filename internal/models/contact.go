@@ -7,7 +7,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/johannesheinz/skra/internal/db"
 	"github.com/johannesheinz/skra/internal/ids"
@@ -111,10 +113,10 @@ func CreateContact(ctx context.Context, d *db.DB, addressBookID int64, in Contac
 
 	res, err := d.ExecWrite(ctx,
 		`INSERT INTO contacts
-		   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag)
-		 VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+		   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag, birthday)
+		 VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
 		publicID, addressBookID, name, nullString(details.Org), nullString(details.PrimaryEmail()),
-		nullString(details.PrimaryPhone()), vcardRaw, uid, etag)
+		nullString(details.PrimaryPhone()), vcardRaw, uid, etag, NormalizeBirthday(details.Birthday))
 	if err != nil {
 		return Contact{}, fmt.Errorf("models: insert contact: %w", err)
 	}
@@ -149,10 +151,10 @@ func UpdateContact(ctx context.Context, d *db.DB, contact Contact, in ContactInp
 	_, err = d.ExecWrite(ctx,
 		`UPDATE contacts
 		    SET full_name = ?, org = ?, primary_email = ?, primary_phone = ?,
-		        vcard_raw = ?, etag = ?, updated_at = datetime('now')
+		        vcard_raw = ?, etag = ?, birthday = ?, updated_at = datetime('now')
 		  WHERE id = ?`,
 		name, nullString(details.Org), nullString(details.PrimaryEmail()), nullString(details.PrimaryPhone()),
-		vcardRaw, etag, contact.ID)
+		vcardRaw, etag, NormalizeBirthday(details.Birthday), contact.ID)
 	if err != nil {
 		return fmt.Errorf("models: update contact: %w", err)
 	}
@@ -252,6 +254,178 @@ func RecentContactsForUser(ctx context.Context, d *db.DB, user User, limit int) 
 		return nil, fmt.Errorf("models: iterate recent contacts: %w", err)
 	}
 	return out, nil
+}
+
+// NormalizeBirthday canonicalises a birthday string to YYYY-MM-DD for the
+// denormalized birthday column. A year-less birthday (vCard "--MMDD" /
+// "--MM-DD") keeps year 0000. Anything unparseable — including an empty value —
+// yields "", which the schema treats as "no birthday" (distinct from a NULL
+// column that has not been backfilled yet).
+func NormalizeBirthday(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	var year, month, day int
+	if rest, ok := strings.CutPrefix(s, "--"); ok {
+		digits := strings.ReplaceAll(rest, "-", "")
+		if len(digits) < 4 {
+			return ""
+		}
+		month, day = atoi2(digits[0:2]), atoi2(digits[2:4])
+	} else {
+		digits := strings.ReplaceAll(s, "-", "")
+		if len(digits) < 8 {
+			return ""
+		}
+		year, month, day = atoi2(digits[0:4]), atoi2(digits[4:6]), atoi2(digits[6:8])
+	}
+	if month < 1 || month > 12 || day < 1 || day > 31 {
+		return ""
+	}
+	return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
+}
+
+// atoi2 parses a run of digits, returning -1 on any non-numeric input so the
+// caller's range check rejects it.
+func atoi2(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return -1
+	}
+	return n
+}
+
+// UpcomingBirthday is a dashboard row: a contact whose birthday is next on the
+// calendar within the books the viewer may see.
+type UpcomingBirthday struct {
+	PublicID     string
+	FullName     string
+	HasPhoto     bool
+	BookName     string
+	BookPublicID string
+	Month        time.Month
+	Day          int
+	Age          int // age reached on the upcoming birthday; only set when HasAge
+	HasAge       bool
+}
+
+// DateLabel renders the day and abbreviated month, e.g. "Apr 1".
+func (u UpcomingBirthday) DateLabel() string {
+	return fmt.Sprintf("%s %d", u.Month.String()[:3], u.Day)
+}
+
+// UpcomingBirthdaysForUser returns the contacts whose next birthday is soonest,
+// scoped to the books a user may see (admins see all), ordered by the next
+// calendar occurrence (wrapping past year-end). The ordering is computed in SQL
+// from the normalized YYYY-MM-DD birthday; age is derived in Go against today.
+func UpcomingBirthdaysForUser(ctx context.Context, d *db.DB, user User, limit int) ([]UpcomingBirthday, error) {
+	// The upcoming occurrence is this year's month-day if it has not passed yet,
+	// otherwise next year's. Lexicographic comparison of the YYYY-MM-DD strings
+	// is correct because both sides are zero-padded and same-width.
+	const nextOccurrence = `CASE
+		WHEN strftime('%Y','now') || substr(c.birthday, 5) >= date('now')
+		THEN strftime('%Y','now') || substr(c.birthday, 5)
+		ELSE CAST(CAST(strftime('%Y','now') AS INTEGER) + 1 AS TEXT) || substr(c.birthday, 5)
+	END`
+	const base = `SELECT c.public_id, c.full_name, c.has_photo, ab.name, ab.public_id, c.birthday
+		FROM contacts c JOIN address_books ab ON ab.id = c.address_book_id
+		WHERE c.birthday IS NOT NULL AND length(c.birthday) = 10`
+	var (
+		rows *sql.Rows
+		err  error
+	)
+	if user.Role == RoleAdmin {
+		rows, err = d.QueryContext(ctx, base+` ORDER BY (`+nextOccurrence+`) ASC, c.full_name COLLATE NOCASE LIMIT ?`, limit)
+	} else {
+		rows, err = d.QueryContext(ctx, base+`
+			AND (ab.owner_id = ?
+			     OR EXISTS (SELECT 1 FROM address_book_members m WHERE m.address_book_id = ab.id AND m.user_id = ?))
+			ORDER BY (`+nextOccurrence+`) ASC, c.full_name COLLATE NOCASE LIMIT ?`, user.ID, user.ID, limit)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("models: upcoming birthdays: %w", err)
+	}
+	defer rows.Close()
+
+	now := time.Now()
+	var out []UpcomingBirthday
+	for rows.Next() {
+		var (
+			ub       UpcomingBirthday
+			hasPhoto int64
+			birthday string
+		)
+		if err := rows.Scan(&ub.PublicID, &ub.FullName, &hasPhoto, &ub.BookName, &ub.BookPublicID, &birthday); err != nil {
+			return nil, fmt.Errorf("models: scan upcoming birthday: %w", err)
+		}
+		ub.HasPhoto = hasPhoto != 0
+		year, month, day := atoi2(birthday[0:4]), atoi2(birthday[5:7]), atoi2(birthday[8:10])
+		ub.Month, ub.Day = time.Month(month), day
+		if year > 0 {
+			ub.HasAge = true
+			ub.Age = occurrenceYear(now, month, day) - year
+		}
+		out = append(out, ub)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("models: iterate upcoming birthdays: %w", err)
+	}
+	return out, nil
+}
+
+// occurrenceYear returns the year in which the given month-day next occurs
+// relative to now (this year if it has not passed, otherwise next year).
+func occurrenceYear(now time.Time, month, day int) int {
+	if month < int(now.Month()) || (month == int(now.Month()) && day < now.Day()) {
+		return now.Year() + 1
+	}
+	return now.Year()
+}
+
+// BackfillBirthdays populates the birthday column for contacts that predate the
+// column (birthday IS NULL) by parsing their stored vCard. Rows without a BDAY
+// get an empty string so they are not rescanned. It is idempotent and cheap on
+// subsequent runs (the NULL filter matches nothing), so it is safe to call on
+// every startup. Returns the number of rows updated.
+func BackfillBirthdays(ctx context.Context, d *db.DB) (int, error) {
+	rows, err := d.QueryContext(ctx, `SELECT id, vcard_raw FROM contacts WHERE birthday IS NULL`)
+	if err != nil {
+		return 0, fmt.Errorf("models: backfill birthdays scan: %w", err)
+	}
+	type pending struct {
+		id       int64
+		birthday string
+	}
+	var todo []pending
+	for rows.Next() {
+		var (
+			id       int64
+			vcardRaw string
+		)
+		if err := rows.Scan(&id, &vcardRaw); err != nil {
+			rows.Close()
+			return 0, fmt.Errorf("models: backfill birthdays row: %w", err)
+		}
+		details, err := vcardio.Parse(vcardRaw)
+		if err != nil {
+			rows.Close()
+			return 0, fmt.Errorf("models: backfill parse contact %d: %w", id, err)
+		}
+		todo = append(todo, pending{id: id, birthday: NormalizeBirthday(details.Birthday)})
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, fmt.Errorf("models: backfill iterate: %w", err)
+	}
+	rows.Close()
+
+	for _, p := range todo {
+		if _, err := d.ExecWrite(ctx, `UPDATE contacts SET birthday = ? WHERE id = ?`, p.birthday, p.id); err != nil {
+			return 0, fmt.Errorf("models: backfill update contact %d: %w", p.id, err)
+		}
+	}
+	return len(todo), nil
 }
 
 // GetContactByID resolves a contact by its internal id.

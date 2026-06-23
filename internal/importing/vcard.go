@@ -24,6 +24,7 @@ type Record struct {
 	Org          string
 	Email        string
 	Phone        string
+	Birthday     string
 	UID          string
 	CanonicalRaw string
 	PhotoData    []byte
@@ -68,6 +69,7 @@ func parseCard(block string) (Record, error) {
 		Org:       strings.TrimSpace(card.PreferredValue(vcard.FieldOrganization)),
 		Email:     strings.TrimSpace(card.PreferredValue(vcard.FieldEmail)),
 		Phone:     strings.TrimSpace(card.PreferredValue(vcard.FieldTelephone)),
+		Birthday:  strings.TrimSpace(card.Value(vcard.FieldBirthday)),
 		UID:       uid,
 		PhotoData: photo,
 	}

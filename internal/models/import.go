@@ -108,6 +108,7 @@ type PreparedImport struct {
 	Org       string
 	Email     string
 	Phone     string
+	Birthday  string // raw BDAY from the source card; normalized on insert
 	VCardRaw  string
 	UID       string
 	PhotoJPEG []byte // optional, already normalized
@@ -135,10 +136,10 @@ func ImportContacts(ctx context.Context, d *db.DB, addressBookID int64, records 
 			}
 			res, err := tx.ExecContext(ctx,
 				`INSERT INTO contacts
-				   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				   (public_id, address_book_id, full_name, org, primary_email, primary_phone, has_photo, vcard_raw, uid, etag, birthday)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				publicID, addressBookID, rec.FullName, nullString(rec.Org), nullString(rec.Email),
-				nullString(rec.Phone), hasPhoto, rec.VCardRaw, rec.UID, etag)
+				nullString(rec.Phone), hasPhoto, rec.VCardRaw, rec.UID, etag, NormalizeBirthday(rec.Birthday))
 			if err != nil {
 				return fmt.Errorf("insert contact: %w", err)
 			}

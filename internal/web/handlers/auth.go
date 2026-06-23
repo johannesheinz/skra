@@ -105,11 +105,18 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+	birthdays, err := models.UpcomingBirthdaysForUser(r.Context(), h.DB, user, 5)
+	if err != nil {
+		h.Logger.Error("dashboard birthdays failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 	h.render(w, r, http.StatusOK, "home.html", map[string]any{
 		"Books":         books,
 		"BookCount":     len(books),
 		"TotalContacts": total,
 		"Recent":        recent,
+		"Birthdays":     birthdays,
 	})
 }
 

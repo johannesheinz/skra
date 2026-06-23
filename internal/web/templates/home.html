@@ -26,6 +26,25 @@
 <p class="muted">No address books yet. <a href="/books/new">Create your first</a>.</p>
 {{end}}
 
+{{if .Birthdays}}
+<h2>Upcoming birthdays</h2>
+<ul class="recent-list">
+  {{range .Birthdays}}
+  <li>
+    <a class="recent-item" href="/contacts/{{.PublicID}}">
+      {{if .HasPhoto}}
+      <img class="avatar avatar-sm" src="/contacts/{{.PublicID}}/photo" alt="" width="52" height="52">
+      {{else}}
+      <span class="avatar avatar-sm avatar-placeholder" aria-hidden="true">{{initial .FullName}}</span>
+      {{end}}
+      <span class="recent-name">{{.FullName}}</span>
+    </a>
+    <span class="birthday-when">{{icon "cake"}} {{.DateLabel}}{{if .HasAge}} <span class="muted">turns {{.Age}}</span>{{end}}</span>
+  </li>
+  {{end}}
+</ul>
+{{end}}
+
 {{if .Recent}}
 <h2>Recently added</h2>
 <ul class="recent-list">
