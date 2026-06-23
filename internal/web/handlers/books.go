@@ -120,6 +120,7 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 	}
 	if !showAll {
 		totalPages := (total + limit - 1) / limit
+		data["TotalPages"] = totalPages
 		if page > 1 {
 			data["PrevURL"] = bookContactsURL(book.PublicID, query, page-1)
 		}

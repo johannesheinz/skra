@@ -52,11 +52,13 @@
   <button class="btn-secondary" type="submit" data-js-hide>Apply</button>
 </form>
 {{template "contact_cards" .Cards}}
+{{if or .ShowAll (gt .TotalPages 1)}}
 <nav class="pager" aria-label="Pagination">
   {{if .PrevURL}}<a class="btn btn-secondary btn-icon" href="{{.PrevURL}}" aria-label="Previous page" title="Previous page">{{icon "chevron-left"}}</a>{{end}}
   <span class="muted">{{if .ShowAll}}All {{.Total}}{{else}}Page {{.Page}}{{end}}</span>
   {{if .NextURL}}<a class="btn btn-secondary btn-icon" href="{{.NextURL}}" aria-label="Next page" title="Next page">{{icon "chevron-right"}}</a>{{end}}
 </nav>
+{{end}}
 {{else}}
 <p class="muted">{{if .Query}}No contacts match “{{.Query}}”.{{else}}No contacts yet.{{end}}</p>
 {{end}}

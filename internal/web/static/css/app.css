@@ -143,6 +143,9 @@
 
 /* ---- Reset & base ---- */
 *, *::before, *::after { box-sizing: border-box; }
+/* Ensure the hidden attribute wins over component display rules (e.g. buttons
+   set display:inline-flex, which would otherwise defeat [hidden]). */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
