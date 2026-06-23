@@ -258,7 +258,21 @@ Shape:
 
 Effort/risk: medium — the parser and header maps plus a mapping UI; no schema change (the staging table and commit path already exist).
 
-## 7. OpenStreetMap links for addresses
+## 7. Map links for addresses — implemented
+
+Shipped: each address on the contact detail page carries three outbound link-outs, built from `Address.SingleLine()` (a comma-joined single line of the non-empty components) and percent-encoded by `html/template` in the query position:
+
+- **OpenStreetMap** — `https://www.openstreetmap.org/search?query=<address>`
+- **Google Maps** — `https://www.google.com/maps/search/?api=1&query=<address>`
+- **Directions** — `https://www.google.com/maps/dir/?api=1&destination=<address>` (origin omitted, so Google uses the visitor's current location)
+
+All open in a new tab with `rel="noopener noreferrer"`; combined with the app-wide `Referrer-Policy: no-referrer`, no page URL (and thus no `public_id`) leaks. Nothing is embedded — these are plain navigations, so the self-only CSP is untouched. Privacy note: following a link discloses the address to that provider; the Google links disclose to Google, which is more tracking-prone than OSM, so the links are rendered small and unobtrusive.
+
+The `Region` field was dropped from the address model entirely (struct, form, vCard round-trip, display) per product decision; addresses are now street / city / postal / country.
+
+Tile embedding is evaluated but not implemented — see the constraint below (kept from the original note): an embed loads third-party resources on every view and would breach the CSP / local-first stance. If ever wanted it must be opt-in with a self-hosted tile server or an explicit per-deployment CSP relaxation.
+
+Original notes retained below for reference.
 
 Now that contacts carry structured postal addresses (the rich-fields work), each address on the detail page could offer a "View on map" action linking to OpenStreetMap, e.g. `https://www.openstreetmap.org/search?query=<url-encoded address>` opened in a new tab. A `geo:` URI (`geo:0,0?q=<address>`) is a nice companion for mobile, handing off to the device's map app.
 
@@ -380,7 +394,7 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Dependabot → Renovate (§4) | ✅ implemented | low | `renovate.json` also tracks the vendored htmx/font versions |
 | Contact de-duplication (§5) | none (within-book) | medium | Add after rich fields; pairs with the multi-book change |
 | CSV import (§6) | none (staging exists) | medium | Follow-up to the vCard import; needs a parser + mapping UI |
-| OpenStreetMap address links (§7) | none | very low | Link out (don't embed) to keep the self-only CSP intact |
+| Map address links (§7) | ✅ implemented | very low | OSM + Google Maps + directions link-outs (no embed); Region field dropped |
 | Responsive / mobile layout (§8) | none (CSS + minor templates) | low–medium | Deliberate small-screen pass; pairs with the design/colors pass |
 | Upcoming birthdays on landing (§9) | denormalized birthday column + backfill | medium | Needs a queryable birthday; then a small dashboard widget |
 | Theming light/dark (§10) | none (cookie) or 1 column (per-user) | low | Tokens exist; server-set data-theme, no flash, CSP-safe |

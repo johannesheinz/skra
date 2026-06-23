@@ -15,7 +15,7 @@ func TestEncodeParseRoundTrip(t *testing.T) {
 		Note:       "met at conf",
 		Emails:     []Typed{{Type: "work", Value: "jane@acme.test"}, {Type: "home", Value: "jane@home.test"}},
 		Phones:     []Typed{{Type: "mobile", Value: "+1555"}},
-		Addresses:  []Address{{Type: "home", Street: "1 Main", City: "Town", Region: "RG", PostalCode: "12345", Country: "Land"}},
+		Addresses:  []Address{{Type: "home", Street: "1 Main", City: "Town", PostalCode: "12345", Country: "Land"}},
 		URLs:       []string{"https://jane.test"},
 	}
 	raw, err := Encode(in, "uid-1")
@@ -54,6 +54,9 @@ func TestEncodeParseRoundTrip(t *testing.T) {
 	}
 	if len(out.Addresses) != 1 || out.Addresses[0].City != "Town" || out.Addresses[0].PostalCode != "12345" {
 		t.Errorf("address = %+v", out.Addresses)
+	}
+	if got := out.Addresses[0].SingleLine(); got != "1 Main, Town, 12345, Land" {
+		t.Errorf("SingleLine = %q", got)
 	}
 	if len(out.URLs) != 1 || out.URLs[0] != "https://jane.test" {
 		t.Errorf("urls = %+v", out.URLs)
