@@ -305,6 +305,8 @@ input, select, textarea {
   padding: var(--space-2) var(--space-3);
 }
 input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--muted) 80%, transparent); }
+/* Non-editable fields (e.g. the fixed username) read as locked on hover. */
+input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; color: var(--muted); background: var(--surface-sunken); }
 
 fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); margin: 0; background: var(--surface-sunken); }
 legend { padding: 0 var(--space-2); }
