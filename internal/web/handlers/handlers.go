@@ -76,7 +76,6 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, pa
 	// set renders.
 	loc := i18n.FromContext(r.Context())
 	data["Lang"] = loc.Lang()
-	data["Dir"] = loc.Dir()
 	if _, set := data["Locale"]; !set {
 		data["Locale"] = loc.Code
 	}

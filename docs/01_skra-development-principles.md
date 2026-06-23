@@ -83,9 +83,11 @@ Never pass an English literal into template data. The locale is resolved once by
 
 ### Adding a locale
 
-1. Add a `Locale` to the `locales` registry in `internal/i18n/i18n.go` (tag, display name, catalog language, date layouts, address order, direction).
+1. Add a `Locale` to the `locales` registry in `internal/i18n/i18n.go` (tag, display name, catalog language, date layouts, address order).
 2. If it introduces a new **language**, add `locales/<lang>.json` with every key. A new **region** for an existing language (e.g. `en-IE`) needs no new catalog — only the registry entry and its format fields.
 3. `x/text` handles `Accept-Language` matching and plural categories automatically.
+
+**RTL is not supported** (decision: [`00_skra-future-changes.md`](00_skra-future-changes.md) §13). All locales are left-to-right, so there is no `dir` attribute. The CSS uses logical properties, so adding RTL later means reintroducing a per-locale direction plus `<html dir>` — don't carry that scaffolding until an RTL locale actually ships.
 
 ## Documentation & commit messages
 

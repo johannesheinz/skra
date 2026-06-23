@@ -49,23 +49,21 @@ type Locale struct {
 	dateLayout       string // Go reference layout for a full date
 	monthDayLayout   string // Go reference layout for a month+day (no year)
 	postalBeforeCity bool   // address line order
-	dir              string // "ltr" | "rtl"
 }
 
-// Dir returns the text direction ("ltr"/"rtl") for the <html dir> attribute.
-func (l Locale) Dir() string { return l.dir }
-
-// Lang returns the BCP-47 code for the <html lang> attribute.
+// Lang returns the BCP-47 code for the <html lang> attribute. All shipped
+// locales are left-to-right; RTL is intentionally not supported (see
+// docs/00_skra-future-changes.md §13).
 func (l Locale) Lang() string { return l.Code }
 
 // locales is the ordered registry; the first entry is the default.
 var locales = []Locale{
 	{Code: "en-US", Name: "English (US)", Tag: language.MustParse("en-US"), lang: "en",
-		dateLayout: "Jan 2, 2006", monthDayLayout: "Jan 2", postalBeforeCity: false, dir: "ltr"},
+		dateLayout: "Jan 2, 2006", monthDayLayout: "Jan 2", postalBeforeCity: false},
 	{Code: "de-DE", Name: "Deutsch", Tag: language.MustParse("de-DE"), lang: "de",
-		dateLayout: "02.01.2006", monthDayLayout: "02.01.", postalBeforeCity: true, dir: "ltr"},
+		dateLayout: "02.01.2006", monthDayLayout: "02.01.", postalBeforeCity: true},
 	{Code: "en-DK", Name: "English (EU)", Tag: language.MustParse("en-DK"), lang: "en",
-		dateLayout: "2 Jan 2006", monthDayLayout: "2 Jan", postalBeforeCity: true, dir: "ltr"},
+		dateLayout: "2 Jan 2006", monthDayLayout: "2 Jan", postalBeforeCity: true},
 }
 
 // Locales returns the registry (default first) for building a selector.
