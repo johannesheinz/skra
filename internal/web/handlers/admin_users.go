@@ -49,15 +49,15 @@ func (h *Handlers) AdminUserCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if username == "" || email == "" {
-		reRender("Username and email are required.")
+		reRender(h.tr(r).T("msg.username_email_required"))
 		return
 	}
 	if role != models.RoleAdmin && role != models.RoleUser {
-		reRender("Choose a valid role.")
+		reRender(h.tr(r).T("msg.invalid_role"))
 		return
 	}
 	if len(password) < MinPasswordLen {
-		reRender("Password must be at least 8 characters.")
+		reRender(h.tr(r).T("msg.password_min"))
 		return
 	}
 	hash, err := auth.HashPassword(password)
@@ -67,7 +67,7 @@ func (h *Handlers) AdminUserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err := models.CreateUser(r.Context(), h.DB, username, email, hash, role); err != nil {
-		reRender("Username or email already in use.")
+		reRender(h.tr(r).T("msg.username_or_email_in_use"))
 		return
 	}
 	http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
@@ -94,13 +94,13 @@ func (h *Handlers) AdminUserUpdate(w http.ResponseWriter, r *http.Request) {
 	email := strings.TrimSpace(r.PostFormValue("email"))
 	role := r.PostFormValue("role")
 	if email == "" || (role != models.RoleAdmin && role != models.RoleUser) {
-		h.renderAdminEdit(w, r, http.StatusUnprocessableEntity, user, "Email and a valid role are required.")
+		h.renderAdminEdit(w, r, http.StatusUnprocessableEntity, user, h.tr(r).T("msg.email_role_required"))
 		return
 	}
 	// Guard: do not demote the last admin.
 	if user.Role == models.RoleAdmin && role != models.RoleAdmin {
 		if h.isLastAdmin(w, r) {
-			h.renderAdminEdit(w, r, http.StatusUnprocessableEntity, user, "Cannot demote the last admin.")
+			h.renderAdminEdit(w, r, http.StatusUnprocessableEntity, user, h.tr(r).T("msg.last_admin_demote"))
 			return
 		}
 	}
@@ -123,7 +123,7 @@ func (h *Handlers) AdminUserPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	password := r.PostFormValue("password")
 	if len(password) < MinPasswordLen {
-		h.renderAdminEdit(w, r, http.StatusUnprocessableEntity, user, "Password must be at least 8 characters.")
+		h.renderAdminEdit(w, r, http.StatusUnprocessableEntity, user, h.tr(r).T("msg.password_min"))
 		return
 	}
 	hash, err := auth.HashPassword(password)
@@ -137,7 +137,7 @@ func (h *Handlers) AdminUserPassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	h.renderAdminEdit(w, r, http.StatusOK, user, "Password reset.")
+	h.renderAdminEdit(w, r, http.StatusOK, user, h.tr(r).T("msg.password_reset"))
 }
 
 // AdminUserDelete deletes a user (POST /admin/users/{publicID}/delete), with
@@ -152,11 +152,11 @@ func (h *Handlers) AdminUserDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	current, _ := auth.UserFromContext(r.Context())
 	if user.ID == current.ID {
-		h.adminUsersError(w, r, "You cannot delete your own account.")
+		h.adminUsersError(w, r, h.tr(r).T("msg.delete_self"))
 		return
 	}
 	if user.Role == models.RoleAdmin && h.isLastAdmin(w, r) {
-		h.adminUsersError(w, r, "Cannot delete the last admin.")
+		h.adminUsersError(w, r, h.tr(r).T("msg.last_admin_delete"))
 		return
 	}
 	owns, err := models.OwnsAddressBooks(r.Context(), h.DB, user.ID)
@@ -166,11 +166,11 @@ func (h *Handlers) AdminUserDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if owns {
-		h.adminUsersError(w, r, "This user owns address books; reassign or delete those first.")
+		h.adminUsersError(w, r, h.tr(r).T("msg.user_owns_books"))
 		return
 	}
 	if err := models.DeleteUser(r.Context(), h.DB, user.ID); err != nil {
-		h.adminUsersError(w, r, "Could not delete this user.")
+		h.adminUsersError(w, r, h.tr(r).T("msg.user_delete_failed"))
 		return
 	}
 	http.Redirect(w, r, "/admin/users", http.StatusSeeOther)

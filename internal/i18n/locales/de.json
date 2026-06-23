@@ -253,5 +253,26 @@
   "msg.no_contacts_found": "In dieser Datei wurden keine Kontakte gefunden.",
   "msg.enter_book_name": "Gib einen Namen für das neue Adressbuch ein.",
   "msg.book_create_failed": "Das Adressbuch konnte nicht erstellt werden.",
-  "msg.login_failed": "Ungültiger Benutzername oder falsches Passwort."
+  "msg.login_failed": "Ungültiger Benutzername oder falsches Passwort.",
+
+  "msg.password_min": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+  "msg.username_email_required": "Benutzername und E-Mail sind erforderlich.",
+  "msg.invalid_role": "Wähle eine gültige Rolle.",
+  "msg.username_or_email_in_use": "Benutzername oder E-Mail wird bereits verwendet.",
+  "msg.email_role_required": "E-Mail und eine gültige Rolle sind erforderlich.",
+  "msg.last_admin_demote": "Der letzte Administrator kann nicht herabgestuft werden.",
+  "msg.password_reset": "Passwort zurückgesetzt.",
+  "msg.delete_self": "Du kannst dein eigenes Konto nicht löschen.",
+  "msg.last_admin_delete": "Der letzte Administrator kann nicht gelöscht werden.",
+  "msg.user_owns_books": "Diesem Benutzer gehören Adressbücher; übertrage oder lösche diese zuerst.",
+  "msg.user_delete_failed": "Dieser Benutzer konnte nicht gelöscht werden.",
+  "msg.invalid_access_level": "Wähle eine gültige Zugriffsstufe.",
+  "msg.no_such_user": "Kein Benutzer mit diesem Benutzernamen.",
+  "msg.username_email_taken": "Dieser Benutzername oder diese E-Mail ist bereits vergeben.",
+  "msg.owner_access_locked": "Der Zugriff des Bucheigentümers kann nicht entfernt werden.",
+  "msg.share_create_failed": "Freigabelink konnte nicht erstellt werden.",
+  "msg.invalid_share_mode": "Wähle einen gültigen Freigabemodus.",
+  "msg.gated_needs_secret": "Ein geschützter Link erfordert ein Geheimnis.",
+  "msg.max_uses_invalid": "Maximale Nutzungen müssen eine nicht-negative Zahl sein.",
+  "msg.expiry_invalid": "Das Ablaufdatum muss ein gültiges Datum sein."
 }
