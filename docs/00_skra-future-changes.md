@@ -452,3 +452,17 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Richer user profiles (§11) | ✅ implemented | low–medium | Account page: email edit, memberships, appearance, password |
 | Accessibility (§12) | ✅ implemented | low–medium | Labels, focus mgmt, live regions, prefers-contrast; axe pass suggested |
 | Internationalization (§13) | ✅ implemented | medium–high | en-US/de-DE/en-DK; x/text formatting; per-user locale; language × region |
+| Accessibility auditing in CI (§16) | deferred (needs Node) | low–medium | Real axe/Lighthouse audit; conflicts with no-npm — Go invariant test covers structure today |
+
+## 16. Accessibility auditing in CI (axe / Lighthouse) — deferred
+
+The accessibility work (§12) is guarded by a dependency-free Go invariant test (`internal/web/a11y_test.go`) that runs in the normal `go test` CI pass — it checks the structural affordances (labels, `alt`, accessible names, one `<h1>`, `lang`, `<title>`). What a static parse cannot judge is the *computed* ARIA tree, colour-contrast ratios, and performance — the things a real browser-based audit (axe-core, Lighthouse) measures.
+
+Adding such an audit to CI is deliberately **deferred** because it conflicts with the local-first / no-npm principle ([`01_skra-development-principles.md`](01_skra-development-principles.md)): axe/Lighthouse/pa11y are Node tools requiring a headless Chrome and an npm dependency tree in CI.
+
+If adopted later, keep it isolated from the build:
+
+- A **separate** GitHub Actions job (never the release build) that: builds the `skra` binary, seeds a demo DB, starts the server, and runs **pa11y-ci** (bundles axe-core + HTML_CodeSniffer) or **Lighthouse CI** against a fixed URL list.
+- Authenticated pages need a login step first — pa11y `actions` (type credentials, submit) or a pre-seeded session cookie.
+- Treat it as an explicit, documented exception to the no-npm rule, and consider running it on a schedule rather than every push to limit the Node surface.
+- Value: catches contrast regressions, ARIA/role mistakes, and performance budgets the Go check can't.
