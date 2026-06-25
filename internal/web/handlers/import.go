@@ -43,7 +43,9 @@ func (h *Handlers) ImportUpload(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	_ = models.DeleteStaleImportUploads(r.Context(), h.DB)
+	if err := models.DeleteStaleImportUploads(r.Context(), h.DB); err != nil {
+		h.Logger.Error("prune stale import uploads", "err", err)
+	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
 	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
@@ -121,8 +123,11 @@ func (h *Handlers) ImportCommit(w http.ResponseWriter, r *http.Request) {
 	}
 	token := r.PostFormValue("token")
 	action := r.PostFormValue("action")
+	// Reject an unknown/absent action rather than silently defaulting to skip,
+	// which would quietly change which contacts get inserted.
 	if action != importActionSkip && action != importActionCreateNew {
-		action = importActionSkip
+		http.Error(w, "invalid import action", http.StatusBadRequest)
+		return
 	}
 
 	upload, err := models.GetImportUpload(r.Context(), h.DB, token)
@@ -167,7 +172,9 @@ func (h *Handlers) ImportCommit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	_ = models.DeleteImportUpload(r.Context(), h.DB, token)
+	if err := models.DeleteImportUpload(r.Context(), h.DB, token); err != nil {
+		h.Logger.Error("delete committed import upload", "token-len", len(token), "err", err)
+	}
 
 	h.render(w, r, http.StatusOK, "import_result.html", map[string]any{
 		"Book":     book,

@@ -202,3 +202,32 @@ func extractHidden(t *testing.T, body, name string) string {
 	end := strings.IndexByte(rest, '"')
 	return rest[:end]
 }
+
+func TestImportRejectsUnknownAction(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Book", "")
+	session := sessionCookieFor(t, d, owner.ID)
+	importURL := "/books/" + book.PublicID + "/import"
+
+	_, token, csrf := authedGet(t, router, session, importURL)
+	preview := uploadVCF(t, router, session, csrf, importURL, token, importVCF)
+	body := preview.Body.String()
+	stageToken := extractHidden(t, body, "token")
+	commitCSRF := cookieByName(preview.Result().Cookies(), auth.CSRFCookieName)
+	commitToken := extractCSRF(t, body)
+
+	// An unknown action is rejected (no silent default to skip).
+	rec := authedPostForm(router, session, commitCSRF, importURL+"/commit", url.Values{
+		auth.CSRFFormField: {commitToken}, "token": {stageToken}, "action": {"bogus"},
+	})
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("unknown action = %d, want 400", rec.Code)
+	}
+	// Nothing was imported.
+	if _, total, _ := models.ListContacts(ctx, d, book.ID, "", "", false, 50, 0); total != 0 {
+		t.Errorf("contacts imported despite invalid action: %d", total)
+	}
+}
