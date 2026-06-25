@@ -151,6 +151,17 @@ Frontend assets are self-hosted and embedded in the binary — no CDNs, no third
 
 To update: bump the version in this table (a Renovate PR does this step and links the paths), replace the corresponding files — htmx under `internal/web/static/js/`, the font under `internal/web/static/fonts/`, the Lucide subset under `internal/web/icons/svg/` (also bump `Version` in `internal/web/icons/icons.go`) — and re-run the tests.
 
+## Dependency & asset updates (Renovate)
+
+[`renovate.json`](renovate.json) extends `config:recommended` (weekly, with a dependency dashboard) and watches **everything with a version in the repo**:
+
+- **Go modules** — `go.mod`/`go.sum`, grouped into one "go dependencies" PR.
+- **GitHub Actions** — the SHA-pinned `uses:` in `.github/workflows/ci.yml`; Renovate bumps both the pinned commit SHA and its `# vN` comment. (Actions are pinned to SHAs, not mutable tags, as a supply-chain measure — don't reintroduce `@vN` refs.)
+- **Dockerfile base images** — the `FROM` tags. The versioned builder (`golang:1.26-bookworm`) gets update PRs; the runtime `distroless/...:nonroot` is a rolling, version-less tag, so it only moves when the image is rebuilt (tracking it would require digest pinning, deliberately not enabled).
+- **Vendored front-end assets** — the "Vendored assets" table above, via regex custom-managers (htmx + Space Grotesk from `github-tags`, Lucide from the `lucide-static` npm package). These bump only the recorded version string; the binary/font/SVG files are refreshed by hand, and each PR names the exact path to update.
+
+Renovate is not automatic: enable it once (install the Renovate GitHub App or run the self-hosted action) — see [`docs/03_skra-github-setup.md`](docs/03_skra-github-setup.md).
+
 ## License
 
 [MIT](LICENSE.md). Dependencies are permissively licensed and MIT-compatible: `go-chi/chi` (MIT) and `modernc.org/sqlite` (BSD-3-Clause), plus their BSD/MIT-licensed transitive dependencies.

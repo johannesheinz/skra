@@ -43,7 +43,7 @@ Leave it private if pulls should require `docker login ghcr.io`.
 Renovate only runs once enabled — `renovate.json` alone does nothing:
 
 - Install the **Renovate GitHub App** (github.com/apps/renovate) on the repo, **or** add a self-hosted `renovatebot/github-action` workflow. Merge the onboarding PR it opens.
-- It then keeps Go modules, GitHub Actions SHAs, the Dockerfile builder image, and the vendored asset versions up to date (see [future-changes §4](00_skra-future-changes.md#4-dependency-updates-migrate-dependabot--renovate--implemented)).
+- It then keeps Go modules, GitHub Actions SHAs, the Dockerfile builder image, and the vendored asset versions up to date (see the [Dependency & asset updates](../README.md#dependency--asset-updates-renovate) section of the README).
 
 ## 6. Recommended hardening (optional)
 

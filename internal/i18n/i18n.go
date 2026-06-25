@@ -53,8 +53,8 @@ type Locale struct {
 }
 
 // Lang returns the BCP-47 code for the <html lang> attribute. All shipped
-// locales are left-to-right; RTL is intentionally not supported (see
-// docs/00_skra-future-changes.md §13).
+// locales are left-to-right; RTL is intentionally not supported (see the
+// development principles).
 func (l Locale) Lang() string { return l.Code }
 
 // locales is the ordered registry; the first entry is the default.

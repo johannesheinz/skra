@@ -8,6 +8,7 @@ Shared conventions for working on Skrá. These complement the architecture rules
 - **No silent defaults.** If a situation is unclear (missing config, ambiguous input), return an error or fail fast — never fall back to a guessed default. Configuration is validated at startup and reports every problem at once.
 - **Prefer speaking names over comments.** Comment only what the names cannot express (intent, non-obvious trade-offs, gotchas). Keep comment density low.
 - **Security and performance are default concerns,** not afterthoughts: constant-time comparisons for secrets, parameterized SQL, serialized SQLite writes, bounded resource use.
+- **Password hashing is argon2id (PHC-encoded), no pepper.** argon2id already salts per password; a server-side pepper is intentionally *not* used because Skrá ships as a single binary beside its SQLite file on the same host, so a compromise that reads the DB almost certainly reads the pepper too — it adds key-management/rehash burden for little real gain. Revisit only if secrets ever live in a separate KMS/HSM.
 - **Tests land with the code,** not after. New behavior is covered where it makes sense; the suite runs under `-race`. `gofmt` and `go vet` are clean before commit.
 
 ## Configuration
@@ -23,13 +24,14 @@ Shared conventions for working on Skrá. These complement the architecture rules
 - **htmx is self-hosted** (embedded), never loaded from a CDN.
 - Assets get content-hashed filenames and long immutable cache headers.
 - **Responsive by default — it has to look good and be usable on a mobile phone.** Every page must be comfortable on a small touch screen, not merely not-broken: no horizontal page scroll (wide content like tables scrolls inside its own container), tap targets are finger-sized on coarse pointers, inputs use `font-size: 16px` so iOS does not zoom, and the nav collapses gracefully. Breakpoints are plain token-driven `@media` rules — no framework. Verify layouts down to a ~360px-wide viewport when changing any page.
+- **Address maps are link-outs, never embedded tiles.** Each address links out to OpenStreetMap / Google Maps / directions (`rel="noopener noreferrer"`, opened in a new tab). Embedding a map or tiles would load third-party resources on every view, breach the self-only CSP, and enable tracking, so it is deliberately avoided; a map would only ever be added opt-in with a self-hosted tile server.
 - **Print stylesheet.** A `@media print` block keeps the record printable: it strips the app chrome (nav, toolbars, pagers, action buttons, forms, decorative links) and renders black-on-white. The address-book/contact overview and the contact detail page in particular must produce a clean printout / PDF.
 - **Localized by default — no hardcoded user-facing strings.** Every string a user can see or a screen reader can read goes through the translation pipeline (see [Internationalization](#internationalization-i18n)); that includes invisible text (`aria-label`, `title`, `alt`, `<title>`). Numbers, dates, and addresses are formatted for the locale, never with a fixed format. Contact data is user content and is never translated. When you add or change UI text, add the key to **every** catalog — the build fails otherwise.
-- **Accessibility is guarded, not hoped for.** Semantic elements and landmarks; every control (including icon-only ones) has an accessible name; validation errors move focus to the `role="alert"`; htmx-added rows move focus and announce via a polite live region; `prefers-reduced-motion` and `prefers-contrast` are honoured. This is enforced by an automated invariant test (`internal/web/a11y_test.go`) that renders every page and fails CI if any page lacks a non-empty `lang`, exactly one `<h1>`, a `<title>`, `alt` on images, an accessible name on buttons/links, or a label on a form control. It is a dependency-free Go check by design — a Node/axe/Lighthouse audit in CI is deliberately deferred (see [`00_skra-future-changes.md`](00_skra-future-changes.md) §16) to keep the no-npm principle; a manual axe/screen-reader spot-check stays a periodic complement.
+- **Accessibility is guarded, not hoped for.** Semantic elements and landmarks; every control (including icon-only ones) has an accessible name; validation errors move focus to the `role="alert"`; htmx-added rows move focus and announce via a polite live region; `prefers-reduced-motion` and `prefers-contrast` are honoured. This is enforced by an automated invariant test (`internal/web/a11y_test.go`) that renders every page and fails CI if any page lacks a non-empty `lang`, exactly one `<h1>`, a `<title>`, `alt` on images, an accessible name on buttons/links, or a label on a form control. It is a dependency-free Go check by design: a real browser-based audit (axe/Lighthouse/pa11y) is a Node toolchain and is deliberately kept out of CI to honour the no-npm principle — the static check covers structure, and a manual axe/screen-reader spot-check stays a periodic complement for the computed ARIA tree and contrast.
 
 ## Internationalization (i18n)
 
-Skrá is translatable. This section is the practical guide to the pipeline; the design rationale lives in [`00_skra-future-changes.md`](00_skra-future-changes.md) §13.
+Skrá is translatable. This section is the practical guide to the pipeline.
 
 ### Model
 
@@ -88,7 +90,7 @@ Never pass an English literal into template data. The locale is resolved once by
 2. If it introduces a new **language**, add `locales/<lang>.json` with every key. A new **region** for an existing language (e.g. `en-IE`) needs no new catalog — only the registry entry and its format fields.
 3. `x/text` handles `Accept-Language` matching and plural categories automatically.
 
-**RTL is not supported** (decision: [`00_skra-future-changes.md`](00_skra-future-changes.md) §13). All locales are left-to-right, so there is no `dir` attribute. The CSS uses logical properties, so adding RTL later means reintroducing a per-locale direction plus `<html dir>` — don't carry that scaffolding until an RTL locale actually ships.
+**RTL is not supported** (deliberate). All locales are left-to-right, so there is no `dir` attribute. The CSS uses logical properties, so adding RTL later means reintroducing a per-locale direction plus `<html dir>` — don't carry that scaffolding until an RTL locale actually ships.
 
 ## Releases
 
