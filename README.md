@@ -73,6 +73,14 @@ All configuration comes from the environment; there are no fallback defaults, so
 
 ## Docker
 
+CI publishes an image to the GitHub Container Registry on every push to `main` (tagged `latest` and the commit SHA) and on release tags (tagged with the version, e.g. `1.1.0` and `1.1`). Pull it instead of building:
+
+```sh
+docker pull ghcr.io/<owner>/skra:latest   # or a version tag, e.g. :1.1.0
+```
+
+Or build locally:
+
 ```sh
 docker build -t skra .
 docker run --rm -p 3000:3000 \
