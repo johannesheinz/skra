@@ -1,9 +1,8 @@
 # Skrá — Baseline Specification
 
-A self-hosted application for storing, managing, and sharing/presenting
-contacts. This document fixes every decision from the planning phase and is the
-authoritative baseline for implementation. It is self-contained; no other
-documents are required.
+> **Historical document.** This is the baseline plan written during the initialization phase — it fixed the decisions Skrá was first built against. It is kept for its architecture and rationale, **not** as a live status report: some designs, decisions, and implementations have changed since, and the app has grown well beyond this original scope (theming, i18n, accessibility, and the 1.1.0 hardening pass, among others). For the current shipped state see the [README](../README.md); for conventions and later decisions see [`01_skra-development-principles.md`](01_skra-development-principles.md). The **non-negotiable constraints (§18)** remain the standing invariants and should still hold.
+
+A self-hosted application for storing, managing, and sharing/presenting contacts.
 
 ---
 
