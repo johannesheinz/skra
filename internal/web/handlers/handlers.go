@@ -66,9 +66,12 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, pa
 	}
 	if user, ok := auth.UserFromContext(r.Context()); ok {
 		data["User"] = user
-		if _, set := data["Theme"]; !set {
-			if prefs, err := models.GetPreferences(r.Context(), h.DB, user.ID); err == nil {
+		if prefs, err := models.GetPreferences(r.Context(), h.DB, user.ID); err == nil {
+			if _, set := data["Theme"]; !set {
 				data["Theme"] = prefs.Theme
+			}
+			if _, set := data["Contrast"]; !set {
+				data["Contrast"] = prefs.A11y.HighContrast
 			}
 		}
 	}

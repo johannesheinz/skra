@@ -215,6 +215,32 @@ func (h *Handlers) AccountLocaleUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/account", http.StatusSeeOther)
 }
 
+// AccountA11yUpdate persists the accessibility settings (POST /account/a11y),
+// currently the high-contrast opt-in, then returns to the account page.
+func (h *Handlers) AccountA11yUpdate(w http.ResponseWriter, r *http.Request) {
+	user, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	if !h.checkForm(w, r) {
+		return
+	}
+	prefs, err := models.GetPreferences(r.Context(), h.DB, user.ID)
+	if err != nil {
+		h.Logger.Error("get preferences failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	prefs.A11y.HighContrast = r.PostFormValue("high_contrast") != ""
+	if err := models.UpdatePreferences(r.Context(), h.DB, user.ID, prefs); err != nil {
+		h.Logger.Error("update preferences failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/account", http.StatusSeeOther)
+}
+
 // AccountThemeToggle flips the saved light/dark mode from the header control
 // (POST /account/theme) and returns to the current page. Persisting to the
 // account keeps the toggle and the Appearance settings consistent.
@@ -286,6 +312,7 @@ func (h *Handlers) renderAccount(w http.ResponseWriter, r *http.Request, status 
 		"Accents":       accentOptions,
 		"Locales":       i18n.Locales(),
 		"CurrentLocale": prefs.Locale,
+		"HighContrast":  prefs.A11y.HighContrast,
 		// The account page is always reachable via GET, even when this render is
 		// the result of a POST, so the header toggle returns here.
 		"Path": "/account",

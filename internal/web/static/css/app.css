@@ -613,12 +613,20 @@ section.card + section.card { margin-top: var(--space-5); }
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
 
-/* ---- High-contrast preference: firmer borders and a thicker focus ring. ---- */
+/* ---- High contrast: firmer borders, thicker focus ring, full-contrast muted
+   text. Triggered either by the OS preference or the per-user opt-in
+   (data-contrast="more" on <html>). ---- */
 @media (prefers-contrast: more) {
   :root { --border: var(--border-strong); }
   :focus-visible { outline-width: 3px; }
   .muted, .recent-pill-book, .bday-date, .stat-label { color: var(--ink); }
 }
+:root[data-contrast="more"] { --border: var(--border-strong); }
+:root[data-contrast="more"] :focus-visible { outline-width: 3px; }
+:root[data-contrast="more"] .muted,
+:root[data-contrast="more"] .recent-pill-book,
+:root[data-contrast="more"] .bday-date,
+:root[data-contrast="more"] .stat-label { color: var(--ink); }
 
 /* ---- Print ----
    Strip the app chrome and interactive controls, render black-on-white, and let

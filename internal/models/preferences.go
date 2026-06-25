@@ -66,12 +66,17 @@ func (l ListPrefs) SortKey() string {
 	return "first"
 }
 
+// A11yPrefs holds the user's accessibility choices.
+type A11yPrefs struct {
+	HighContrast bool `json:"highContrast,omitempty"` // force the high-contrast styling on top of any OS preference
+}
+
 // UIPreferences is the user's stored UI preferences blob. It is intentionally
-// extensible — locale and accessibility settings can be added as sibling fields
-// without a migration.
+// extensible — new settings can be added as sibling fields without a migration.
 type UIPreferences struct {
 	Theme  ThemePrefs `json:"theme"`
 	List   ListPrefs  `json:"list"`
+	A11y   A11yPrefs  `json:"a11y"`
 	Locale string     `json:"locale,omitempty"` // BCP-47 code, e.g. "de-DE"; empty = detect from Accept-Language
 }
 

@@ -77,6 +77,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Post("/account/appearance", h.AccountAppearanceUpdate)
 		r.Post("/account/theme", h.AccountThemeToggle)
 		r.Post("/account/locale", h.AccountLocaleUpdate)
+		r.Post("/account/a11y", h.AccountA11yUpdate)
 		r.Post("/account/list-prefs", h.AccountListPrefsUpdate)
 		r.Post("/account/password", h.AccountPasswordUpdate)
 		r.Get("/account/password", func(w http.ResponseWriter, r *http.Request) {

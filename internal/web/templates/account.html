@@ -64,6 +64,16 @@
 </section>
 
 <section class="card stack">
+  <h2>{{t "account.accessibility"}}</h2>
+  <form class="stack" method="post" action="/account/a11y" data-autosubmit>
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <label class="checkbox"><input type="checkbox" name="high_contrast" value="1" data-autosubmit-control{{if .HighContrast}} checked{{end}}> {{t "account.high_contrast"}}</label>
+    <p class="muted">{{t "account.high_contrast_hint"}}</p>
+    <button type="submit" data-js-hide>{{t "common.save"}}</button>
+  </form>
+</section>
+
+<section class="card stack">
   <h2>{{t "account.memberships"}}</h2>
   {{if .Memberships}}
   <div class="table-wrap"><table>
