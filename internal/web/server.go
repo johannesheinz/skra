@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -17,6 +18,21 @@ import (
 	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/web/handlers"
 	"github.com/johannesheinz/skra/internal/web/static"
+)
+
+// HTTP server timeouts and body limits. Explicit (no reliance on zero-value
+// defaults) to bound slowloris/slow-body/stuck-reader exposure. Read/write are
+// generous enough for a 10 MiB upload or a large book export on a slow link.
+const (
+	serverReadHeaderTimeout = 10 * time.Second
+	serverReadTimeout       = 60 * time.Second
+	serverWriteTimeout      = 120 * time.Second
+	serverIdleTimeout       = 120 * time.Second
+	serverMaxHeaderBytes    = 1 << 20 // 1 MiB
+
+	// defaultMaxBodyBytes caps request bodies on ordinary form routes. Upload
+	// routes (photo/import) set their own larger cap and are skipped here.
+	defaultMaxBodyBytes = 1 << 20 // 1 MiB
 )
 
 // Server owns the HTTP server and its lifecycle.
@@ -37,7 +53,11 @@ func New(cfg config.Config, database *db.DB, logger *slog.Logger) (*Server, erro
 		httpServer: &http.Server{
 			Addr:              cfg.Listen,
 			Handler:           router,
-			ReadHeaderTimeout: 10 * time.Second,
+			ReadHeaderTimeout: serverReadHeaderTimeout,
+			ReadTimeout:       serverReadTimeout,
+			WriteTimeout:      serverWriteTimeout,
+			IdleTimeout:       serverIdleTimeout,
+			MaxHeaderBytes:    serverMaxHeaderBytes,
 		},
 		logger:   logger,
 		db:       database,
@@ -62,6 +82,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
 	r.Use(securityHeaders)
+	r.Use(limitBody)
 	r.Use(authenticator.LoadUser)
 	r.Use(h.ResolveLocale)
 
@@ -151,6 +172,25 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	r.Get("/s/{token}/export.csv", h.ShareExportCSV)
 
 	return r, sessions, nil
+}
+
+// limitBody caps request bodies for ordinary routes at defaultMaxBodyBytes.
+// Upload routes (paths ending in /photo or /import) set their own larger cap in
+// the handler, so they are skipped here — wrapping them at 1 MiB would break
+// uploads, since the innermost MaxBytesReader wins.
+func limitBody(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Body != nil && !isUploadPath(r.URL.Path) {
+			r.Body = http.MaxBytesReader(w, r.Body, defaultMaxBodyBytes)
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// isUploadPath reports whether a path is one of the multipart upload endpoints
+// that manages its own (larger) body cap.
+func isUploadPath(p string) bool {
+	return strings.HasSuffix(p, "/photo") || strings.HasSuffix(p, "/import")
 }
 
 // securityHeaders applies a restrictive, self-only Content-Security-Policy plus
