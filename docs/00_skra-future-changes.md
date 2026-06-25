@@ -475,3 +475,18 @@ If adopted later, keep it isolated from the build:
 - Authenticated pages need a login step first — pa11y `actions` (type credentials, submit) or a pre-seeded session cookie.
 - Treat it as an explicit, documented exception to the no-npm rule, and consider running it on a schedule rather than every push to limit the Node surface.
 - Value: catches contrast regressions, ARIA/role mistakes, and performance budgets the Go check can't.
+
+## 17. Secondary hardening (carried over from the 1.0 code review)
+
+A five-part code review of 1.0 found **no confirmed critical/remotely-exploitable vulnerability**; its nine High-severity findings were remediated in patch releases 1.0.1–1.0.9 and shipped as **1.1.0** (image pixel cap, background maintenance ticker, streamed exports, real CI coverage + golangci-lint + govulncheck, tests for the privileged/public paths, full server timeouts + body cap, bounded connection pool, rejected unknown import action, and share-link cleanup on delete). These lower-severity items were deferred and are worth scheduling:
+
+- **Login rate limiting / lockout** — `/login` has no throttle, so online brute force is possible and every attempt runs the expensive argon2 hash (a CPU-DoS lever). Add per-IP + per-username throttling and temporary lockout (`internal/web/handlers/auth.go`).
+- **Bootstrap-admin password strength** — `skra create-admin` accepts any length while every in-app path enforces ≥8 characters; apply the same minimum (`main.go`, `createAdmin`).
+- **Defined-type enums (anemic models)** — roles, access levels, and share modes are bare strings validated procedurally, so an invalid value like `User{Role:"root"}` is representable. Consider named types with validating constructors.
+- **Repository/service seam** — `models` is free functions over a concrete `*db.DB`, so handlers can't be tested against fakes and a transaction can't span multiple model calls. This is the main friction against the multi-book (§2) change.
+- **Text timestamps** — `ShareLink.Usable` parses a hardcoded time layout; a stored value with different precision would silently brick the link (`internal/models/share_link.go`). Store/compare timestamps as a consistent type.
+- **Duplicated helpers/constants** — two `nullString`/`nullableString` variants with divergent trim semantics, and duplicated time-format constants across `auth` and `models` that would break session/expiry logic if they desynced. Consolidate.
+- **Index on `share_links(scope, target_id)`** — the shares-management lookup full-scans the table; negligible today, cheap to add when it grows.
+- **Operational observability** — no container `HEALTHCHECK`, no `/metrics`, a fixed log level, and no access log (`/healthz` + `/readyz` already exist). Add as operational maturity grows.
+
+Already fixed during the 1.1.0 pass: the swallowed housekeeping errors (`DeleteStaleImportUploads`/`DeleteImportUpload`, now logged) and the lint-flagged test-setup error ignores.
