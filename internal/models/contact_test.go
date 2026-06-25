@@ -126,3 +126,22 @@ func TestListContactsSearchAndPagination(t *testing.T) {
 		t.Error("pages overlap; ordering/offset wrong")
 	}
 }
+
+func TestGetContactExport(t *testing.T) {
+	d := testutil.NewDB(t)
+	ctx := context.Background()
+	owner, _ := models.CreateUser(ctx, d, "o", "o@example.com", "h", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Book", "")
+	c, _ := models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "Jane Roe", Org: "Acme"})
+
+	got, err := models.GetContactExport(ctx, d, c.ID)
+	if err != nil {
+		t.Fatalf("GetContactExport: %v", err)
+	}
+	if got.ID != c.ID || got.FullName != "Jane Roe" || got.Org != "Acme" || got.VCardRaw == "" {
+		t.Errorf("export = %+v", got)
+	}
+	if _, err := models.GetContactExport(ctx, d, 999999); !errors.Is(err, models.ErrContactNotFound) {
+		t.Errorf("missing contact err = %v, want ErrContactNotFound", err)
+	}
+}

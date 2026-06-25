@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -21,8 +21,12 @@ func (h *Handlers) BookExportVCard(w http.ResponseWriter, r *http.Request) {
 	h.writeBookVCard(w, r, book)
 }
 
-// writeBookVCard renders every contact in a book as a vCard download, embedding
-// photos. Authorization is the caller's responsibility.
+// writeBookVCard streams every contact in a book as a vCard download, embedding
+// photos, loading each photo just-in-time so only one is held in memory at a
+// time. Authorization is the caller's responsibility. The whole-book row set is
+// fetched before any bytes are written, so a DB error there still becomes a 500;
+// once streaming starts the status is already committed, so mid-stream photo
+// errors are logged and the photo skipped rather than corrupting the download.
 func (h *Handlers) writeBookVCard(w http.ResponseWriter, r *http.Request, book models.AddressBook) {
 	contacts, err := models.ListContactsForExport(r.Context(), h.DB, book.ID)
 	if err != nil {
@@ -30,26 +34,21 @@ func (h *Handlers) writeBookVCard(w http.ResponseWriter, r *http.Request, book m
 		return
 	}
 
-	entries := make([]export.VCardEntry, 0, len(contacts))
+	h.setDownloadHeaders(w, export.VCardMIME, downloadFilename(book.Name, "vcf"))
 	for _, c := range contacts {
 		entry := export.VCardEntry{Raw: c.VCardRaw}
 		if c.HasPhoto {
 			if photo, ok, err := models.GetPhotoBytes(r.Context(), h.DB, c.ID); err != nil {
-				h.exportError(w, "load photo for export", err)
-				return
+				h.Logger.Error("export: load photo mid-stream", "contact", c.ID, "err", err)
 			} else if ok {
 				entry.PhotoJPEG = photo
 			}
 		}
-		entries = append(entries, entry)
+		if err := export.WriteVCards(w, []export.VCardEntry{entry}); err != nil {
+			h.Logger.Error("export: write vcard mid-stream", "contact", c.ID, "err", err)
+			return
+		}
 	}
-
-	var buf bytes.Buffer
-	if err := export.WriteVCards(&buf, entries); err != nil {
-		h.exportError(w, "render vcard", err)
-		return
-	}
-	h.sendDownload(w, export.VCardMIME, downloadFilename(book.Name, "vcf"), buf.Bytes())
 }
 
 // BookExportCSV streams a book's contacts as a CSV download
@@ -70,12 +69,11 @@ func (h *Handlers) BookExportCSV(w http.ResponseWriter, r *http.Request) {
 		rows = append(rows, export.CSVRow{FullName: c.FullName, Org: c.Org, Email: c.Email, Phone: c.Phone})
 	}
 
-	var buf bytes.Buffer
-	if err := export.WriteCSV(&buf, rows); err != nil {
-		h.exportError(w, "render csv", err)
-		return
+	// CSV rows carry no BLOBs, so stream straight to the response.
+	h.setDownloadHeaders(w, export.CSVMIME, downloadFilename(book.Name, "csv"))
+	if err := export.WriteCSV(w, rows); err != nil {
+		h.Logger.Error("export: write csv mid-stream", "err", err)
 	}
-	h.sendDownload(w, export.CSVMIME, downloadFilename(book.Name, "csv"), buf.Bytes())
 }
 
 // ContactExportVCard streams a single contact as a vCard download
@@ -91,43 +89,35 @@ func (h *Handlers) ContactExportVCard(w http.ResponseWriter, r *http.Request) {
 // writeContactVCard renders one contact as a vCard download, embedding its photo
 // if present. Authorization is the caller's responsibility.
 func (h *Handlers) writeContactVCard(w http.ResponseWriter, r *http.Request, contact models.Contact) {
-	exports, err := models.ListContactsForExport(r.Context(), h.DB, contact.AddressBookID)
+	c, err := models.GetContactExport(r.Context(), h.DB, contact.ID)
+	if errors.Is(err, models.ErrContactNotFound) {
+		http.NotFound(w, r)
+		return
+	}
 	if err != nil {
 		h.exportError(w, "load contact for export", err)
 		return
 	}
-	var entry export.VCardEntry
-	found := false
-	for _, c := range exports {
-		if c.ID == contact.ID {
-			entry.Raw = c.VCardRaw
-			if c.HasPhoto {
-				if photo, ok, err := models.GetPhotoBytes(r.Context(), h.DB, c.ID); err == nil && ok {
-					entry.PhotoJPEG = photo
-				}
-			}
-			found = true
-			break
+	entry := export.VCardEntry{Raw: c.VCardRaw}
+	if c.HasPhoto {
+		if photo, ok, err := models.GetPhotoBytes(r.Context(), h.DB, c.ID); err != nil {
+			h.exportError(w, "load photo for export", err)
+			return
+		} else if ok {
+			entry.PhotoJPEG = photo
 		}
 	}
-	if !found {
-		http.NotFound(w, r)
-		return
-	}
 
-	var buf bytes.Buffer
-	if err := export.WriteVCards(&buf, []export.VCardEntry{entry}); err != nil {
-		h.exportError(w, "render vcard", err)
-		return
+	h.setDownloadHeaders(w, export.VCardMIME, downloadFilename(contact.FullName, "vcf"))
+	if err := export.WriteVCards(w, []export.VCardEntry{entry}); err != nil {
+		h.Logger.Error("export: write contact vcard", "contact", c.ID, "err", err)
 	}
-	h.sendDownload(w, export.VCardMIME, downloadFilename(contact.FullName, "vcf"), buf.Bytes())
 }
 
-func (h *Handlers) sendDownload(w http.ResponseWriter, mime, filename string, body []byte) {
+func (h *Handlers) setDownloadHeaders(w http.ResponseWriter, mime, filename string) {
 	w.Header().Set("Content-Type", mime)
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	_, _ = w.Write(body)
 }
 
 func (h *Handlers) exportError(w http.ResponseWriter, what string, err error) {

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"errors"
 	"net/http"
 	"time"
@@ -187,12 +186,10 @@ func (h *Handlers) ShareExportCSV(w http.ResponseWriter, r *http.Request) {
 	for _, c := range contacts {
 		rows = append(rows, export.CSVRow{FullName: c.FullName, Org: c.Org, Email: c.Email, Phone: c.Phone})
 	}
-	var buf bytes.Buffer
-	if err := export.WriteCSV(&buf, rows); err != nil {
-		h.exportError(w, "share csv render", err)
-		return
+	h.setDownloadHeaders(w, export.CSVMIME, downloadFilename(book.Name, "csv"))
+	if err := export.WriteCSV(w, rows); err != nil {
+		h.Logger.Error("export: share csv write mid-stream", "err", err)
 	}
-	h.sendDownload(w, export.CSVMIME, downloadFilename(book.Name, "csv"), buf.Bytes())
 }
 
 // ShareGateSubmit verifies a gated link's secret (POST /s/{token}/gate).

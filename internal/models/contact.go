@@ -636,6 +636,26 @@ func ListContactsForExport(ctx context.Context, d *db.DB, addressBookID int64) (
 	return out, nil
 }
 
+// GetContactExport loads a single contact's export fields by internal id,
+// avoiding a whole-book scan for a one-contact export.
+func GetContactExport(ctx context.Context, d *db.DB, id int64) (ContactExport, error) {
+	var c ContactExport
+	var org, email, phone sql.NullString
+	var hasPhoto int64
+	err := d.QueryRowContext(ctx,
+		`SELECT id, full_name, org, primary_email, primary_phone, vcard_raw, has_photo
+		 FROM contacts WHERE id = ?`, id).
+		Scan(&c.ID, &c.FullName, &org, &email, &phone, &c.VCardRaw, &hasPhoto)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ContactExport{}, ErrContactNotFound
+	}
+	if err != nil {
+		return ContactExport{}, fmt.Errorf("models: get contact export: %w", err)
+	}
+	c.Org, c.Email, c.Phone, c.HasPhoto = org.String, email.String, phone.String, hasPhoto != 0
+	return c, nil
+}
+
 // GetPhotoBytes returns a contact's stored JPEG by internal id, for export.
 func GetPhotoBytes(ctx context.Context, d *db.DB, contactID int64) ([]byte, bool, error) {
 	var b []byte
