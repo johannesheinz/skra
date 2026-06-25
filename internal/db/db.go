@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -57,6 +58,18 @@ func Open(path string) (*DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
+
+	// Bound the pool. Writes are already serialized by writeMu (SQLite is
+	// single-writer), so an unbounded reader pool has no correctness upside and
+	// can starve the writer / surface busy_timeout errors under load. A small
+	// bound tied to CPU count is plenty for a single-instance deployment.
+	maxConns := runtime.NumCPU()
+	if maxConns < 2 {
+		maxConns = 2
+	}
+	pool.SetMaxOpenConns(maxConns)
+	pool.SetMaxIdleConns(maxConns)
+	pool.SetConnMaxIdleTime(5 * time.Minute)
 
 	if err := pool.Ping(); err != nil {
 		pool.Close()
