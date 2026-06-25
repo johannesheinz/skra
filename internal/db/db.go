@@ -130,7 +130,7 @@ func (d *DB) Write(ctx context.Context, fn func(*sql.Tx) error) error {
 	if err != nil {
 		return fmt.Errorf("begin write tx: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	if err := fn(tx); err != nil {
 		return err

@@ -92,7 +92,7 @@ func TestListAddressBooksScoping(t *testing.T) {
 	bob, _ := models.CreateUser(ctx, d, "bob", "b@example.com", "h", models.RoleUser)
 
 	aliceBook, _ := models.CreateAddressBook(ctx, d, alice.ID, "Alice Book", "")
-	models.CreateAddressBook(ctx, d, bob.ID, "Bob Book", "")
+	_, _ = models.CreateAddressBook(ctx, d, bob.ID, "Bob Book", "")
 
 	// Alice sees only her own book.
 	aliceList, err := models.ListAddressBooks(ctx, d, alice)

@@ -11,9 +11,9 @@ import (
 func TestListUsersAndCountAdmins(t *testing.T) {
 	d := testutil.NewDB(t)
 	ctx := context.Background()
-	models.CreateUser(ctx, d, "admin", "a@e.com", "h", models.RoleAdmin)
-	models.CreateUser(ctx, d, "bob", "b@e.com", "h", models.RoleUser)
-	models.CreateUser(ctx, d, "alice", "al@e.com", "h", models.RoleUser)
+	_, _ = models.CreateUser(ctx, d, "admin", "a@e.com", "h", models.RoleAdmin)
+	_, _ = models.CreateUser(ctx, d, "bob", "b@e.com", "h", models.RoleUser)
+	_, _ = models.CreateUser(ctx, d, "alice", "al@e.com", "h", models.RoleUser)
 
 	users, err := models.ListUsers(ctx, d)
 	if err != nil {
@@ -54,7 +54,7 @@ func TestDeleteUserAndOwnsBooks(t *testing.T) {
 	ctx := context.Background()
 	owner, _ := models.CreateUser(ctx, d, "owner", "o@e.com", "h", models.RoleUser)
 	plain, _ := models.CreateUser(ctx, d, "plain", "p@e.com", "h", models.RoleUser)
-	models.CreateAddressBook(ctx, d, owner.ID, "Book", "")
+	_, _ = models.CreateAddressBook(ctx, d, owner.ID, "Book", "")
 
 	owns, err := models.OwnsAddressBooks(ctx, d, owner.ID)
 	if err != nil || !owns {

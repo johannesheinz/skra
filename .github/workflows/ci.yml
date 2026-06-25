@@ -31,8 +31,24 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+
       - name: Test (race detector + coverage)
-        run: go test -race -coverprofile=coverage.out ./...
+        # -coverpkg measures coverage of all internal packages, including handlers
+        # exercised end-to-end from internal/web (default per-package coverage
+        # reports those as ~0%).
+        run: |
+          go test -race -coverpkg=./internal/... -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out | tail -1
+
+      - name: Vulnerability scan
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
 
       - name: Build static binary
         run: CGO_ENABLED=0 go build -trimpath -o skra .

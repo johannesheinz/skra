@@ -75,7 +75,7 @@ func downscale(src image.Image, max int) image.Image {
 	if w <= max && h <= max {
 		return src
 	}
-	tw, th := w, h
+	var tw, th int
 	if w >= h {
 		tw = max
 		th = h * max / w

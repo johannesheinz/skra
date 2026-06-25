@@ -60,7 +60,6 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	r.Use(securityHeaders)
 	r.Use(authenticator.LoadUser)

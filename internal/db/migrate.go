@@ -109,7 +109,7 @@ func applyMigration(db *sql.DB, m migration) error {
 	if err != nil {
 		return fmt.Errorf("begin: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	if _, err := tx.Exec(m.sql); err != nil {
 		return err

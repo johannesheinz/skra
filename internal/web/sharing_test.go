@@ -74,7 +74,7 @@ func TestGatedShareFlow(t *testing.T) {
 	ctx := context.Background()
 	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
 	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Secret Book", "")
-	models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "Jane Doe"})
+	_, _ = models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "Jane Doe"})
 	secretHash, _ := auth.HashPassword("hunter2")
 	link, _ := models.CreateShareLink(ctx, d, models.NewShareLinkParams{
 		Mode: sharing.ModeGated, Scope: sharing.ScopeBook, TargetID: book.ID, SecretHash: secretHash, CreatedBy: owner.ID,
@@ -162,7 +162,7 @@ func TestRevokedShareIs404(t *testing.T) {
 	link, _ := models.CreateShareLink(ctx, d, models.NewShareLinkParams{
 		Mode: sharing.ModePublicLong, Scope: sharing.ScopeBook, TargetID: book.ID, CreatedBy: owner.ID,
 	})
-	models.RevokeShareLink(ctx, d, link.ID)
+	_ = models.RevokeShareLink(ctx, d, link.ID)
 	if rec := get(router, "/s/"+link.Token); rec.Code != http.StatusNotFound {
 		t.Errorf("revoked share = %d, want 404", rec.Code)
 	}

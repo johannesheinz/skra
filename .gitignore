@@ -20,3 +20,4 @@ skra.env
 .DS_Store
 .idea/
 .vscode/
+.tmpbin/

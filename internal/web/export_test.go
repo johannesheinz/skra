@@ -18,7 +18,7 @@ func TestBookExportVCardAndCSV(t *testing.T) {
 	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
 	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Friends", "")
 	jane, _ := models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "Jane Doe", Org: "Acme", PrimaryEmail: "jane@acme.test"})
-	models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "=cmd|formula"})
+	_, _ = models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "=cmd|formula"})
 	if err := models.SetContactPhoto(ctx, d, jane.ID, []byte{0xFF, 0xD8, 0xFF, 0xD9}); err != nil {
 		t.Fatalf("set photo: %v", err)
 	}

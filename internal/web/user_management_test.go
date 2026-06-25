@@ -84,7 +84,7 @@ func TestAdminGuards(t *testing.T) {
 
 	// Cannot delete a user who owns books.
 	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
-	models.CreateAddressBook(ctx, d, owner.ID, "Book", "")
+	_, _ = models.CreateAddressBook(ctx, d, owner.ID, "Book", "")
 	_, token, csrf := authedGet(t, router, session, "/admin/users/"+owner.PublicID+"/edit")
 	del := authedPostForm(router, session, csrf, "/admin/users/"+owner.PublicID+"/delete", url.Values{auth.CSRFFormField: {token}})
 	if del.Code != http.StatusUnprocessableEntity {

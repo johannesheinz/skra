@@ -1,0 +1,14 @@
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - govet
+    - unused
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
