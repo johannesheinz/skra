@@ -14,6 +14,7 @@ import (
 	"github.com/johannesheinz/skra/internal/auth"
 	"github.com/johannesheinz/skra/internal/config"
 	"github.com/johannesheinz/skra/internal/db"
+	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/web/handlers"
 	"github.com/johannesheinz/skra/internal/web/static"
 )
@@ -22,11 +23,13 @@ import (
 type Server struct {
 	httpServer *http.Server
 	logger     *slog.Logger
+	db         *db.DB
+	sessions   *auth.SessionStore
 }
 
 // New builds a Server from configuration, the open database, and a logger.
 func New(cfg config.Config, database *db.DB, logger *slog.Logger) (*Server, error) {
-	router, err := buildRouter(cfg, database, logger)
+	router, sessions, err := buildRouter(cfg, database, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -36,11 +39,13 @@ func New(cfg config.Config, database *db.DB, logger *slog.Logger) (*Server, erro
 			Handler:           router,
 			ReadHeaderTimeout: 10 * time.Second,
 		},
-		logger: logger,
+		logger:   logger,
+		db:       database,
+		sessions: sessions,
 	}, nil
 }
 
-func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.Handler, error) {
+func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.Handler, *auth.SessionStore, error) {
 	sessions := auth.NewSessionStore(database)
 	authenticator := &auth.Authenticator{
 		Sessions:  sessions,
@@ -50,7 +55,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	}
 	h, err := handlers.New(database, sessions, cfg.CookieSecure, cfg.ExternalURL, cfg.SessionKey, logger)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	r := chi.NewRouter()
@@ -146,7 +151,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	r.Get("/s/{token}/export.vcf", h.ShareExportVCard)
 	r.Get("/s/{token}/export.csv", h.ShareExportCSV)
 
-	return r, nil
+	return r, sessions, nil
 }
 
 // securityHeaders applies a restrictive, self-only Content-Security-Policy plus
@@ -167,6 +172,8 @@ func securityHeaders(next http.Handler) http.Handler {
 // Run starts the server and blocks until ctx is cancelled, then shuts down
 // gracefully within a bounded timeout.
 func (s *Server) Run(ctx context.Context) error {
+	go s.runMaintenance(ctx)
+
 	errCh := make(chan error, 1)
 	go func() {
 		s.logger.Info("http server listening", "addr", s.httpServer.Addr)
@@ -185,5 +192,39 @@ func (s *Server) Run(ctx context.Context) error {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		return s.httpServer.Shutdown(shutdownCtx)
+	}
+}
+
+// maintenanceInterval is how often stale sessions/uploads are pruned and free
+// pages reclaimed. Hourly is ample for a single-instance deployment.
+const maintenanceInterval = time.Hour
+
+// runMaintenance prunes expired sessions and stale import uploads and reclaims
+// free pages on a schedule, once at startup and then every maintenanceInterval,
+// until ctx is cancelled.
+func (s *Server) runMaintenance(ctx context.Context) {
+	s.maintain(ctx)
+	ticker := time.NewTicker(maintenanceInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.maintain(ctx)
+		}
+	}
+}
+
+// maintain runs one maintenance pass, logging (never swallowing) each error.
+func (s *Server) maintain(ctx context.Context) {
+	if err := s.sessions.DeleteExpired(ctx); err != nil {
+		s.logger.Error("maintenance: prune expired sessions", "err", err)
+	}
+	if err := models.DeleteStaleImportUploads(ctx, s.db); err != nil {
+		s.logger.Error("maintenance: prune stale import uploads", "err", err)
+	}
+	if err := s.db.IncrementalVacuum(ctx); err != nil {
+		s.logger.Error("maintenance: incremental vacuum", "err", err)
 	}
 }

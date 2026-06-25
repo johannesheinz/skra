@@ -28,7 +28,7 @@ func testRouter(t *testing.T, d *db.DB) http.Handler {
 		SessionKey:   "0123456789abcdef0123456789abcdef",
 	}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	router, err := buildRouter(cfg, d, logger)
+	router, _, err := buildRouter(cfg, d, logger)
 	if err != nil {
 		t.Fatalf("buildRouter: %v", err)
 	}

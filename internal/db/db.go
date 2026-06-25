@@ -145,6 +145,15 @@ func (d *DB) ExecWrite(ctx context.Context, query string, args ...any) (sql.Resu
 	return d.DB.ExecContext(ctx, query, args...)
 }
 
+// IncrementalVacuum reclaims free pages from the (INCREMENTAL auto_vacuum) file
+// so it shrinks after deletes. Serialized as a write.
+func (d *DB) IncrementalVacuum(ctx context.Context) error {
+	if _, err := d.ExecWrite(ctx, "PRAGMA incremental_vacuum"); err != nil {
+		return fmt.Errorf("db: incremental vacuum: %w", err)
+	}
+	return nil
+}
+
 // initAutoVacuum sets INCREMENTAL auto_vacuum and forces it into the database
 // header with a VACUUM. Both statements must run on the same connection, so a
 // single connection is pinned for the operation. VACUUM persists the mode even
