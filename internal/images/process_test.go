@@ -2,6 +2,9 @@ package images
 
 import (
 	"bytes"
+	"encoding/binary"
+	"errors"
+	"hash/crc32"
 	"image"
 	"image/color"
 	"image/jpeg"
@@ -126,5 +129,41 @@ func TestReadOrientation(t *testing.T) {
 
 	if got := readOrientation(jpegBytes); got != 6 {
 		t.Errorf("EXIF orientation = %d, want 6", got)
+	}
+}
+
+// craftPNGHeader builds a minimal, CRC-valid PNG (signature + IHDR only) that
+// declares the given dimensions, so DecodeConfig can read the size without any
+// pixel data — used to exercise the decode dimension cap.
+func craftPNGHeader(t *testing.T, w, h uint32) []byte {
+	t.Helper()
+	var b bytes.Buffer
+	b.Write([]byte{0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a})
+	ihdr := make([]byte, 13)
+	binary.BigEndian.PutUint32(ihdr[0:], w)
+	binary.BigEndian.PutUint32(ihdr[4:], h)
+	ihdr[8] = 8 // bit depth
+	ihdr[9] = 2 // color type: truecolor RGB
+	length := make([]byte, 4)
+	binary.BigEndian.PutUint32(length, uint32(len(ihdr)))
+	b.Write(length)
+	typeAndData := append([]byte("IHDR"), ihdr...)
+	b.Write(typeAndData)
+	crc := make([]byte, 4)
+	binary.BigEndian.PutUint32(crc, crc32.ChecksumIEEE(typeAndData))
+	b.Write(crc)
+	return b.Bytes()
+}
+
+func TestProcessRejectsOversizedDimensions(t *testing.T) {
+	// 30000 > maxDimensionInput, so it must be rejected from the header alone,
+	// before any full-resolution buffer is allocated.
+	if _, err := Process(craftPNGHeader(t, 30000, 30000)); !errors.Is(err, ErrImageTooLarge) {
+		t.Fatalf("Process(oversized) = %v, want ErrImageTooLarge", err)
+	}
+	// A modest header passes the cap (then fails later for lack of pixel data,
+	// which is a different, non-ErrImageTooLarge error).
+	if _, err := Process(craftPNGHeader(t, 100, 100)); errors.Is(err, ErrImageTooLarge) {
+		t.Fatal("Process(100x100 header) wrongly rejected as too large")
 	}
 }
