@@ -13,7 +13,7 @@
   <script src="{{static "js/photo.js"}}" defer></script>
   <script src="{{static "js/prefs.js"}}" defer></script>
   <script src="{{static "js/birthday.js"}}" defer></script>
-  <script src="{{static "js/rows.js"}}" defer></script>
+  <script src="{{static "js/a11y.js"}}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">{{t "skip_to_content"}}</a>
@@ -34,7 +34,7 @@
     </a>
     <div class="appbar-right">
       {{with .User}}
-      <nav class="appnav">
+      <nav class="appnav" aria-label="{{t "nav.primary"}}">
         <a href="/books" aria-label="{{t "nav.address_books"}}" title="{{t "nav.address_books"}}">{{icon "book-open"}} <span class="nav-label">{{t "nav.address_books"}}</span></a>
         {{if eq .Role "admin"}}<a href="/admin/users" aria-label="{{t "nav.users"}}" title="{{t "nav.users"}}">{{icon "users"}} <span class="nav-label">{{t "nav.users"}}</span></a>{{end}}
         <a href="/account" aria-label="{{t "nav.account"}}" title="{{.Username}}">{{icon "settings"}} <span class="nav-label">{{.Username}}</span></a>

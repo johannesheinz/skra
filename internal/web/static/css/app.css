@@ -416,6 +416,8 @@ legend { padding: 0 var(--space-2); }
 
 /* ---- Contact header + photo control ---- */
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* The photo file input is visually hidden; surface keyboard focus on its label. */
+[data-photo-input]:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
 .contact-header { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-5); margin-bottom: var(--space-5); }
 .contact-headings h1 { margin-bottom: var(--space-1); }
 .photo-edit { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
@@ -609,6 +611,13 @@ section.card + section.card { margin-top: var(--space-5); }
 /* ---- Motion preference ---- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+/* ---- High-contrast preference: firmer borders and a thicker focus ring. ---- */
+@media (prefers-contrast: more) {
+  :root { --border: var(--border-strong); }
+  :focus-visible { outline-width: 3px; }
+  .muted, .recent-pill-book, .bday-date, .stat-label { color: var(--ink); }
 }
 
 /* ---- Print ----

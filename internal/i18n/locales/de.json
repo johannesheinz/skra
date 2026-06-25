@@ -7,6 +7,9 @@
   "nav.account": "Kontoeinstellungen",
   "nav.sign_out": "Abmelden",
   "nav.toggle_theme": "Zwischen hellem und dunklem Design wechseln",
+  "nav.primary": "Hauptnavigation",
+  "a11y.row_added": "Zeile hinzugefügt",
+  "a11y.row_removed": "Zeile entfernt",
 
   "common.save": "Speichern",
   "common.cancel": "Abbrechen",

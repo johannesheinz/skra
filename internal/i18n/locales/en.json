@@ -7,6 +7,9 @@
   "nav.account": "Account settings",
   "nav.sign_out": "Sign out",
   "nav.toggle_theme": "Toggle light or dark theme",
+  "nav.primary": "Main navigation",
+  "a11y.row_added": "Row added",
+  "a11y.row_removed": "Row removed",
 
   "common.save": "Save",
   "common.cancel": "Cancel",

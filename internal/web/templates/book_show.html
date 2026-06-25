@@ -19,7 +19,7 @@
 
 <div class="toolbar">
   <form method="get" action="/books/{{.Book.PublicID}}" role="search">
-    <input type="search" name="q" value="{{.Query}}" placeholder="{{t "book.search_placeholder"}}">
+    <input type="search" name="q" value="{{.Query}}" placeholder="{{t "book.search_placeholder"}}" aria-label="{{t "book.search_placeholder"}}">
     <button class="btn-secondary" type="submit">{{icon "search"}} {{t "common.search"}}</button>
   </form>
   <div class="actions">

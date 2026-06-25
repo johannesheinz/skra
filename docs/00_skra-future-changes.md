@@ -365,7 +365,20 @@ Self-service today is limited to changing your own password (`/account/password`
 
 Effort/risk: low–medium — a memberships query plus a small profile form and page; no schema change (the `email` column already exists). Pairs naturally with the per-user theme preference (§10) if profile settings grow.
 
-## 12. Accessibility (a11y)
+## 12. Accessibility (a11y) — implemented
+
+Shipped a deliberate pass on top of the semantic baseline:
+
+- **Labels/landmarks:** the main nav and the pager nav carry distinct `aria-label`s; the search box has an `aria-label`; icon-only controls (nav, pager, sort direction, add FAB, row remove, theme toggle) already had `aria-label`/`title`.
+- **Dynamic rows:** adding a row via htmx moves focus to its first field and announces it through a polite `role="status"` live region; removing a row announces too (`a11y.js`).
+- **Errors:** on a validation re-render, focus moves to the `role="alert"` so it is announced and reachable.
+- **Keyboard:** all actions are real `<button>`/`<a>` elements; the visually-hidden photo file input now shows a focus ring on its label when keyboard-focused.
+- **Preferences:** `prefers-reduced-motion` disables transitions/animations; `prefers-contrast: more` firms up borders, thickens the focus ring, and promotes muted text to full-contrast.
+- **Focus visibility:** `:focus-visible` outlines on controls and a ring on inputs; a skip-to-content link.
+
+Verification: structural/keyboard/SR-affordance work is in place. Contrast for the default light/dark palettes meets AA for body text; the Solarized flavor follows Ethan Schoonover's canonical palette (its muted "comment" tone is low-contrast by design). Running axe/Lighthouse in CI is a suggested follow-up but not wired up here.
+
+Original notes retained below for reference.
 
 The server-rendered HTML is a good starting point — semantic elements, `<label>`-wrapped inputs, `role="alert"` on errors, `role="search"`, landmark `header`/`main`/`nav`, `lang="en"`, and visible focus outlines — but there has been no deliberate accessibility pass.
 
@@ -437,5 +450,5 @@ When implementing either topic, keep the baseline's non-negotiables intact:
 | Upcoming birthdays on landing (§9) | denormalized birthday column + backfill | medium | Needs a queryable birthday; then a small dashboard widget |
 | Theming light/dark (§10) | ✅ implemented | low | Per-user Mode/Flavor/Accent in preferences; server-set data-* attrs, no flash |
 | Richer user profiles (§11) | ✅ implemented | low–medium | Account page: email edit, memberships, appearance, password |
-| Accessibility (§12) | none (templates/CSS) | low–medium | a11y pass: labels, focus, aria-live, contrast; verify with axe |
+| Accessibility (§12) | ✅ implemented | low–medium | Labels, focus mgmt, live regions, prefers-contrast; axe pass suggested |
 | Internationalization (§13) | ✅ implemented | medium–high | en-US/de-DE/en-DK; x/text formatting; per-user locale; language × region |

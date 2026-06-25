@@ -4,6 +4,7 @@
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 <form class="stack" method="post" action="{{.FormAction}}">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <p class="visually-hidden" role="status" aria-live="polite" data-live-region data-added="{{t "a11y.row_added"}}" data-removed="{{t "a11y.row_removed"}}"></p>
 
   <label>{{t "contact_form.first_name"}} <input name="given_name" value="{{.D.GivenName}}" autofocus></label>
   <label>{{t "contact_form.last_name"}} <input name="family_name" value="{{.D.FamilyName}}"></label>
