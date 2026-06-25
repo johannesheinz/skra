@@ -376,7 +376,7 @@ Shipped a deliberate pass on top of the semantic baseline:
 - **Preferences:** `prefers-reduced-motion` disables transitions/animations; `prefers-contrast: more` firms up borders, thickens the focus ring, and promotes muted text to full-contrast.
 - **Focus visibility:** `:focus-visible` outlines on controls and a ring on inputs; a skip-to-content link.
 
-Verification: structural/keyboard/SR-affordance work is in place. Contrast for the default light/dark palettes meets AA for body text; the Solarized flavor follows Ethan Schoonover's canonical palette (its muted "comment" tone is low-contrast by design). Running axe/Lighthouse in CI is a suggested follow-up but not wired up here.
+Verification: an automated a11y regression test (`internal/web/a11y_test.go`) renders every page and asserts concrete invariants — non-empty `<html lang>`, exactly one `<h1>`, a non-empty `<title>`, an `alt` on every image, an accessible name on every button/link, and a programmatic label on every form control. It runs in the normal CI test pass. This is a **dependency-free Go check by design**: pulling a Node/axe/Lighthouse toolchain into CI would violate the local-first / no-npm principle, so it is deliberately not used. Writing this test caught and fixed several unlabeled form controls. A manual axe/Lighthouse spot-check (and a screen-reader smoke test) remains a recommended periodic complement, especially for the computed ARIA tree and contrast, which a static check cannot fully assess. Contrast for the default light/dark palettes meets AA for body text; the Solarized flavor follows Ethan Schoonover's canonical palette (its muted "comment" tone is low-contrast by design).
 
 Original notes retained below for reference.
 

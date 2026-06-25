@@ -39,7 +39,7 @@
   <fieldset class="birthday-field">
     <legend>{{t "contact_form.birthday"}}</legend>
     <span data-birthday-date{{if .BirthdayNoYear}} hidden{{end}}>
-      <input type="date" name="birthday" value="{{.BirthdayDate}}">
+      <input type="date" name="birthday" value="{{.BirthdayDate}}" aria-label="{{t "contact_form.birthday"}}">
     </span>
     <span class="birthday-md" data-birthday-md{{if not .BirthdayNoYear}} hidden{{end}}>
       <select name="birthday_month" aria-label="{{t "contact_form.month"}}">

@@ -13,7 +13,7 @@
 {{define "email_row"}}
 <div class="field-row">
   <select name="email_type" aria-label="{{t "field.email_type"}}">{{template "type_options" .Type}}</select>
-  <input type="email" name="email_value" value="{{.Value}}" placeholder="email@example.com">
+  <input type="email" name="email_value" value="{{.Value}}" placeholder="email@example.com" aria-label="{{t "contact.email"}}">
   {{template "row_remove"}}
 </div>
 {{end}}
@@ -21,14 +21,14 @@
 {{define "phone_row"}}
 <div class="field-row">
   <select name="phone_type" aria-label="{{t "field.phone_type"}}">{{template "type_options" .Type}}</select>
-  <input type="tel" name="phone_value" value="{{.Value}}" placeholder="+1 555 000 0000">
+  <input type="tel" name="phone_value" value="{{.Value}}" placeholder="+1 555 000 0000" aria-label="{{t "contact.phone"}}">
   {{template "row_remove"}}
 </div>
 {{end}}
 
 {{define "url_row"}}
 <div class="field-row">
-  <input type="url" name="url_value" value="{{.}}" placeholder="https://">
+  <input type="url" name="url_value" value="{{.}}" placeholder="https://" aria-label="{{t "contact.link"}}">
   {{template "row_remove"}}
 </div>
 {{end}}
@@ -36,10 +36,10 @@
 {{define "address_row"}}
 <fieldset class="field-row address-row">
   <select name="adr_type" aria-label="{{t "field.address_type"}}">{{template "type_options" .Type}}</select>
-  <input name="adr_street" value="{{.Street}}" placeholder="{{t "field.street"}}">
-  <input name="adr_city" value="{{.City}}" placeholder="{{t "field.city"}}">
-  <input name="adr_postal" value="{{.PostalCode}}" placeholder="{{t "field.postal"}}">
-  <input name="adr_country" value="{{.Country}}" placeholder="{{t "field.country"}}">
+  <input name="adr_street" value="{{.Street}}" placeholder="{{t "field.street"}}" aria-label="{{t "field.street"}}">
+  <input name="adr_city" value="{{.City}}" placeholder="{{t "field.city"}}" aria-label="{{t "field.city"}}">
+  <input name="adr_postal" value="{{.PostalCode}}" placeholder="{{t "field.postal"}}" aria-label="{{t "field.postal"}}">
+  <input name="adr_country" value="{{.Country}}" placeholder="{{t "field.country"}}" aria-label="{{t "field.country"}}">
   {{template "row_remove"}}
 </fieldset>
 {{end}}
