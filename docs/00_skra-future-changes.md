@@ -222,7 +222,16 @@ Effort/risk: low–medium. It is additive (new virtual table + triggers in a mig
 
 ## 4. Dependency updates: migrate Dependabot → Renovate — implemented
 
-Shipped: `.github/dependabot.yml` is replaced by [`renovate.json`](../renovate.json). It extends `config:recommended` on a weekly schedule with a dependency dashboard, keeping the gomod / github-actions / docker coverage, and adds regex custom-managers that read the README "Vendored assets" table and bump the recorded versions: htmx and Space Grotesk from `github-tags`, and Lucide from the `lucide-static` npm package (which is where its recorded version originates, per `internal/web/icons/icons.go`). Renovate only edits the version string; the vendored binaries, the font subset, and the inlined icon SVGs are still refreshed by hand — each PR carries a `prBodyNotes` warning naming the exact repo path to update. Enabling it is an ops step: install the Renovate GitHub App on the repo, or run the self-hosted `renovatebot/github-action`.
+Shipped: `.github/dependabot.yml` is replaced by [`renovate.json`](../renovate.json). It extends `config:recommended` on a weekly schedule with a dependency dashboard. Enabling it is an ops step: install the Renovate GitHub App on the repo, or run the self-hosted `renovatebot/github-action` (see [`03_skra-github-setup.md`](03_skra-github-setup.md)).
+
+Renovate watches **everything with a version in this repo**:
+
+- **Go modules** (`gomod`) — `go.mod`/`go.sum`, grouped into one "go dependencies" PR.
+- **GitHub Actions** (`github-actions`) — the SHA-pinned `uses:` in `.github/workflows/ci.yml`; Renovate bumps the pinned commit SHA and its `# vN` comment together.
+- **Dockerfile base images** (`dockerfile`) — the `FROM` tags in `Dockerfile`. The versioned builder (`golang:1.26-bookworm`) gets update PRs; the runtime `distroless/...:nonroot` is a rolling tag with no version, so it only moves when rebuilt (would need digest pinning to track — deliberately not enabled).
+- **Vendored front-end assets** (custom regex managers over the README table) — **htmx** and **Space Grotesk** via `github-tags`, and **Lucide** via the `lucide-static` npm package. These bump only the recorded version string; the actual binary/font/SVG files are refreshed by hand, and each PR carries a `prBodyNotes` note naming the exact repo path to update.
+
+Not tracked: the runtime container digest (see above) and anything without a discoverable version (e.g. the inlined SVGs themselves).
 
 Original notes retained below for reference.
 

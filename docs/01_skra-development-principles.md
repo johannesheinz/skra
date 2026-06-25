@@ -90,6 +90,28 @@ Never pass an English literal into template data. The locale is resolved once by
 
 **RTL is not supported** (decision: [`00_skra-future-changes.md`](00_skra-future-changes.md) §13). All locales are left-to-right, so there is no `dir` attribute. The CSS uses logical properties, so adding RTL later means reintroducing a per-locale direction plus `<html dir>` — don't carry that scaffolding until an RTL locale actually ships.
 
+## Releases
+
+Skrá follows semantic versioning. The version lives in one place — `const Version` in `main.go` — and is printed by `skra version` and logged at startup.
+
+**Versioning convention.** A self-contained fix or small change is a **patch** bump (1.0.0 → 1.0.1), committed *without* a tag. When a planned batch of work is complete (e.g. a review's remediation plan), bump the **minor** version and tag it. Breaking changes to config, storage, or the CLI would be a **major** bump. Commit the version bump as part of the change it describes; do not tag every patch.
+
+**Cutting a release.**
+
+1. Bump `Version` in `main.go` and commit.
+2. Tag it: `git tag -a vX.Y.Z -m "Skrá X.Y.Z"`.
+3. Push the tag: `git push origin vX.Y.Z` (or `git push --tags`).
+
+**What a `v*` tag triggers** (`.github/workflows/ci.yml`, fully automated — no manual GitHub Release step):
+
+- `test` runs (fmt, vet, golangci-lint, race tests + real coverage, govulncheck, build).
+- `docker` builds and pushes the image to GHCR, tagged `X.Y.Z`, `X.Y`, `latest`, and `sha-…`.
+- `release` cross-compiles static CGO-free binaries (linux/darwin × amd64/arm64), writes `SHA256SUMS`, and publishes a GitHub Release whose notes lead with the matching `docker pull` command.
+
+Preconditions: the tag must match `v*`, the `test` and `docker` jobs must pass, and the workflow must exist **at the tagged commit** (tagging an older commit won't run the current release job). First-time repository setup (Actions permissions, image visibility, Renovate) is in [`03_skra-github-setup.md`](03_skra-github-setup.md).
+
+**Supply chain.** Every action in the workflow is pinned to a full commit SHA with a `# vN` comment; Renovate's `github-actions` manager keeps those SHAs current. Do not reintroduce mutable `@vN` action refs.
+
 ## Documentation & commit messages
 
 - **Do not hard-wrap prose at a fixed column.** In Markdown, config-file comments, code comments, and commit message bodies, break lines only where it is semantically meaningful (paragraphs, list items, distinct clauses). `gofmt` does not reflow comments, so Go comments are single long lines too.
