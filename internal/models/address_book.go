@@ -120,7 +120,22 @@ func UpdateAddressBook(ctx context.Context, d *db.DB, id int64, name, descriptio
 
 // DeleteAddressBook removes a book; its contacts (and their photos) cascade.
 func DeleteAddressBook(ctx context.Context, d *db.DB, id int64) error {
-	if _, err := d.ExecWrite(ctx, `DELETE FROM address_books WHERE id = ?`, id); err != nil {
+	// share_links.target_id is a polymorphic reference with no FK, so its rows
+	// must be purged explicitly (in the same transaction, before the book and its
+	// cascaded contacts are removed): the book's own share links and the share
+	// links of every contact in the book.
+	err := d.Write(ctx, func(tx *sql.Tx) error {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM share_links WHERE scope = 'book' AND target_id = ?`, id); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx,
+			`DELETE FROM share_links WHERE scope = 'contact' AND target_id IN (SELECT id FROM contacts WHERE address_book_id = ?)`, id); err != nil {
+			return err
+		}
+		_, err := tx.ExecContext(ctx, `DELETE FROM address_books WHERE id = ?`, id)
+		return err
+	})
+	if err != nil {
 		return fmt.Errorf("models: delete address book: %w", err)
 	}
 	return nil

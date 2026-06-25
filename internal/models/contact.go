@@ -198,7 +198,16 @@ func GetContactDetails(ctx context.Context, d *db.DB, publicID string) (Contact,
 
 // DeleteContact removes a contact; its photo cascades.
 func DeleteContact(ctx context.Context, d *db.DB, contactID int64) error {
-	if _, err := d.ExecWrite(ctx, `DELETE FROM contacts WHERE id = ?`, contactID); err != nil {
+	// Purge the contact's (FK-less, polymorphic) share links in the same
+	// transaction so deleting the contact leaves no orphaned links.
+	err := d.Write(ctx, func(tx *sql.Tx) error {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM share_links WHERE scope = 'contact' AND target_id = ?`, contactID); err != nil {
+			return err
+		}
+		_, err := tx.ExecContext(ctx, `DELETE FROM contacts WHERE id = ?`, contactID)
+		return err
+	})
+	if err != nil {
 		return fmt.Errorf("models: delete contact: %w", err)
 	}
 	return nil
