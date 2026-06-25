@@ -19,6 +19,9 @@ import (
 	"github.com/johannesheinz/skra/internal/web"
 )
 
+// Version is the release version of Skrá.
+const Version = "1.0.0"
+
 func main() {
 	if err := run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, "skra:", err)
@@ -38,6 +41,9 @@ func run(args []string) error {
 		return createAdmin()
 	case "backup":
 		return backup(args[2:])
+	case "version", "--version", "-v":
+		fmt.Println("skra " + Version)
+		return nil
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", args[1], usage())
 	}
@@ -47,7 +53,8 @@ func usage() string {
 	return "usage: skra <command>\n\ncommands:\n" +
 		"  serve          run the HTTP server\n" +
 		"  create-admin   create the initial admin account (first-run bootstrap)\n" +
-		"  backup         write a consistent snapshot: skra backup --out <path>"
+		"  backup         write a consistent snapshot: skra backup --out <path>\n" +
+		"  version        print the version"
 }
 
 func usageError() error {
@@ -56,6 +63,7 @@ func usageError() error {
 
 func serve() error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger.Info("starting skra", "version", Version)
 
 	cfg, err := config.Load()
 	if err != nil {

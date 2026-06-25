@@ -6,7 +6,7 @@
 
 ## Status
 
-Early development.
+**Version 1.0.0** — feature-complete against the baseline specification and ready for self-hosting. Everything below is shipped and covered by tests.
 
 **Phase 0 (skeleton)** — single static CGO-free binary; SQLite open with mandated pragmas (`WAL`, `busy_timeout`, `foreign_keys`, `synchronous=NORMAL`) and `INCREMENTAL auto_vacuum` on a fresh database; embedded migration runner (`schema_migrations`-tracked); `chi` router with `log/slog` logging, graceful shutdown, and `GET /healthz`; `skra serve`.
 
@@ -25,6 +25,8 @@ Early development.
 **Rich contact fields** — contacts hold first/last name, multiple typed emails/phones, multiple postal addresses, links, organization, title, birthday, and note. The edit form has repeatable rows (htmx); everything round-trips through `vcard_raw` (the source of truth) with the structured columns kept as a listing/search cache, so editing no longer drops imported multi-value data.
 
 **Phase 5c (backups & ops)** — `skra backup --out <path>` writes a consistent `VACUUM INTO` snapshot; startup auto-snapshots an existing database before applying pending migrations; `GET /readyz` adds a DB readiness check next to `/healthz`. Rotation/encryption/offsite/systemd/monitoring are documented in [`docs/02_skra-operations.md`](docs/02_skra-operations.md).
+
+**Beyond the baseline** — a refined semantic UI with an inlined icon set and a per-user theming system (light/dark/system × flavor × accent); a fully localized interface (`en-US` / `de-DE` / `en-DK`) with locale-aware number/date/address formatting; an accessibility pass (accessible names, focus management, `prefers-reduced-motion`, a high-contrast mode both auto and opt-in, and a CI invariant test); responsive and print stylesheets; an upcoming-birthdays dashboard; map link-outs for addresses; persisted per-user list page-size and sort preferences; admin create-and-import of a vCard into a new address book; and Renovate for dependency and vendored-asset updates.
 
 See [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) for the full specification and roadmap, and [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md) for conventions.
 
