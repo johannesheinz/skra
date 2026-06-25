@@ -89,9 +89,11 @@ func Handler() http.HandlerFunc {
 
 		w.Header().Set("Content-Type", a.contentType)
 		w.Header().Set("ETag", a.etag)
-		// Versioned requests are immutable; bare requests (e.g. fonts referenced
-		// from CSS without a version) revalidate cheaply via the ETag.
-		if r.URL.Query().Get("v") != "" {
+		// Immutable, year-long cache for versioned requests (?v=<hash>) and for
+		// fonts, whose filenames already carry the version (SpaceGrotesk-*-2.0.0)
+		// so a new font ships under a new URL. Other bare requests revalidate
+		// cheaply via the ETag.
+		if r.URL.Query().Get("v") != "" || strings.HasSuffix(name, ".woff2") {
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 		} else {
 			w.Header().Set("Cache-Control", "public, max-age=3600")

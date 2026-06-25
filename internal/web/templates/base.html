@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <meta name="color-scheme" content="light dark">
+  <!-- Stop htmx injecting its indicator <style> (we ship no indicators); an inline
+       <style> would violate the self-only CSP. -->
+  <meta name="htmx-config" content='{"includeIndicatorStyles":false}'>
   <title>{{block "title" .}}Skrá{{end}}</title>
   <link rel="icon" type="image/svg+xml" href="{{static "img/skra-favicon.svg"}}">
   <script src="{{static "js/theme.js"}}"></script>

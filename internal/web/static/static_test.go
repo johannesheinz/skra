@@ -49,6 +49,24 @@ func TestHandlerServesAssetWithCachingHeaders(t *testing.T) {
 
 func TestHandlerUnversionedRevalidates(t *testing.T) {
 	h := Handler()
+	// A non-versioned, non-font asset (e.g. app.css referenced without ?v=)
+	// revalidates via ETag rather than being cached immutably.
+	req := httptest.NewRequest(http.MethodGet, "/static/css/app.css", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	if cc := rec.Header().Get("Cache-Control"); strings.Contains(cc, "immutable") {
+		t.Errorf("unversioned request should not be immutable, got %q", cc)
+	}
+}
+
+func TestHandlerFontsAreImmutable(t *testing.T) {
+	h := Handler()
+	// Font filenames carry their version, so they are cached immutably even
+	// without a ?v= query (referenced that way from the stylesheet).
 	req := httptest.NewRequest(http.MethodGet, "/static/fonts/SpaceGrotesk-Medium-2.0.0.woff2", nil)
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
@@ -59,8 +77,8 @@ func TestHandlerUnversionedRevalidates(t *testing.T) {
 	if ct := rec.Header().Get("Content-Type"); ct != "font/woff2" {
 		t.Errorf("Content-Type = %q, want font/woff2", ct)
 	}
-	if cc := rec.Header().Get("Cache-Control"); strings.Contains(cc, "immutable") {
-		t.Errorf("unversioned request should not be immutable, got %q", cc)
+	if cc := rec.Header().Get("Cache-Control"); !strings.Contains(cc, "immutable") {
+		t.Errorf("font Cache-Control = %q, want immutable", cc)
 	}
 }
 
