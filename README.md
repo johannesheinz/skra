@@ -6,7 +6,7 @@
 
 ## Status
 
-**Version 1.0.0** — feature-complete against the baseline specification and ready for self-hosting. Everything below is shipped and covered by tests.
+**Version 1.1.0** — feature-complete against the baseline specification and ready for self-hosting. Everything below is shipped and covered by tests.
 
 **Phase 0 (skeleton)** — single static CGO-free binary; SQLite open with mandated pragmas (`WAL`, `busy_timeout`, `foreign_keys`, `synchronous=NORMAL`) and `INCREMENTAL auto_vacuum` on a fresh database; embedded migration runner (`schema_migrations`-tracked); `chi` router with `log/slog` logging, graceful shutdown, and `GET /healthz`; `skra serve`.
 

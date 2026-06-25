@@ -1,5 +1,7 @@
 # Skrá Remediation Plan — Critical Findings
 
+> **Status: complete.** All nine items were implemented as patch releases 1.0.1–1.0.9 and shipped together as **1.1.0**. 1) image pixel cap · 2) background maintenance ticker · 3) streamed exports · 4) CI coverage/lint/vuln · 5) tests for privileged/public paths · 6) server timeouts + body cap · 7) bounded connection pool · 8) reject unknown import action · 9) share-link cleanup on delete.
+
 Actionable, self-contained work items for the High-severity findings in [00-summary.md](00-summary.md). Each item is independent and carries the context, exact locations, fix steps, and verification needed to start without re-reading the other reports. Ordered by recommended sequence (safety fixes first).
 
 Project constraints (from `CLAUDE.md` / `docs/01_skra-development-principles.md`): Go 1.26, never use silent defaults (fail fast with an error), prefer speaking names over comments, keep security/performance in mind.
