@@ -1,6 +1,6 @@
 # Skrá — Development Principles
 
-Shared conventions for working on Skrá. These complement the architecture rules in [`00_skra-baseline-spec.md`](00_skra-baseline-spec.md) (§18 non-negotiables) — read that for the data/security architecture; this file is about how we write and structure the code, assets, and docs.
+Shared conventions for working on Skrá. These complement the architecture rules in [`00_skra-baseline-spec.md`](00_skra-baseline-spec.md) (§17 non-negotiables) — read that for the data/security architecture; this file is about how we write and structure the code, assets, and docs.
 
 ## Code
 

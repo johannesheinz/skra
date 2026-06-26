@@ -1,6 +1,6 @@
 # Skrá — Baseline Specification
 
-> **Historical document.** This is the baseline plan written during the initialization phase — it fixed the decisions Skrá was first built against. It is kept for its architecture and rationale, **not** as a live status report: some designs, decisions, and implementations have changed since, and the app has grown well beyond this original scope (theming, i18n, accessibility, and the 1.1.0 hardening pass, among others). For the current shipped state see the [README](../README.md); for conventions and later decisions see [`01_skra-development-principles.md`](01_skra-development-principles.md). The **non-negotiable constraints (§18)** remain the standing invariants and should still hold.
+> **Historical document.** This is the baseline plan written during the initialization phase — it fixed the decisions Skrá was first built against. It is kept for its architecture and rationale, **not** as a live status report: some designs, decisions, and implementations have changed since, and the app has grown well beyond this original scope (theming, i18n, accessibility, and the 1.1.0 hardening pass, among others). For the current shipped state see the [README](../README.md); for conventions and later decisions see [`01_skra-development-principles.md`](01_skra-development-principles.md). The **non-negotiable constraints (§17)** remain the standing invariants and should still hold.
 
 A self-hosted application for storing, managing, and sharing/presenting contacts.
 
@@ -515,19 +515,7 @@ skra/
 
 ---
 
-## 17. Implementation roadmap
-
-- **Phase 0 — Skeleton.** Module + chi + `modernc.org/sqlite` + `embed.FS`; `db.go` (open, `auto_vacuum` on fresh DB, pragmas, migration runner); config loader; `/healthz`; Dockerfile; static build.
-- **Phase 1 — Data & auth.** Apply `0001_init.sql`; argon2id; login/logout; session middleware; secure cookies; admin bootstrap; `can(...)` resolver and RBAC middleware; `public_id` generation; photo endpoint scaffold with ETag/`304`.
-- **Phase 2 — Contact management.** Address book CRUD; contact list (pagination + search), detail, create/edit/delete (manager+); photo upload through the ingest pipeline; hybrid write path (columns + `vcard_raw` + `etag`).
-- **Phase 3 — Presentation & export.** Shared directory/presentation template; vCard and CSV export (injection-safe).
-- **Phase 4 — Public sharing.** Share-link creation with mode validation; public/gated routes reusing the presentation view; gate + per-share throttling; `noindex`/`Referrer-Policy`/CSP.
-- **Phase 5 — Hardening & ops.** CSRF, security headers; admin user management; backup CLI + rotation + encryption + offsite; import (vCard/CSV) with dry-run; optional audit log; systemd/logging/monitoring wiring.
-- **Phase 6 — CardDAV (later).** WebDAV verbs + sync-token over the existing data model.
-
----
-
-## 18. Non-negotiable constraints (do not regress)
+## 17. Non-negotiable constraints (do not regress)
 
 1. CGO-free build (`modernc.org/sqlite`) — keep the single static binary.
 2. SQLite is the only datastore; photos stay as BLOBs (single source of truth).
