@@ -8,8 +8,7 @@ import (
 	"github.com/johannesheinz/skra/internal/models"
 )
 
-// LoginForm renders the login page (GET /login). An already-authenticated user
-// is redirected home.
+// LoginForm renders the login page (GET /login). An already-authenticated user is redirected home.
 func (h *Handlers) LoginForm(w http.ResponseWriter, r *http.Request) {
 	if _, ok := auth.UserFromContext(r.Context()); ok {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -79,8 +78,7 @@ func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-// Home is the authenticated landing dashboard (GET /): the user's books with
-// contact counts, a total, quick actions, and recently added contacts.
+// Home is the authenticated landing dashboard (GET /): the user's books with contact counts, a total, quick actions, and recently added contacts.
 func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {

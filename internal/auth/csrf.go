@@ -14,9 +14,7 @@ const CSRFFormField = "csrf_token"
 // ErrCSRF is returned when the submitted token does not match the cookie.
 var ErrCSRF = errors.New("auth: CSRF token mismatch")
 
-// IssueCSRF generates a token, sets it as the CSRF cookie, and returns it so a
-// handler can embed it in a form. Uses the double-submit pattern: no
-// server-side storage and no signing key required.
+// IssueCSRF generates a token, sets it as the CSRF cookie, and returns it so a handler can embed it in a form. Uses the double-submit pattern: no server-side storage and no signing key required.
 func IssueCSRF(w http.ResponseWriter, secure bool) (string, error) {
 	token, err := ids.NewCSRFToken()
 	if err != nil {
@@ -26,9 +24,7 @@ func IssueCSRF(w http.ResponseWriter, secure bool) (string, error) {
 	return token, nil
 }
 
-// VerifyCSRF checks that the token in the form matches the one in the cookie,
-// in constant time. The request's form must already be parsed, or this parses
-// it.
+// VerifyCSRF checks that the token in the form matches the one in the cookie, in constant time. The request's form must already be parsed, or this parses it.
 func VerifyCSRF(r *http.Request) error {
 	cookie, err := r.Cookie(CSRFCookieName)
 	if err != nil || cookie.Value == "" {

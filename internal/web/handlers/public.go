@@ -16,8 +16,7 @@ import (
 // shareDirectoryLimit caps contacts rendered in a public directory page.
 const shareDirectoryLimit = 500
 
-// ShareEntry is the public landing for a share link (GET /s/{token}). It
-// dispatches by scope after the mode gate is satisfied, and counts the access.
+// ShareEntry is the public landing for a share link (GET /s/{token}). It dispatches by scope after the mode gate is satisfied, and counts the access.
 func (h *Handlers) ShareEntry(w http.ResponseWriter, r *http.Request) {
 	link, ok := h.resolveShareForView(w, r)
 	if !ok {
@@ -76,8 +75,7 @@ func (h *Handlers) shareContact(w http.ResponseWriter, r *http.Request, link mod
 	})
 }
 
-// ShareContactInBook renders a single contact within a book share
-// (GET /s/{token}/c/{contactPublicID}).
+// ShareContactInBook renders a single contact within a book share (GET /s/{token}/c/{contactPublicID}).
 func (h *Handlers) ShareContactInBook(w http.ResponseWriter, r *http.Request) {
 	link, contact, ok := h.resolveShareContact(w, r)
 	if !ok {
@@ -87,13 +85,11 @@ func (h *Handlers) ShareContactInBook(w http.ResponseWriter, r *http.Request) {
 	h.render(w, r, http.StatusOK, "share_contact.html", map[string]any{
 		"Contact":  contact,
 		"PhotoURL": base + "/photo",
-		// Per-contact download is omitted in a book share; the directory offers
-		// a whole-book export.
+		// Per-contact download is omitted in a book share; the directory offers a whole-book export.
 	})
 }
 
-// ShareBookContactPhoto serves a contact's photo within a book share
-// (GET /s/{token}/c/{contactPublicID}/photo).
+// ShareBookContactPhoto serves a contact's photo within a book share (GET /s/{token}/c/{contactPublicID}/photo).
 func (h *Handlers) ShareBookContactPhoto(w http.ResponseWriter, r *http.Request) {
 	_, contact, ok := h.resolveShareContact(w, r)
 	if !ok {
@@ -102,8 +98,7 @@ func (h *Handlers) ShareBookContactPhoto(w http.ResponseWriter, r *http.Request)
 	h.serveSharePhoto(w, r, contact.PublicID)
 }
 
-// ShareContactPhoto serves the photo for a contact-scoped share
-// (GET /s/{token}/photo).
+// ShareContactPhoto serves the photo for a contact-scoped share (GET /s/{token}/photo).
 func (h *Handlers) ShareContactPhoto(w http.ResponseWriter, r *http.Request) {
 	link, ok := h.resolveShareForView(w, r)
 	if !ok {
@@ -135,8 +130,7 @@ func (h *Handlers) serveSharePhoto(w http.ResponseWriter, r *http.Request, conta
 	h.streamPhoto(w, r, contactPublicID, meta.ETag)
 }
 
-// ShareExportVCard exports the shared book or contact as vCard
-// (GET /s/{token}/export.vcf).
+// ShareExportVCard exports the shared book or contact as vCard (GET /s/{token}/export.vcf).
 func (h *Handlers) ShareExportVCard(w http.ResponseWriter, r *http.Request) {
 	link, ok := h.resolveShareForView(w, r)
 	if !ok {
@@ -223,9 +217,7 @@ func (h *Handlers) ShareGateSubmit(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/s/"+token, http.StatusSeeOther)
 }
 
-// resolveShareForView resolves the share for the current request and enforces
-// its mode. It returns ok=false (having written a 404, a login redirect, or the
-// gate page) when the caller must not proceed.
+// resolveShareForView resolves the share for the current request and enforces its mode. It returns ok=false (having written a 404, a login redirect, or the gate page) when the caller must not proceed.
 func (h *Handlers) resolveShareForView(w http.ResponseWriter, r *http.Request) (models.ShareLink, bool) {
 	token := chi.URLParam(r, "token")
 	link, err := models.GetShareLinkByToken(r.Context(), h.DB, token)
@@ -264,8 +256,7 @@ func (h *Handlers) resolveShareForView(w http.ResponseWriter, r *http.Request) (
 	}
 }
 
-// resolveShareContact resolves a book-scoped share and the {contactPublicID}
-// within it, verifying the contact belongs to the shared book.
+// resolveShareContact resolves a book-scoped share and the {contactPublicID} within it, verifying the contact belongs to the shared book.
 func (h *Handlers) resolveShareContact(w http.ResponseWriter, r *http.Request) (models.ShareLink, models.Contact, bool) {
 	link, ok := h.resolveShareForView(w, r)
 	if !ok {
@@ -294,8 +285,7 @@ func (h *Handlers) renderGate(w http.ResponseWriter, r *http.Request, token, err
 	})
 }
 
-// shareTargetError handles the rare case where a share's target row is missing
-// (e.g. the book/contact was deleted): treat as not found.
+// shareTargetError handles the rare case where a share's target row is missing (e.g. the book/contact was deleted): treat as not found.
 func (h *Handlers) shareTargetError(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, models.ErrAddressBookNotFound) || errors.Is(err, models.ErrContactNotFound) {
 		http.NotFound(w, r)

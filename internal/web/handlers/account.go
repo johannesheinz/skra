@@ -133,10 +133,7 @@ func (h *Handlers) AccountPasswordUpdate(w http.ResponseWriter, r *http.Request)
 	h.renderAccount(w, r, http.StatusOK, map[string]any{"PasswordNotice": h.tr(r).T("msg.password_changed")})
 }
 
-// AccountListPrefsUpdate persists the contact-list page size and sort chosen
-// from the controls on a book page (POST /account/list-prefs), then returns to
-// that page. Values are validated against the allowed sets; anything else is
-// coerced to the default. The theme block is preserved.
+// AccountListPrefsUpdate persists the contact-list page size and sort chosen from the controls on a book page (POST /account/list-prefs), then returns to that page. Values are validated against the allowed sets; anything else is coerced to the default. The theme block is preserved.
 func (h *Handlers) AccountListPrefsUpdate(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {
@@ -166,9 +163,7 @@ func (h *Handlers) AccountListPrefsUpdate(w http.ResponseWriter, r *http.Request
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	// Direction is only submitted by the asc/desc toggle button; a plain
-	// sort/size change (auto-submitted <select>) omits it, so preserve the
-	// stored value in that case rather than resetting to ascending.
+	// Direction is only submitted by the asc/desc toggle button; a plain sort/size change (auto-submitted <select>) omits it, so preserve the stored value in that case rather than resetting to ascending.
 	desc := prefs.List.Desc
 	switch r.PostFormValue("dir") {
 	case "asc":
@@ -185,9 +180,7 @@ func (h *Handlers) AccountListPrefsUpdate(w http.ResponseWriter, r *http.Request
 	http.Redirect(w, r, safeReturnPath(r.PostFormValue("return")), http.StatusSeeOther)
 }
 
-// AccountLocaleUpdate persists the signed-in user's locale from the account
-// language selector (POST /account/locale) and returns to the account page. An
-// unknown code clears the preference (falls back to Accept-Language).
+// AccountLocaleUpdate persists the signed-in user's locale from the account language selector (POST /account/locale) and returns to the account page. An unknown code clears the preference (falls back to Accept-Language).
 func (h *Handlers) AccountLocaleUpdate(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {
@@ -215,8 +208,7 @@ func (h *Handlers) AccountLocaleUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/account", http.StatusSeeOther)
 }
 
-// AccountA11yUpdate persists the accessibility settings (POST /account/a11y),
-// currently the high-contrast opt-in, then returns to the account page.
+// AccountA11yUpdate persists the accessibility settings (POST /account/a11y), currently the high-contrast opt-in, then returns to the account page.
 func (h *Handlers) AccountA11yUpdate(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {
@@ -241,9 +233,7 @@ func (h *Handlers) AccountA11yUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/account", http.StatusSeeOther)
 }
 
-// AccountThemeToggle flips the saved light/dark mode from the header control
-// (POST /account/theme) and returns to the current page. Persisting to the
-// account keeps the toggle and the Appearance settings consistent.
+// AccountThemeToggle flips the saved light/dark mode from the header control (POST /account/theme) and returns to the current page. Persisting to the account keeps the toggle and the Appearance settings consistent.
 func (h *Handlers) AccountThemeToggle(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {
@@ -269,14 +259,11 @@ func (h *Handlers) AccountThemeToggle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	// Return to the page the toggle was clicked on. Referer is unusable because
-	// the app sends Referrer-Policy: no-referrer, so the current path is passed
-	// explicitly and validated to a same-origin path to avoid an open redirect.
+	// Return to the page the toggle was clicked on. Referer is unusable because the app sends Referrer-Policy: no-referrer, so the current path is passed explicitly and validated to a same-origin path to avoid an open redirect.
 	http.Redirect(w, r, safeReturnPath(r.PostFormValue("return")), http.StatusSeeOther)
 }
 
-// safeReturnPath accepts only an absolute, non-protocol-relative path; anything
-// else falls back to "/".
+// safeReturnPath accepts only an absolute, non-protocol-relative path; anything else falls back to "/".
 func safeReturnPath(p string) string {
 	if strings.HasPrefix(p, "/") && !strings.HasPrefix(p, "//") {
 		return p
@@ -284,8 +271,7 @@ func safeReturnPath(p string) string {
 	return "/"
 }
 
-// renderAccount renders the settings page with the user's profile, memberships,
-// and current theme; extra carries per-section notices/errors.
+// renderAccount renders the settings page with the user's profile, memberships, and current theme; extra carries per-section notices/errors.
 func (h *Handlers) renderAccount(w http.ResponseWriter, r *http.Request, status int, extra map[string]any) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {
@@ -313,8 +299,7 @@ func (h *Handlers) renderAccount(w http.ResponseWriter, r *http.Request, status 
 		"Locales":       i18n.Locales(),
 		"CurrentLocale": prefs.Locale,
 		"HighContrast":  prefs.A11y.HighContrast,
-		// The account page is always reachable via GET, even when this render is
-		// the result of a POST, so the header toggle returns here.
+		// The account page is always reachable via GET, even when this render is the result of a POST, so the header toggle returns here.
 		"Path": "/account",
 	}
 	for k, v := range extra {

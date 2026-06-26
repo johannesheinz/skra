@@ -1,9 +1,4 @@
-// Package templates embeds and renders Skrá's server-rendered HTML. Each page is
-// parsed together with the shared base layout into its own template set, so the
-// page's "title"/"content" blocks override the base without colliding across
-// pages. Sets are built once per supported locale, each with locale-bound
-// translation/formatting functions, so rendering is a map lookup with no
-// per-request parsing.
+// Package templates embeds and renders Skrá's server-rendered HTML. Each page is parsed together with the shared base layout into its own template set, so the page's "title"/"content" blocks override the base without colliding across pages. Sets are built once per supported locale, each with locale-bound translation/formatting functions, so rendering is a map lookup with no per-request parsing.
 package templates
 
 import (
@@ -40,8 +35,7 @@ func initial(s string) string {
 	return "?"
 }
 
-// localeFuncs builds the FuncMap for one locale: the locale-independent helpers
-// plus the translator/formatter bound to that locale.
+// localeFuncs builds the FuncMap for one locale: the locale-independent helpers plus the translator/formatter bound to that locale.
 func localeFuncs(tr *i18n.Translator) template.FuncMap {
 	return template.FuncMap{
 		"static":           static.URL,
@@ -60,8 +54,7 @@ func localeFuncs(tr *i18n.Translator) template.FuncMap {
 	}
 }
 
-// pageFiles are the content templates; each is composed with base.html and the
-// shared partials.
+// pageFiles are the content templates; each is composed with base.html and the shared partials.
 var pageFiles = []string{
 	"login.html",
 	"home.html",
@@ -103,8 +96,7 @@ func mustParse() (map[string]map[string]*template.Template, map[string]*template
 	return pageSets, fragSets
 }
 
-// RenderFragment writes a single named fragment (no base layout) for the locale,
-// buffering so a template error yields a clean 500.
+// RenderFragment writes a single named fragment (no base layout) for the locale, buffering so a template error yields a clean 500.
 func RenderFragment(w http.ResponseWriter, localeCode, name string, data any) error {
 	set, ok := fragments[localeCode]
 	if !ok {
@@ -120,9 +112,7 @@ func RenderFragment(w http.ResponseWriter, localeCode, name string, data any) er
 	return err
 }
 
-// Render executes a page (composed with the base layout) for the locale into a
-// buffer first, so a template error yields a clean 500 instead of a half-written
-// 200. An unknown locale falls back to the default.
+// Render executes a page (composed with the base layout) for the locale into a buffer first, so a template error yields a clean 500 instead of a half-written 200. An unknown locale falls back to the default.
 func Render(w http.ResponseWriter, status int, localeCode, page string, data any) error {
 	set, ok := pages[localeCode]
 	if !ok {

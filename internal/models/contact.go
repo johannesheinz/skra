@@ -19,8 +19,7 @@ import (
 // ErrContactNotFound is returned when a contact lookup matches no row.
 var ErrContactNotFound = errors.New("models: contact not found")
 
-// Contact is a person/organization entry. The structured columns drive listing
-// and search; vcard_raw holds the canonical full record (the hybrid model).
+// Contact is a person/organization entry. The structured columns drive listing and search; vcard_raw holds the canonical full record (the hybrid model).
 type Contact struct {
 	ID            int64
 	PublicID      string
@@ -34,10 +33,7 @@ type Contact struct {
 	ETag          string
 }
 
-// ContactInput carries the editable fields of a contact. It supports the rich
-// model (name components plus multi-value emails/phones/addresses) and keeps a
-// couple of legacy convenience fields (FullName, PrimaryEmail, PrimaryPhone) so
-// simple callers and tests stay terse.
+// ContactInput carries the editable fields of a contact. It supports the rich model (name components plus multi-value emails/phones/addresses) and keeps a couple of legacy convenience fields (FullName, PrimaryEmail, PrimaryPhone) so simple callers and tests stay terse.
 type ContactInput struct {
 	GivenName  string
 	FamilyName string
@@ -56,8 +52,7 @@ type ContactInput struct {
 	PrimaryPhone string
 }
 
-// Details converts the input to its rich vCard representation (also used to
-// re-render the form after a validation error).
+// Details converts the input to its rich vCard representation (also used to re-render the form after a validation error).
 func (in ContactInput) Details() vcardio.Details {
 	return in.toDetails()
 }
@@ -85,9 +80,7 @@ func (in ContactInput) toDetails() vcardio.Details {
 	return d
 }
 
-// CreateContact inserts a contact via the hybrid write path: the full record is
-// encoded into vcard_raw while the structured columns (display name, primary
-// email/phone) are denormalized for listing and search. uid is stable; etag new.
+// CreateContact inserts a contact via the hybrid write path: the full record is encoded into vcard_raw while the structured columns (display name, primary email/phone) are denormalized for listing and search. uid is stable; etag new.
 func CreateContact(ctx context.Context, d *db.DB, addressBookID int64, in ContactInput) (Contact, error) {
 	details := in.toDetails()
 	name := details.DisplayName()
@@ -135,8 +128,7 @@ func CreateContact(ctx context.Context, d *db.DB, addressBookID int64, in Contac
 	}, nil
 }
 
-// UpdateContact rewrites a contact's fields, regenerating vcard_raw and bumping
-// the etag while preserving the stable uid.
+// UpdateContact rewrites a contact's fields, regenerating vcard_raw and bumping the etag while preserving the stable uid.
 func UpdateContact(ctx context.Context, d *db.DB, contact Contact, in ContactInput) error {
 	details := in.toDetails()
 	name := details.DisplayName()
@@ -167,8 +159,7 @@ func UpdateContact(ctx context.Context, d *db.DB, contact Contact, in ContactInp
 	return nil
 }
 
-// GetContactDetails loads a contact and its parsed rich Details (from vcard_raw)
-// for the detail and edit views.
+// GetContactDetails loads a contact and its parsed rich Details (from vcard_raw) for the detail and edit views.
 func GetContactDetails(ctx context.Context, d *db.DB, publicID string) (Contact, vcardio.Details, error) {
 	var c Contact
 	var org, email, phone sql.NullString
@@ -198,8 +189,7 @@ func GetContactDetails(ctx context.Context, d *db.DB, publicID string) (Contact,
 
 // DeleteContact removes a contact; its photo cascades.
 func DeleteContact(ctx context.Context, d *db.DB, contactID int64) error {
-	// Purge the contact's (FK-less, polymorphic) share links in the same
-	// transaction so deleting the contact leaves no orphaned links.
+	// Purge the contact's (FK-less, polymorphic) share links in the same transaction so deleting the contact leaves no orphaned links.
 	err := d.Write(ctx, func(tx *sql.Tx) error {
 		if _, err := tx.ExecContext(ctx, `DELETE FROM share_links WHERE scope = 'contact' AND target_id = ?`, contactID); err != nil {
 			return err
@@ -233,8 +223,7 @@ type RecentContact struct {
 	BookPublicID string
 }
 
-// RecentContactsForUser returns the most recently created contacts across the
-// books a user may see (admins see all), newest first.
+// RecentContactsForUser returns the most recently created contacts across the books a user may see (admins see all), newest first.
 func RecentContactsForUser(ctx context.Context, d *db.DB, user User, limit int) ([]RecentContact, error) {
 	const base = `SELECT c.public_id, c.full_name, c.has_photo, ab.name, ab.public_id
 		FROM contacts c JOIN address_books ab ON ab.id = c.address_book_id`
@@ -271,11 +260,7 @@ func RecentContactsForUser(ctx context.Context, d *db.DB, user User, limit int) 
 	return out, nil
 }
 
-// NormalizeBirthday canonicalises a birthday string to YYYY-MM-DD for the
-// denormalized birthday column. A year-less birthday (vCard "--MMDD" /
-// "--MM-DD") keeps year 0000. Anything unparseable — including an empty value —
-// yields "", which the schema treats as "no birthday" (distinct from a NULL
-// column that has not been backfilled yet).
+// NormalizeBirthday canonicalises a birthday string to YYYY-MM-DD for the denormalized birthday column. A year-less birthday (vCard "--MMDD" / "--MM-DD") keeps year 0000. Anything unparseable — including an empty value — yields "", which the schema treats as "no birthday" (distinct from a NULL column that has not been backfilled yet).
 func NormalizeBirthday(s string) string {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -301,10 +286,7 @@ func NormalizeBirthday(s string) string {
 	return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
 }
 
-// sortKeysFromDetails derives the denormalized list sort keys: the name
-// components and the primary (first non-empty) address's postal code and
-// country. Empty values are stored as "" (known-empty, distinct from a NULL
-// not-yet-backfilled column).
+// sortKeysFromDetails derives the denormalized list sort keys: the name components and the primary (first non-empty) address's postal code and country. Empty values are stored as "" (known-empty, distinct from a NULL not-yet-backfilled column).
 func sortKeysFromDetails(d vcardio.Details) (given, family, postal, country string) {
 	given = strings.TrimSpace(d.GivenName)
 	family = strings.TrimSpace(d.FamilyName)
@@ -316,8 +298,7 @@ func sortKeysFromDetails(d vcardio.Details) (given, family, postal, country stri
 	return given, family, "", ""
 }
 
-// atoi2 parses a run of digits, returning -1 on any non-numeric input so the
-// caller's range check rejects it.
+// atoi2 parses a run of digits, returning -1 on any non-numeric input so the caller's range check rejects it.
 func atoi2(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {
@@ -326,8 +307,7 @@ func atoi2(s string) int {
 	return n
 }
 
-// UpcomingBirthday is a dashboard row: a contact whose birthday is next on the
-// calendar within the books the viewer may see.
+// UpcomingBirthday is a dashboard row: a contact whose birthday is next on the calendar within the books the viewer may see.
 type UpcomingBirthday struct {
 	PublicID     string
 	FullName     string
@@ -358,14 +338,9 @@ func (u UpcomingBirthday) CountdownLabel() string {
 	}
 }
 
-// UpcomingBirthdaysForUser returns the contacts whose next birthday is soonest,
-// scoped to the books a user may see (admins see all), ordered by the next
-// calendar occurrence (wrapping past year-end). The ordering is computed in SQL
-// from the normalized YYYY-MM-DD birthday; age is derived in Go against today.
+// UpcomingBirthdaysForUser returns the contacts whose next birthday is soonest, scoped to the books a user may see (admins see all), ordered by the next calendar occurrence (wrapping past year-end). The ordering is computed in SQL from the normalized YYYY-MM-DD birthday; age is derived in Go against today.
 func UpcomingBirthdaysForUser(ctx context.Context, d *db.DB, user User, limit int) ([]UpcomingBirthday, error) {
-	// The upcoming occurrence is this year's month-day if it has not passed yet,
-	// otherwise next year's. Lexicographic comparison of the YYYY-MM-DD strings
-	// is correct because both sides are zero-padded and same-width.
+	// The upcoming occurrence is this year's month-day if it has not passed yet, otherwise next year's. Lexicographic comparison of the YYYY-MM-DD strings is correct because both sides are zero-padded and same-width.
 	const nextOccurrence = `CASE
 		WHEN strftime('%Y','now') || substr(c.birthday, 5) >= date('now')
 		THEN strftime('%Y','now') || substr(c.birthday, 5)
@@ -421,8 +396,7 @@ func UpcomingBirthdaysForUser(ctx context.Context, d *db.DB, user User, limit in
 	return out, nil
 }
 
-// occurrenceYear returns the year in which the given month-day next occurs
-// relative to now (this year if it has not passed, otherwise next year).
+// occurrenceYear returns the year in which the given month-day next occurs relative to now (this year if it has not passed, otherwise next year).
 func occurrenceYear(now time.Time, month, day int) int {
 	if month < int(now.Month()) || (month == int(now.Month()) && day < now.Day()) {
 		return now.Year() + 1
@@ -430,11 +404,7 @@ func occurrenceYear(now time.Time, month, day int) int {
 	return now.Year()
 }
 
-// BackfillBirthdays populates the birthday column for contacts that predate the
-// column (birthday IS NULL) by parsing their stored vCard. Rows without a BDAY
-// get an empty string so they are not rescanned. It is idempotent and cheap on
-// subsequent runs (the NULL filter matches nothing), so it is safe to call on
-// every startup. Returns the number of rows updated.
+// BackfillBirthdays populates the birthday column for contacts that predate the column (birthday IS NULL) by parsing their stored vCard. Rows without a BDAY get an empty string so they are not rescanned. It is idempotent and cheap on subsequent runs (the NULL filter matches nothing), so it is safe to call on every startup. Returns the number of rows updated.
 func BackfillBirthdays(ctx context.Context, d *db.DB) (int, error) {
 	rows, err := d.QueryContext(ctx, `SELECT id, vcard_raw FROM contacts WHERE birthday IS NULL`)
 	if err != nil {
@@ -475,11 +445,7 @@ func BackfillBirthdays(ctx context.Context, d *db.DB) (int, error) {
 	return len(todo), nil
 }
 
-// BackfillSortKeys populates the denormalized list sort columns (given_name,
-// family_name, postal_code, country) for contacts that predate them
-// (family_name IS NULL) by parsing their stored vCard. Like BackfillBirthdays
-// it is idempotent — the NULL filter matches nothing once every row has been
-// visited — so it is safe to call on every startup. Returns the rows updated.
+// BackfillSortKeys populates the denormalized list sort columns (given_name, family_name, postal_code, country) for contacts that predate them (family_name IS NULL) by parsing their stored vCard. Like BackfillBirthdays it is idempotent — the NULL filter matches nothing once every row has been visited — so it is safe to call on every startup. Returns the rows updated.
 func BackfillSortKeys(ctx context.Context, d *db.DB) (int, error) {
 	rows, err := d.QueryContext(ctx, `SELECT id, vcard_raw FROM contacts WHERE family_name IS NULL`)
 	if err != nil {
@@ -534,12 +500,7 @@ func GetContactByID(ctx context.Context, d *db.DB, id int64) (Contact, error) {
 	return c, err
 }
 
-// contactOrderBy maps a user-facing sort key and direction to a SQL ORDER BY
-// clause. Both are whitelisted here (never interpolated from user input), so it
-// is safe to concatenate. The "empties last" guard is always ascending so
-// missing values stay at the bottom in both directions; only the value columns
-// take the chosen direction, with full_name as a stable ascending tiebreaker.
-// An unrecognized key falls back to given-name order.
+// contactOrderBy maps a user-facing sort key and direction to a SQL ORDER BY clause. Both are whitelisted here (never interpolated from user input), so it is safe to concatenate. The "empties last" guard is always ascending so missing values stay at the bottom in both directions; only the value columns take the chosen direction, with full_name as a stable ascending tiebreaker. An unrecognized key falls back to given-name order.
 func contactOrderBy(sort string, desc bool) string {
 	dir := "ASC"
 	if desc {
@@ -559,11 +520,7 @@ func contactOrderBy(sort string, desc bool) string {
 	}
 }
 
-// ListContacts returns a page of contacts in a book, optionally filtered by a
-// case-insensitive substring across the structured columns and ordered by the
-// given (whitelisted) sort key and direction, plus the total matching count for
-// pagination. A limit of -1 returns every matching row (SQLite treats LIMIT -1
-// as no limit).
+// ListContacts returns a page of contacts in a book, optionally filtered by a case-insensitive substring across the structured columns and ordered by the given (whitelisted) sort key and direction, plus the total matching count for pagination. A limit of -1 returns every matching row (SQLite treats LIMIT -1 as no limit).
 func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query, sort string, desc bool, limit, offset int) ([]Contact, int, error) {
 	where := "address_book_id = ?"
 	args := []any{addressBookID}
@@ -602,8 +559,7 @@ func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query, sor
 	return contacts, total, nil
 }
 
-// ContactExport carries the fields needed to export a contact: the structured
-// columns for CSV and the canonical vcard_raw for vCard.
+// ContactExport carries the fields needed to export a contact: the structured columns for CSV and the canonical vcard_raw for vCard.
 type ContactExport struct {
 	ID       int64
 	FullName string
@@ -614,8 +570,7 @@ type ContactExport struct {
 	HasPhoto bool
 }
 
-// ListContactsForExport returns every contact in a book (no pagination) with the
-// data needed for vCard and CSV export, ordered by name.
+// ListContactsForExport returns every contact in a book (no pagination) with the data needed for vCard and CSV export, ordered by name.
 func ListContactsForExport(ctx context.Context, d *db.DB, addressBookID int64) ([]ContactExport, error) {
 	rows, err := d.QueryContext(ctx,
 		`SELECT id, full_name, org, primary_email, primary_phone, vcard_raw, has_photo
@@ -645,8 +600,7 @@ func ListContactsForExport(ctx context.Context, d *db.DB, addressBookID int64) (
 	return out, nil
 }
 
-// GetContactExport loads a single contact's export fields by internal id,
-// avoiding a whole-book scan for a one-contact export.
+// GetContactExport loads a single contact's export fields by internal id, avoiding a whole-book scan for a one-contact export.
 func GetContactExport(ctx context.Context, d *db.DB, id int64) (ContactExport, error) {
 	var c ContactExport
 	var org, email, phone sql.NullString
@@ -699,8 +653,7 @@ func scanContact(row rowScanner) (Contact, error) {
 
 // --- Photo metadata/bytes (used by the photo-serving endpoint) ---
 
-// PhotoMeta is the lightweight metadata needed to authorize and conditionally
-// serve a contact photo without loading the BLOB.
+// PhotoMeta is the lightweight metadata needed to authorize and conditionally serve a contact photo without loading the BLOB.
 type PhotoMeta struct {
 	AddressBookID int64
 	ETag          string
@@ -713,9 +666,7 @@ type Photo struct {
 	ETag     string
 }
 
-// GetContactPhotoMeta returns the owning book id and the photo ETag for a
-// contact, looked up by public_id. found is false when the contact does not
-// exist or has no photo (both resolve to 404 at the handler).
+// GetContactPhotoMeta returns the owning book id and the photo ETag for a contact, looked up by public_id. found is false when the contact does not exist or has no photo (both resolve to 404 at the handler).
 func GetContactPhotoMeta(ctx context.Context, d *db.DB, contactPublicID string) (PhotoMeta, bool, error) {
 	var m PhotoMeta
 	err := d.QueryRowContext(ctx,
@@ -732,9 +683,7 @@ func GetContactPhotoMeta(ctx context.Context, d *db.DB, contactPublicID string) 
 	return m, true, nil
 }
 
-// SetContactPhoto stores (or replaces) a contact's normalized JPEG photo and
-// flags the contact as having one, in a single transaction. The ETag is the
-// content hash, so re-uploading identical bytes is a no-op for caches.
+// SetContactPhoto stores (or replaces) a contact's normalized JPEG photo and flags the contact as having one, in a single transaction. The ETag is the content hash, so re-uploading identical bytes is a no-op for caches.
 func SetContactPhoto(ctx context.Context, d *db.DB, contactID int64, jpeg []byte) error {
 	sum := sha256.Sum256(jpeg)
 	etag := hex.EncodeToString(sum[:])

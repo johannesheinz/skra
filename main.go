@@ -1,5 +1,4 @@
-// Command skra is a self-hosted contacts application served as a single static
-// binary backed by one SQLite file.
+// Command skra is a self-hosted contacts application served as a single static binary backed by one SQLite file.
 package main
 
 import (
@@ -77,8 +76,7 @@ func serve() error {
 	defer database.Close()
 	logger.Info("database ready", "path", cfg.DBPath)
 
-	// One-time (idempotent) backfills of the denormalized columns for contacts
-	// that predate them; each is a no-op once every row has been visited.
+	// One-time (idempotent) backfills of the denormalized columns for contacts that predate them; each is a no-op once every row has been visited.
 	if n, err := models.BackfillBirthdays(context.Background(), database); err != nil {
 		return err
 	} else if n > 0 {
@@ -101,8 +99,7 @@ func serve() error {
 	return server.Run(ctx)
 }
 
-// backup writes a consistent VACUUM INTO snapshot of the database. It needs only
-// SKRA_DB_PATH and a --out destination.
+// backup writes a consistent VACUUM INTO snapshot of the database. It needs only SKRA_DB_PATH and a --out destination.
 func backup(args []string) error {
 	fs := flag.NewFlagSet("backup", flag.ContinueOnError)
 	out := fs.String("out", "", "destination path for the snapshot")
@@ -130,9 +127,7 @@ func backup(args []string) error {
 	return nil
 }
 
-// createAdmin bootstraps the first admin account. It reads credentials from the
-// environment, refuses to run on a database that already has users, and uses
-// only SKRA_DB_PATH (not the full serve configuration).
+// createAdmin bootstraps the first admin account. It reads credentials from the environment, refuses to run on a database that already has users, and uses only SKRA_DB_PATH (not the full serve configuration).
 func createAdmin() error {
 	dbPath := strings.TrimSpace(os.Getenv("SKRA_DB_PATH"))
 	username := strings.TrimSpace(os.Getenv("SKRA_ADMIN_USERNAME"))

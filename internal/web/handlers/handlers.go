@@ -24,13 +24,11 @@ type Handlers struct {
 	Gate         sharing.GateSigner
 	Logger       *slog.Logger
 
-	// dummyHash is verified against when a username is unknown, so that login
-	// timing does not reveal whether an account exists.
+	// dummyHash is verified against when a username is unknown, so that login timing does not reveal whether an account exists.
 	dummyHash string
 }
 
-// New builds the handler set. It precomputes a dummy password hash for the
-// user-enumeration defense; failing to do so is fatal to construction.
+// New builds the handler set. It precomputes a dummy password hash for the user-enumeration defense; failing to do so is fatal to construction.
 func New(database *db.DB, sessions *auth.SessionStore, cookieSecure bool, externalURL, sessionKey string, logger *slog.Logger) (*Handlers, error) {
 	dummy, err := auth.HashPassword("skra-nonexistent-account")
 	if err != nil {
@@ -47,16 +45,12 @@ func New(database *db.DB, sessions *auth.SessionStore, cookieSecure bool, extern
 	}, nil
 }
 
-// render renders a page with the shared layout. It injects the authenticated
-// user (if any) and a freshly issued CSRF token, which the base layout uses for
-// its nav and the logout form.
+// render renders a page with the shared layout. It injects the authenticated user (if any) and a freshly issued CSRF token, which the base layout uses for its nav and the logout form.
 func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, page string, data map[string]any) {
 	if data == nil {
 		data = map[string]any{}
 	}
-	// Path is where the header theme toggle returns to. Only a GET URL is safe
-	// to return to; a POST-rendered page (a form result) would 405 on GET, so
-	// fall back to home unless the caller set an explicit GET path.
+	// Path is where the header theme toggle returns to. Only a GET URL is safe to return to; a POST-rendered page (a form result) would 405 on GET, so fall back to home unless the caller set an explicit GET path.
 	if _, set := data["Path"]; !set {
 		if r.Method == http.MethodGet {
 			data["Path"] = r.URL.RequestURI()
@@ -75,8 +69,7 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, pa
 			}
 		}
 	}
-	// The request's locale drives <html lang>/<dir> and which localized template
-	// set renders.
+	// The request's locale drives <html lang>/<dir> and which localized template set renders.
 	loc := i18n.FromContext(r.Context())
 	data["Lang"] = loc.Lang()
 	if _, set := data["Locale"]; !set {
@@ -94,16 +87,14 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, pa
 	}
 }
 
-// ResolveLocale is middleware that resolves the request's locale (a saved user
-// preference, else the Accept-Language header) and stores it in the context.
+// ResolveLocale is middleware that resolves the request's locale (a saved user preference, else the Accept-Language header) and stores it in the context.
 func (h *Handlers) ResolveLocale(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r.WithContext(i18n.WithLocale(r.Context(), h.localeFor(r))))
 	})
 }
 
-// localeFor picks the locale for a request: a signed-in user's saved locale wins,
-// otherwise the best match for Accept-Language.
+// localeFor picks the locale for a request: a signed-in user's saved locale wins, otherwise the best match for Accept-Language.
 func (h *Handlers) localeFor(r *http.Request) i18n.Locale {
 	if user, ok := auth.UserFromContext(r.Context()); ok {
 		if prefs, err := models.GetPreferences(r.Context(), h.DB, user.ID); err == nil && prefs.Locale != "" {

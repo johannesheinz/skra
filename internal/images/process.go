@@ -1,7 +1,4 @@
-// Package images implements the contact-photo ingest pipeline: decode, correct
-// EXIF orientation, strip all metadata (by re-encoding), downscale to a cap, and
-// re-encode as a single normalized JPEG. The CGO-free constraint means HEIC is
-// not supported; such inputs fail to decode and are rejected by the caller.
+// Package images implements the contact-photo ingest pipeline: decode, correct EXIF orientation, strip all metadata (by re-encoding), downscale to a cap, and re-encode as a single normalized JPEG. The CGO-free constraint means HEIC is not supported; such inputs fail to decode and are rejected by the caller.
 package images
 
 import (
@@ -21,27 +18,18 @@ const MaxDimension = 512
 // jpegQuality is the re-encode quality; ~80 keeps BLOBs small with little visible loss.
 const jpegQuality = 80
 
-// maxDecodedPixels bounds the pixel count we are willing to decode. A small,
-// highly compressible file can declare huge dimensions and force a multi-GB
-// RGBA allocation (memory-exhaustion DoS); the request body cap does not bound
-// decoded pixels, so we check the header first. 40 MP comfortably exceeds any
-// real avatar while blocking pathological inputs.
+// maxDecodedPixels bounds the pixel count we are willing to decode. A small, highly compressible file can declare huge dimensions and force a multi-GB RGBA allocation (memory-exhaustion DoS); the request body cap does not bound decoded pixels, so we check the header first. 40 MP comfortably exceeds any real avatar while blocking pathological inputs.
 const maxDecodedPixels = 40_000_000
 
 // maxDimensionInput rejects absurd single-axis dimensions before the multiply.
 const maxDimensionInput = 20000
 
-// ErrImageTooLarge is returned when an image's declared dimensions exceed the
-// decode caps, before any full-resolution buffer is allocated.
+// ErrImageTooLarge is returned when an image's declared dimensions exceed the decode caps, before any full-resolution buffer is allocated.
 var ErrImageTooLarge = fmt.Errorf("images: image dimensions exceed the allowed maximum")
 
-// Process decodes an uploaded image, applies EXIF orientation, downscales it to
-// fit MaxDimension while preserving aspect ratio, and returns a metadata-free
-// JPEG. Re-encoding from decoded pixels discards all original metadata (EXIF,
-// GPS). It returns an error if the bytes are not a decodable image.
+// Process decodes an uploaded image, applies EXIF orientation, downscales it to fit MaxDimension while preserving aspect ratio, and returns a metadata-free JPEG. Re-encoding from decoded pixels discards all original metadata (EXIF, GPS). It returns an error if the bytes are not a decodable image.
 func Process(data []byte) ([]byte, error) {
-	// Bound decoded pixels from the header before allocating any full-resolution
-	// buffer. DecodeConfig reads only the dimensions, not the pixel data.
+	// Bound decoded pixels from the header before allocating any full-resolution buffer. DecodeConfig reads only the dimensions, not the pixel data.
 	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf("images: decode config (unsupported or corrupt image): %w", err)
@@ -67,8 +55,7 @@ func Process(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// downscale returns an image fitting within max×max, preserving aspect ratio. It
-// only shrinks; smaller images are returned unchanged.
+// downscale returns an image fitting within max×max, preserving aspect ratio. It only shrinks; smaller images are returned unchanged.
 func downscale(src image.Image, max int) image.Image {
 	b := src.Bounds()
 	w, h := b.Dx(), b.Dy()
@@ -94,9 +81,7 @@ func downscale(src image.Image, max int) image.Image {
 	return dst
 }
 
-// applyOrientation returns src rotated/flipped so it displays upright, given an
-// EXIF orientation value (1–8). Orientation 1 (and anything unrecognized) is a
-// no-op.
+// applyOrientation returns src rotated/flipped so it displays upright, given an EXIF orientation value (1–8). Orientation 1 (and anything unrecognized) is a no-op.
 func applyOrientation(src image.Image, orientation int) image.Image {
 	switch orientation {
 	case 2:
@@ -180,9 +165,7 @@ func rotate270(src image.Image) *image.RGBA {
 	return dst
 }
 
-// readOrientation extracts the EXIF orientation (1–8) from JPEG bytes, returning
-// 1 when there is no EXIF, it is unparesable, or the image is not a JPEG. It is
-// deliberately defensive: any malformed structure yields 1 rather than an error.
+// readOrientation extracts the EXIF orientation (1–8) from JPEG bytes, returning 1 when there is no EXIF, it is unparesable, or the image is not a JPEG. It is deliberately defensive: any malformed structure yields 1 rather than an error.
 func readOrientation(data []byte) int {
 	if len(data) < 2 || data[0] != 0xFF || data[1] != 0xD8 {
 		return 1

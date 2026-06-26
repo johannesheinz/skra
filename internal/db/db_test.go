@@ -22,8 +22,7 @@ func openTestDB(t *testing.T) (*DB, string) {
 func TestOpenSetsAutoVacuumIncremental(t *testing.T) {
 	_, path := openTestDB(t)
 
-	// Re-open with a bare DSN (no pragmas) so the query reflects the value
-	// persisted in the database header, not a per-connection echo.
+	// Re-open with a bare DSN (no pragmas) so the query reflects the value persisted in the database header, not a per-connection echo.
 	bare, err := sql.Open("sqlite", "file:"+path)
 	if err != nil {
 		t.Fatalf("bare open: %v", err)
@@ -138,8 +137,7 @@ func TestConcurrentWritesAreSerialized(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for i := 0; i < perGoroutine; i++ {
-				// A read-modify-write inside one serialized tx; if writes were
-				// not serialized this would lose updates or hit lock errors.
+				// A read-modify-write inside one serialized tx; if writes were not serialized this would lose updates or hit lock errors.
 				err := database.Write(ctx, func(tx *sql.Tx) error {
 					var n int
 					if err := tx.QueryRow("SELECT n FROM counter").Scan(&n); err != nil {
@@ -205,8 +203,7 @@ func TestSnapshot(t *testing.T) {
 func TestForeignKeysEnforced(t *testing.T) {
 	database, _ := openTestDB(t)
 
-	// Inserting a contact referencing a non-existent address book must fail
-	// because foreign_keys is ON.
+	// Inserting a contact referencing a non-existent address book must fail because foreign_keys is ON.
 	_, err := database.Exec(
 		`INSERT INTO contacts (public_id, address_book_id, full_name, vcard_raw, uid, etag)
          VALUES ('pid', 999, 'Nobody', 'BEGIN:VCARD', 'uid', 'etag')`,

@@ -147,8 +147,7 @@ func (h *Handlers) revokeShare(w http.ResponseWriter, r *http.Request, backURL, 
 		http.NotFound(w, r)
 		return
 	}
-	// Confirm the link belongs to this target before revoking, so a manager of
-	// one book cannot revoke another's link by guessing ids.
+	// Confirm the link belongs to this target before revoking, so a manager of one book cannot revoke another's link by guessing ids.
 	links, err := models.ListShareLinksForTarget(r.Context(), h.DB, scope, targetID)
 	if err != nil {
 		h.Logger.Error("list share links failed", "err", err)
@@ -174,8 +173,7 @@ func (h *Handlers) revokeShare(w http.ResponseWriter, r *http.Request, backURL, 
 	http.Redirect(w, r, backURL+"/shares", http.StatusSeeOther)
 }
 
-// parseShareForm validates the creation form and returns the params or a
-// user-facing error message.
+// parseShareForm validates the creation form and returns the params or a user-facing error message.
 func parseShareForm(r *http.Request, scope string, targetID, createdBy int64) (models.NewShareLinkParams, string) {
 	tr := i18n.For(i18n.FromContext(r.Context()))
 	mode := r.PostFormValue("mode")

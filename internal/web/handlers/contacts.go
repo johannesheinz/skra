@@ -20,9 +20,7 @@ import (
 	"github.com/johannesheinz/skra/internal/web/templates"
 )
 
-// ContactCard is the view-model for one contact in a directory card grid. The
-// URLs are precomputed by the caller so the same card partial renders both the
-// authenticated browse and the public share (with share-scoped links).
+// ContactCard is the view-model for one contact in a directory card grid. The URLs are precomputed by the caller so the same card partial renders both the authenticated browse and the public share (with share-scoped links).
 type ContactCard struct {
 	Name     string
 	Org      string
@@ -32,8 +30,7 @@ type ContactCard struct {
 	HasPhoto bool
 }
 
-// buildContactCards maps contacts to cards, deriving each card's detail and
-// photo URL via the supplied functions (which differ per context).
+// buildContactCards maps contacts to cards, deriving each card's detail and photo URL via the supplied functions (which differ per context).
 func buildContactCards(contacts []models.Contact, detailURL, photoURL func(publicID string) string) []ContactCard {
 	cards := make([]ContactCard, 0, len(contacts))
 	for _, c := range contacts {
@@ -55,8 +52,7 @@ const (
 	maxUploadMemory = 1 << 20  // keep up to 1 MiB in memory, spill the rest to temp
 )
 
-// ContactNew renders the create form for a contact in a book
-// (GET /books/{publicID}/contacts/new). Requires manager on the book.
+// ContactNew renders the create form for a contact in a book (GET /books/{publicID}/contacts/new). Requires manager on the book.
 func (h *Handlers) ContactNew(w http.ResponseWriter, r *http.Request) {
 	book, _, ok := h.authorizeBook(w, r, rbac.Write)
 	if !ok {
@@ -164,8 +160,7 @@ func (h *Handlers) ContactDelete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/books/"+book.PublicID, http.StatusSeeOther)
 }
 
-// ContactPhotoUpload accepts a multipart photo, runs it through the ingest
-// pipeline, and stores the normalized JPEG (POST /contacts/{publicID}/photo).
+// ContactPhotoUpload accepts a multipart photo, runs it through the ingest pipeline, and stores the normalized JPEG (POST /contacts/{publicID}/photo).
 func (h *Handlers) ContactPhotoUpload(w http.ResponseWriter, r *http.Request) {
 	contact, book, user, ok := h.authorizeContact(w, r, rbac.Write)
 	if !ok {
@@ -244,9 +239,7 @@ func (h *Handlers) renderContactWithError(w http.ResponseWriter, r *http.Request
 	})
 }
 
-// authorizeContact resolves the {publicID} contact, loads its book (for links),
-// and enforces action against the contact's book. 404 when not visible, 403 when
-// visible but forbidden.
+// authorizeContact resolves the {publicID} contact, loads its book (for links), and enforces action against the contact's book. 404 when not visible, 403 when visible but forbidden.
 func (h *Handlers) authorizeContact(w http.ResponseWriter, r *http.Request, action rbac.Action) (models.Contact, models.AddressBook, models.User, bool) {
 	user, _ := auth.UserFromContext(r.Context())
 	publicID := chi.URLParam(r, "publicID")
@@ -301,9 +294,7 @@ func contactInputFromForm(r *http.Request) models.ContactInput {
 	}
 }
 
-// birthdayFromForm builds the stored birthday from the form. With "no year"
-// ticked it reads the month/day selects into the vCard year-less form
-// (--MM-DD); otherwise it takes the full date input (YYYY-MM-DD).
+// birthdayFromForm builds the stored birthday from the form. With "no year" ticked it reads the month/day selects into the vCard year-less form (--MM-DD); otherwise it takes the full date input (YYYY-MM-DD).
 func birthdayFromForm(r *http.Request) string {
 	if r.PostFormValue("birthday_no_year") != "" {
 		m, _ := strconv.Atoi(r.PostFormValue("birthday_month"))
@@ -316,10 +307,7 @@ func birthdayFromForm(r *http.Request) string {
 	return strings.TrimSpace(r.PostFormValue("birthday"))
 }
 
-// splitBirthday prepares a stored birthday for the two form controls: a value
-// for <input type="date"> (a placeholder year fills in for year-less birthdays),
-// the month and day for the year-less selects, and whether the year is omitted.
-// Both controls are prefilled so toggling "no year" client-side keeps the value.
+// splitBirthday prepares a stored birthday for the two form controls: a value for <input type="date"> (a placeholder year fills in for year-less birthdays), the month and day for the year-less selects, and whether the year is omitted. Both controls are prefilled so toggling "no year" client-side keeps the value.
 func splitBirthday(raw string) (dateValue string, month, day int, noYear bool) {
 	norm := models.NormalizeBirthday(raw) // "YYYY-MM-DD" or "" (year 0000 = year-less)
 	if norm == "" {
@@ -333,8 +321,7 @@ func splitBirthday(raw string) (dateValue string, month, day int, noYear bool) {
 	return norm, month, day, false
 }
 
-// typedFromForm pairs parallel type/value arrays into typed values, dropping
-// rows whose value is blank.
+// typedFromForm pairs parallel type/value arrays into typed values, dropping rows whose value is blank.
 func typedFromForm(types, values []string) []vcardio.Typed {
 	var out []vcardio.Typed
 	for i, v := range values {
@@ -350,8 +337,7 @@ func typedFromForm(types, values []string) []vcardio.Typed {
 	return out
 }
 
-// addressesFromForm assembles addresses from the parallel adr_* arrays, dropping
-// empty rows.
+// addressesFromForm assembles addresses from the parallel adr_* arrays, dropping empty rows.
 func addressesFromForm(r *http.Request) []vcardio.Address {
 	streets := r.PostForm["adr_street"]
 	cities := r.PostForm["adr_city"]
@@ -410,8 +396,7 @@ func (h *Handlers) renderContactForm(w http.ResponseWriter, r *http.Request, sta
 	})
 }
 
-// ContactRowFragment returns a single blank form row for htmx to append
-// (GET /ui/rows/{kind}). Auth is required but no specific resource.
+// ContactRowFragment returns a single blank form row for htmx to append (GET /ui/rows/{kind}). Auth is required but no specific resource.
 func (h *Handlers) ContactRowFragment(w http.ResponseWriter, r *http.Request) {
 	var tmpl string
 	var data any

@@ -1,6 +1,4 @@
-// Package models holds the data-access functions for Skra's core entities.
-// Internal integer ids stay within this layer and the database; callers outside
-// reference rows by public_id.
+// Package models holds the data-access functions for Skra's core entities. Internal integer ids stay within this layer and the database; callers outside reference rows by public_id.
 package models
 
 import (
@@ -13,8 +11,7 @@ import (
 	"github.com/johannesheinz/skra/internal/ids"
 )
 
-// Roles are the global account roles. There is no default; an unrecognized role
-// is rejected.
+// Roles are the global account roles. There is no default; an unrecognized role is rejected.
 const (
 	RoleAdmin = "admin"
 	RoleUser  = "user"
@@ -33,8 +30,7 @@ type User struct {
 	Role         string
 }
 
-// CreateUser inserts a new user with a freshly generated public_id and returns
-// the stored row. The role must be RoleAdmin or RoleUser.
+// CreateUser inserts a new user with a freshly generated public_id and returns the stored row. The role must be RoleAdmin or RoleUser.
 func CreateUser(ctx context.Context, d *db.DB, username, email, passwordHash, role string) (User, error) {
 	if role != RoleAdmin && role != RoleUser {
 		return User{}, fmt.Errorf("models: invalid role %q", role)
@@ -67,24 +63,21 @@ func CreateUser(ctx context.Context, d *db.DB, username, email, passwordHash, ro
 	}, nil
 }
 
-// GetUserByUsername loads a user by username, returning ErrUserNotFound if none
-// exists.
+// GetUserByUsername loads a user by username, returning ErrUserNotFound if none exists.
 func GetUserByUsername(ctx context.Context, d *db.DB, username string) (User, error) {
 	return scanUser(d.QueryRowContext(ctx,
 		`SELECT id, public_id, username, email, password_hash, role
 		 FROM users WHERE username = ?`, username))
 }
 
-// GetUserByID loads a user by internal id, returning ErrUserNotFound if none
-// exists.
+// GetUserByID loads a user by internal id, returning ErrUserNotFound if none exists.
 func GetUserByID(ctx context.Context, d *db.DB, id int64) (User, error) {
 	return scanUser(d.QueryRowContext(ctx,
 		`SELECT id, public_id, username, email, password_hash, role
 		 FROM users WHERE id = ?`, id))
 }
 
-// GetUserByPublicID loads a user by public id, returning ErrUserNotFound if none
-// exists.
+// GetUserByPublicID loads a user by public id, returning ErrUserNotFound if none exists.
 func GetUserByPublicID(ctx context.Context, d *db.DB, publicID string) (User, error) {
 	return scanUser(d.QueryRowContext(ctx,
 		`SELECT id, public_id, username, email, password_hash, role
@@ -115,8 +108,7 @@ func ListUsers(ctx context.Context, d *db.DB) ([]User, error) {
 	return users, nil
 }
 
-// UpdateUser changes a user's email and role (username is immutable) and bumps
-// updated_at. The role must be RoleAdmin or RoleUser.
+// UpdateUser changes a user's email and role (username is immutable) and bumps updated_at. The role must be RoleAdmin or RoleUser.
 func UpdateUser(ctx context.Context, d *db.DB, id int64, email, role string) error {
 	if role != RoleAdmin && role != RoleUser {
 		return fmt.Errorf("models: invalid role %q", role)
@@ -130,8 +122,7 @@ func UpdateUser(ctx context.Context, d *db.DB, id int64, email, role string) err
 	return nil
 }
 
-// DeleteUser removes a user. It fails if the user still owns address books
-// (owner_id is ON DELETE RESTRICT); the caller surfaces that as a usage error.
+// DeleteUser removes a user. It fails if the user still owns address books (owner_id is ON DELETE RESTRICT); the caller surfaces that as a usage error.
 func DeleteUser(ctx context.Context, d *db.DB, id int64) error {
 	if _, err := d.ExecWrite(ctx, `DELETE FROM users WHERE id = ?`, id); err != nil {
 		return fmt.Errorf("models: delete user: %w", err)
@@ -157,8 +148,7 @@ func OwnsAddressBooks(ctx context.Context, d *db.DB, userID int64) (bool, error)
 	return n > 0, nil
 }
 
-// CountUsers returns the number of user rows; used by admin bootstrap to refuse
-// running on a non-empty database.
+// CountUsers returns the number of user rows; used by admin bootstrap to refuse running on a non-empty database.
 func CountUsers(ctx context.Context, d *db.DB) (int, error) {
 	var n int
 	if err := d.QueryRowContext(ctx, "SELECT COUNT(*) FROM users").Scan(&n); err != nil {
@@ -167,8 +157,7 @@ func CountUsers(ctx context.Context, d *db.DB) (int, error) {
 	return n, nil
 }
 
-// UpdatePasswordHash overwrites a user's password hash (used for lazy rehash on
-// login) and bumps updated_at.
+// UpdatePasswordHash overwrites a user's password hash (used for lazy rehash on login) and bumps updated_at.
 func UpdatePasswordHash(ctx context.Context, d *db.DB, id int64, passwordHash string) error {
 	_, err := d.ExecWrite(ctx,
 		`UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?`,

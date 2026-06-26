@@ -1,7 +1,4 @@
-// Package sharing holds the primitives for public share links: mode/scope
-// constants, per-mode token generation, and the signed gate cookie. Validity of
-// a stored link (revoked/expired/uses-exhausted) lives with the model that owns
-// the row; this package stays free of database concerns.
+// Package sharing holds the primitives for public share links: mode/scope constants, per-mode token generation, and the signed gate cookie. Validity of a stored link (revoked/expired/uses-exhausted) lives with the model that owns the row; this package stays free of database concerns.
 package sharing
 
 import (
@@ -10,7 +7,7 @@ import (
 	"github.com/johannesheinz/skra/internal/ids"
 )
 
-// Share modes (see spec §7).
+// Share modes.
 const (
 	ModeAuthenticated = "authenticated" // any logged-in user with the link
 	ModePublicLong    = "public_long"   // anyone; protected only by the long token
@@ -23,9 +20,7 @@ const (
 	ScopeContact = "contact"
 )
 
-// GateMaxFailures is how many wrong secret attempts lock a gated link until a
-// manager revokes/recreates it. Proxy rate limiting is too coarse for slow
-// per-link guessing, so this is enforced in the app.
+// GateMaxFailures is how many wrong secret attempts lock a gated link until a manager revokes/recreates it. Proxy rate limiting is too coarse for slow per-link guessing, so this is enforced in the app.
 const GateMaxFailures = 10
 
 const (
@@ -43,9 +38,7 @@ func ValidScope(s string) bool {
 	return s == ScopeBook || s == ScopeContact
 }
 
-// NewToken generates the path token for a share of the given mode. public_long
-// gets a high-entropy (>=160-bit) token because the URL is the only secret;
-// other modes use a short slug.
+// NewToken generates the path token for a share of the given mode. public_long gets a high-entropy (>=160-bit) token because the URL is the only secret; other modes use a short slug.
 func NewToken(mode string) (string, error) {
 	switch mode {
 	case ModePublicLong:

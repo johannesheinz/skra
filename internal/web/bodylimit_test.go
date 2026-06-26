@@ -12,8 +12,7 @@ import (
 	"github.com/johannesheinz/skra/internal/testutil"
 )
 
-// TestBodyLimitOnFormRoute: an oversized body on an ordinary form route is
-// rejected (4xx), while a normal-sized submission on the same route succeeds.
+// TestBodyLimitOnFormRoute: an oversized body on an ordinary form route is rejected (4xx), while a normal-sized submission on the same route succeeds.
 func TestBodyLimitOnFormRoute(t *testing.T) {
 	d := testutil.NewDB(t)
 	router := testRouter(t, d)

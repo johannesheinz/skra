@@ -11,9 +11,7 @@ import (
 	"github.com/johannesheinz/skra/internal/rbac"
 )
 
-// ContactPhoto serves a contact's photo with a strong ETag and conditional-GET
-// support (GET /contacts/{publicID}/photo). Authorization inherits the contact's
-// address book; anything the user may not see returns 404, never 403.
+// ContactPhoto serves a contact's photo with a strong ETag and conditional-GET support (GET /contacts/{publicID}/photo). Authorization inherits the contact's address book; anything the user may not see returns 404, never 403.
 func (h *Handlers) ContactPhoto(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {
@@ -47,9 +45,7 @@ func (h *Handlers) ContactPhoto(w http.ResponseWriter, r *http.Request) {
 	h.streamPhoto(w, r, publicID, meta.ETag)
 }
 
-// streamPhoto writes a contact's photo with a strong ETag, conditional-GET
-// support, and a private cache. The caller is responsible for authorization;
-// publicID/etag come from a prior metadata lookup.
+// streamPhoto writes a contact's photo with a strong ETag, conditional-GET support, and a private cache. The caller is responsible for authorization; publicID/etag come from a prior metadata lookup.
 func (h *Handlers) streamPhoto(w http.ResponseWriter, r *http.Request, publicID, rawETag string) {
 	etag := `"` + rawETag + `"`
 	w.Header().Set("ETag", etag)
@@ -73,8 +69,7 @@ func (h *Handlers) streamPhoto(w http.ResponseWriter, r *http.Request, publicID,
 	_, _ = w.Write(photo.Bytes)
 }
 
-// matchesETag reports whether an If-None-Match header matches the resource ETag.
-// Supports the "*" wildcard and a comma-separated list of candidate tags.
+// matchesETag reports whether an If-None-Match header matches the resource ETag. Supports the "*" wildcard and a comma-separated list of candidate tags.
 func matchesETag(ifNoneMatch, etag string) bool {
 	if ifNoneMatch == "" {
 		return false

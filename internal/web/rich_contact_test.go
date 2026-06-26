@@ -63,8 +63,7 @@ func TestRichContactMultiValueRoundTrip(t *testing.T) {
 		}
 	}
 
-	// The edit form is pre-populated with the multiple values (round-trips
-	// through vcard_raw), so re-saving preserves them.
+	// The edit form is pre-populated with the multiple values (round-trips through vcard_raw), so re-saving preserves them.
 	publicID := strings.TrimPrefix(contactURL, "/contacts/")
 	editForm, _, _ := authedGet(t, router, session, "/contacts/"+publicID+"/edit")
 	eb := editForm.Body.String()

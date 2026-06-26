@@ -2,8 +2,7 @@ package i18n
 
 import "testing"
 
-// TestGermanCatalogComplete guards translation coverage: every key in the
-// English source catalog must exist in German.
+// TestGermanCatalogComplete guards translation coverage: every key in the English source catalog must exist in German.
 func TestGermanCatalogComplete(t *testing.T) {
 	if missing := MissingKeys("de"); len(missing) > 0 {
 		t.Errorf("de.json is missing %d keys: %v", len(missing), missing)

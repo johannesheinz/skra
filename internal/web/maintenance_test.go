@@ -11,8 +11,7 @@ import (
 	"github.com/johannesheinz/skra/internal/testutil"
 )
 
-// TestServerMaintenancePrunes verifies one maintenance pass removes an expired
-// session and a stale import upload.
+// TestServerMaintenancePrunes verifies one maintenance pass removes an expired session and a stale import upload.
 func TestServerMaintenancePrunes(t *testing.T) {
 	d := testutil.NewDB(t)
 	ctx := context.Background()

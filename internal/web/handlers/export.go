@@ -11,8 +11,7 @@ import (
 	"github.com/johannesheinz/skra/internal/rbac"
 )
 
-// BookExportVCard streams a book's contacts as a vCard download
-// (GET /books/{publicID}/export.vcf). Requires read on the book.
+// BookExportVCard streams a book's contacts as a vCard download (GET /books/{publicID}/export.vcf). Requires read on the book.
 func (h *Handlers) BookExportVCard(w http.ResponseWriter, r *http.Request) {
 	book, _, ok := h.authorizeBook(w, r, rbac.Read)
 	if !ok {
@@ -21,12 +20,7 @@ func (h *Handlers) BookExportVCard(w http.ResponseWriter, r *http.Request) {
 	h.writeBookVCard(w, r, book)
 }
 
-// writeBookVCard streams every contact in a book as a vCard download, embedding
-// photos, loading each photo just-in-time so only one is held in memory at a
-// time. Authorization is the caller's responsibility. The whole-book row set is
-// fetched before any bytes are written, so a DB error there still becomes a 500;
-// once streaming starts the status is already committed, so mid-stream photo
-// errors are logged and the photo skipped rather than corrupting the download.
+// writeBookVCard streams every contact in a book as a vCard download, embedding photos, loading each photo just-in-time so only one is held in memory at a time. Authorization is the caller's responsibility. The whole-book row set is fetched before any bytes are written, so a DB error there still becomes a 500; once streaming starts the status is already committed, so mid-stream photo errors are logged and the photo skipped rather than corrupting the download.
 func (h *Handlers) writeBookVCard(w http.ResponseWriter, r *http.Request, book models.AddressBook) {
 	contacts, err := models.ListContactsForExport(r.Context(), h.DB, book.ID)
 	if err != nil {
@@ -51,8 +45,7 @@ func (h *Handlers) writeBookVCard(w http.ResponseWriter, r *http.Request, book m
 	}
 }
 
-// BookExportCSV streams a book's contacts as a CSV download
-// (GET /books/{publicID}/export.csv). Requires read on the book.
+// BookExportCSV streams a book's contacts as a CSV download (GET /books/{publicID}/export.csv). Requires read on the book.
 func (h *Handlers) BookExportCSV(w http.ResponseWriter, r *http.Request) {
 	book, _, ok := h.authorizeBook(w, r, rbac.Read)
 	if !ok {
@@ -76,8 +69,7 @@ func (h *Handlers) BookExportCSV(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ContactExportVCard streams a single contact as a vCard download
-// (GET /contacts/{publicID}/export.vcf). Requires read on the contact's book.
+// ContactExportVCard streams a single contact as a vCard download (GET /contacts/{publicID}/export.vcf). Requires read on the contact's book.
 func (h *Handlers) ContactExportVCard(w http.ResponseWriter, r *http.Request) {
 	contact, _, _, ok := h.authorizeContact(w, r, rbac.Read)
 	if !ok {
@@ -86,8 +78,7 @@ func (h *Handlers) ContactExportVCard(w http.ResponseWriter, r *http.Request) {
 	h.writeContactVCard(w, r, contact)
 }
 
-// writeContactVCard renders one contact as a vCard download, embedding its photo
-// if present. Authorization is the caller's responsibility.
+// writeContactVCard renders one contact as a vCard download, embedding its photo if present. Authorization is the caller's responsibility.
 func (h *Handlers) writeContactVCard(w http.ResponseWriter, r *http.Request, contact models.Contact) {
 	c, err := models.GetContactExport(r.Context(), h.DB, contact.ID)
 	if errors.Is(err, models.ErrContactNotFound) {
@@ -125,8 +116,7 @@ func (h *Handlers) exportError(w http.ResponseWriter, what string, err error) {
 	http.Error(w, "internal server error", http.StatusInternalServerError)
 }
 
-// downloadFilename builds a safe download filename from a title, replacing any
-// character outside [A-Za-z0-9-_] with an underscore and defaulting to "skra".
+// downloadFilename builds a safe download filename from a title, replacing any character outside [A-Za-z0-9-_] with an underscore and defaulting to "skra".
 func downloadFilename(title, ext string) string {
 	var b strings.Builder
 	for _, r := range title {

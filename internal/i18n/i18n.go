@@ -1,11 +1,6 @@
-// Package i18n provides Skrá's localization: a small registry of supported
-// locales (language × region), message catalogs keyed by language, and locale
-// -aware formatting of numbers, dates, and addresses.
+// Package i18n provides Skrá's localization: a small registry of supported locales (language × region), message catalogs keyed by language, and locale -aware formatting of numbers, dates, and addresses.
 //
-// A locale is a BCP-47 tag such as en-US, de-DE, or en-DK. The language subtag
-// selects the message catalog (en-US and en-DK share the English catalog); the
-// full tag drives number/date/address formatting (so en-DK renders English text
-// with European formats). Contact data is user content and is never translated.
+// A locale is a BCP-47 tag such as en-US, de-DE, or en-DK. The language subtag selects the message catalog (en-US and en-DK share the English catalog); the full tag drives number/date/address formatting (so en-DK renders English text with European formats). Contact data is user content and is never translated.
 package i18n
 
 import (
@@ -52,9 +47,7 @@ type Locale struct {
 	postalBeforeCity bool   // address line order
 }
 
-// Lang returns the BCP-47 code for the <html lang> attribute. All shipped
-// locales are left-to-right; RTL is intentionally not supported (see the
-// development principles).
+// Lang returns the BCP-47 code for the <html lang> attribute. All shipped locales are left-to-right; RTL is intentionally not supported (see the development principles).
 func (l Locale) Lang() string { return l.Code }
 
 // locales is the ordered registry; the first entry is the default.
@@ -92,13 +85,11 @@ func ByCode(code string) (Locale, bool) {
 	return Locale{}, false
 }
 
-// Match picks the best locale for an Accept-Language header, falling back to the
-// default when nothing matches.
+// Match picks the best locale for an Accept-Language header, falling back to the default when nothing matches.
 func Match(acceptLanguage string) Locale {
 	tag, _ := language.MatchStrings(matcher, acceptLanguage)
 	base, _ := tag.Base()
-	// MatchStrings returns one of the registry tags; find it by exact code, else
-	// by language base, else default.
+	// MatchStrings returns one of the registry tags; find it by exact code, else by language base, else default.
 	for _, l := range locales {
 		if l.Tag == tag {
 			return l
@@ -112,8 +103,7 @@ func Match(acceptLanguage string) Locale {
 	return Default()
 }
 
-// entry is one catalog message: either a single string or plural forms keyed by
-// CLDR category ("one", "other", ...).
+// entry is one catalog message: either a single string or plural forms keyed by CLDR category ("one", "other", ...).
 type entry struct {
 	single string
 	forms  map[string]string
@@ -174,8 +164,7 @@ func For(loc Locale) *Translator {
 	return &Translator{Locale: loc, printer: message.NewPrinter(loc.Tag)}
 }
 
-// lookup finds a key's entry in the locale's language catalog, falling back to
-// English. ok is false when the key is absent everywhere.
+// lookup finds a key's entry in the locale's language catalog, falling back to English. ok is false when the key is absent everywhere.
 func (t *Translator) lookup(key string) (entry, bool) {
 	if e, ok := catalogs[t.Locale.lang][key]; ok {
 		return e, true
@@ -186,8 +175,7 @@ func (t *Translator) lookup(key string) (entry, bool) {
 	return entry{}, false
 }
 
-// T returns the message for key. A missing key returns the key itself so gaps
-// are visible rather than silently blank.
+// T returns the message for key. A missing key returns the key itself so gaps are visible rather than silently blank.
 func (t *Translator) T(key string) string {
 	e, ok := t.lookup(key)
 	if !ok {
@@ -196,14 +184,12 @@ func (t *Translator) T(key string) string {
 	return e.single
 }
 
-// Tf formats a message that contains printf verbs, using locale-aware number
-// formatting for its arguments.
+// Tf formats a message that contains printf verbs, using locale-aware number formatting for its arguments.
 func (t *Translator) Tf(key string, args ...any) string {
 	return t.printer.Sprintf(t.T(key), args...)
 }
 
-// Plural returns the correct plural form for n, substituting {n} with the
-// locale-formatted count. The catalog entry must be a plural object.
+// Plural returns the correct plural form for n, substituting {n} with the locale-formatted count. The catalog entry must be a plural object.
 func (t *Translator) Plural(key string, n int) string {
 	e, ok := t.lookup(key)
 	if !ok || e.forms == nil {
@@ -232,12 +218,10 @@ func (t *Translator) MonthDay(month time.Month, day int) string {
 	return time.Date(2000, month, day, 0, 0, 0, 0, time.UTC).Format(t.Locale.monthDayLayout)
 }
 
-// PostalBeforeCity reports whether the postal code precedes the city on an
-// address line (European order) versus following it (US order).
+// PostalBeforeCity reports whether the postal code precedes the city on an address line (European order) versus following it (US order).
 func (t *Translator) PostalBeforeCity() bool { return t.Locale.postalBeforeCity }
 
-// ISODate formats a stored YYYY-MM-DD date for the locale; a value that does not
-// parse (e.g. a year-less birthday) is returned unchanged.
+// ISODate formats a stored YYYY-MM-DD date for the locale; a value that does not parse (e.g. a year-less birthday) is returned unchanged.
 func (t *Translator) ISODate(s string) string {
 	tm, err := time.Parse("2006-01-02", s)
 	if err != nil {
@@ -246,9 +230,7 @@ func (t *Translator) ISODate(s string) string {
 	return t.Date(tm)
 }
 
-// BirthdayLabel formats a stored birthday for display: a full YYYY-MM-DD renders
-// as a locale date; a year-less birthday (vCard --MMDD / --MM-DD) renders as a
-// locale month+day; anything else is returned unchanged.
+// BirthdayLabel formats a stored birthday for display: a full YYYY-MM-DD renders as a locale date; a year-less birthday (vCard --MMDD / --MM-DD) renders as a locale month+day; anything else is returned unchanged.
 func (t *Translator) BirthdayLabel(raw string) string {
 	raw = strings.TrimSpace(raw)
 	if tm, err := time.Parse("2006-01-02", raw); err == nil {
@@ -265,8 +247,7 @@ func (t *Translator) BirthdayLabel(raw string) string {
 	return raw
 }
 
-// TypeLabel translates a known type tag (home/work/mobile/other), falling back
-// to the raw value for anything else (e.g. a type from an imported vCard).
+// TypeLabel translates a known type tag (home/work/mobile/other), falling back to the raw value for anything else (e.g. a type from an imported vCard).
 func (t *Translator) TypeLabel(s string) string {
 	if e, ok := t.lookup("type." + s); ok && e.single != "" {
 		return e.single
@@ -292,8 +273,7 @@ func pluralCategory(tag language.Tag, n int) string {
 	}
 }
 
-// MissingKeys returns keys present in the English base catalog but absent from
-// the given language catalog — used by tests to guarantee full coverage.
+// MissingKeys returns keys present in the English base catalog but absent from the given language catalog — used by tests to guarantee full coverage.
 func MissingKeys(lang string) []string {
 	var missing []string
 	for key := range catalogs["en"] {

@@ -16,9 +16,7 @@ const GateCookieName = "skra_share"
 // GateTTL is how long a passed gate stays valid without re-entering the secret.
 const GateTTL = time.Hour
 
-// GateSigner issues and verifies the short-lived, HMAC-signed cookie that proves
-// a visitor passed a gated link's secret. The cookie binds to one token; opening
-// a different gated link overwrites it.
+// GateSigner issues and verifies the short-lived, HMAC-signed cookie that proves a visitor passed a gated link's secret. The cookie binds to one token; opening a different gated link overwrites it.
 type GateSigner struct {
 	key []byte
 }

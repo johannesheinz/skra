@@ -8,8 +8,7 @@ import (
 	"github.com/johannesheinz/skra/internal/db"
 )
 
-// NewDB opens a fresh, migrated SQLite database in a temporary directory and
-// registers cleanup. It fails the test on any error.
+// NewDB opens a fresh, migrated SQLite database in a temporary directory and registers cleanup. It fails the test on any error.
 func NewDB(t *testing.T) *db.DB {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "test.db")

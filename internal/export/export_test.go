@@ -23,8 +23,7 @@ func TestWriteCSVSanitizesInjection(t *testing.T) {
 			t.Errorf("output missing sanitized %q:\n%s", want, out)
 		}
 	}
-	// A normal phone that merely contains "+1 555" — its field starts with '+'
-	// so it is also prefixed; ensure the benign name is untouched.
+	// A normal phone that merely contains "+1 555" — its field starts with '+' so it is also prefixed; ensure the benign name is untouched.
 	if !strings.Contains(out, "Jane Doe") {
 		t.Error("benign value altered")
 	}
@@ -82,8 +81,7 @@ func TestWriteVCardsInjectsPhoto(t *testing.T) {
 		t.Fatalf("WriteVCards: %v", err)
 	}
 	out := buf.String()
-	// The comma in the data URI is vCard-escaped as "\," on encode (and
-	// unescaped on decode), so match the format-agnostic substring.
+	// The comma in the data URI is vCard-escaped as "\," on encode (and unescaped on decode), so match the format-agnostic substring.
 	if !strings.Contains(out, "PHOTO:data:image/jpeg;base64") {
 		t.Errorf("expected embedded base64 PHOTO:\n%s", out)
 	}

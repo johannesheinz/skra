@@ -54,8 +54,7 @@ func (h *Handlers) BookCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/books/"+book.PublicID, http.StatusSeeOther)
 }
 
-// BookShow renders a book's detail with its contacts (GET /books/{publicID}),
-// supporting a search query (?q=) and pagination (?page=).
+// BookShow renders a book's detail with its contacts (GET /books/{publicID}), supporting a search query (?q=) and pagination (?page=).
 func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 	book, user, ok := h.authorizeBook(w, r, rbac.Read)
 	if !ok {
@@ -77,8 +76,7 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 	sort := prefs.List.SortKey()
 	desc := prefs.List.Desc
 	limit, showAll := prefs.List.PageLimit()
-	// The size the selector should show as chosen: the "all" sentinel, or the
-	// effective limit (so the default 0 shows as its real value, e.g. 25).
+	// The size the selector should show as chosen: the "all" sentinel, or the effective limit (so the default 0 shows as its real value, e.g. 25).
 	selectedSize := limit
 	if showAll {
 		selectedSize = -1
@@ -114,8 +112,7 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 		"ShowAll":      showAll,
 		"SortOptions":  models.AllowedSorts,
 		"PageSizes":    models.AllowedPageSizes,
-		// Where the list-prefs form returns to: this book with its current search,
-		// reset to page 1 (page offsets change when size/sort change).
+		// Where the list-prefs form returns to: this book with its current search, reset to page 1 (page offsets change when size/sort change).
 		"ListPrefsReturn": bookContactsURL(book.PublicID, query, 1),
 	}
 	if !showAll {
@@ -187,9 +184,7 @@ func (h *Handlers) BookDelete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/books", http.StatusSeeOther)
 }
 
-// authorizeBook resolves the {publicID} book and enforces action. It writes the
-// appropriate response (404 when the book is not visible to the user, 403 when
-// visible but the action is not permitted) and returns ok=false in those cases.
+// authorizeBook resolves the {publicID} book and enforces action. It writes the appropriate response (404 when the book is not visible to the user, 403 when visible but the action is not permitted) and returns ok=false in those cases.
 func (h *Handlers) authorizeBook(w http.ResponseWriter, r *http.Request, action rbac.Action) (models.AddressBook, models.User, bool) {
 	user, _ := auth.UserFromContext(r.Context())
 	publicID := chi.URLParam(r, "publicID")
@@ -222,8 +217,7 @@ func (h *Handlers) authorizeBook(w http.ResponseWriter, r *http.Request, action 
 	return book, user, true
 }
 
-// checkForm parses the form and verifies the CSRF token, writing an error
-// response and returning false on failure.
+// checkForm parses the form and verifies the CSRF token, writing an error response and returning false on failure.
 func (h *Handlers) checkForm(w http.ResponseWriter, r *http.Request) bool {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)

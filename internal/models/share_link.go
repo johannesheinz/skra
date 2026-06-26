@@ -44,9 +44,7 @@ type NewShareLinkParams struct {
 	CreatedBy  int64
 }
 
-// CreateShareLink inserts a share link after enforcing the cross-cutting
-// invariant that a gated link must carry a secret. The token is generated for
-// the mode (public_long is high-entropy). Returns the stored link.
+// CreateShareLink inserts a share link after enforcing the cross-cutting invariant that a gated link must carry a secret. The token is generated for the mode (public_long is high-entropy). Returns the stored link.
 func CreateShareLink(ctx context.Context, d *db.DB, p NewShareLinkParams) (ShareLink, error) {
 	if !sharing.ValidMode(p.Mode) {
 		return ShareLink{}, fmt.Errorf("models: invalid share mode %q", p.Mode)
@@ -91,8 +89,7 @@ func GetShareLinkByToken(ctx context.Context, d *db.DB, token string) (ShareLink
 		 FROM share_links WHERE token = ?`, token))
 }
 
-// ListShareLinksForTarget returns the share links for a given scope+target,
-// newest first.
+// ListShareLinksForTarget returns the share links for a given scope+target, newest first.
 func ListShareLinksForTarget(ctx context.Context, d *db.DB, scope string, targetID int64) ([]ShareLink, error) {
 	rows, err := d.QueryContext(ctx,
 		`SELECT id, token, mode, scope, target_id, secret_hash, max_uses, use_count, failed_count, expires_at, revoked, created_by
@@ -140,8 +137,7 @@ func IncrementShareFailure(ctx context.Context, d *db.DB, id int64) error {
 	return nil
 }
 
-// Usable reports whether the link may currently be served: not revoked, not
-// expired, not uses-exhausted, and not locked by too many gate failures.
+// Usable reports whether the link may currently be served: not revoked, not expired, not uses-exhausted, and not locked by too many gate failures.
 func (s ShareLink) Usable(now time.Time) bool {
 	if s.Revoked {
 		return false

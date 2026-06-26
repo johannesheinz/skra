@@ -64,8 +64,7 @@ func TestProcessRejectsNonImage(t *testing.T) {
 }
 
 func TestProcessStripsMetadata(t *testing.T) {
-	// A JPEG carrying an EXIF APP1 segment; after processing the output must not
-	// contain it (re-encode strips metadata).
+	// A JPEG carrying an EXIF APP1 segment; after processing the output must not contain it (re-encode strips metadata).
 	src := image.NewRGBA(image.Rect(0, 0, 50, 50))
 	var raw bytes.Buffer
 	if err := jpeg.Encode(&raw, src, nil); err != nil {
@@ -81,8 +80,7 @@ func TestProcessStripsMetadata(t *testing.T) {
 }
 
 func TestRotate90Clockwise(t *testing.T) {
-	// 2x1 image: pixel (0,0) red (left), (1,0) blue (right). Rotating the strip
-	// 90° clockwise stands it upright with red on top and blue on the bottom.
+	// 2x1 image: pixel (0,0) red (left), (1,0) blue (right). Rotating the strip 90° clockwise stands it upright with red on top and blue on the bottom.
 	src := image.NewRGBA(image.Rect(0, 0, 2, 1))
 	red := color.RGBA{255, 0, 0, 255}
 	blue := color.RGBA{0, 0, 255, 255}
@@ -132,9 +130,7 @@ func TestReadOrientation(t *testing.T) {
 	}
 }
 
-// craftPNGHeader builds a minimal, CRC-valid PNG (signature + IHDR only) that
-// declares the given dimensions, so DecodeConfig can read the size without any
-// pixel data — used to exercise the decode dimension cap.
+// craftPNGHeader builds a minimal, CRC-valid PNG (signature + IHDR only) that declares the given dimensions, so DecodeConfig can read the size without any pixel data — used to exercise the decode dimension cap.
 func craftPNGHeader(t *testing.T, w, h uint32) []byte {
 	t.Helper()
 	var b bytes.Buffer
@@ -156,13 +152,11 @@ func craftPNGHeader(t *testing.T, w, h uint32) []byte {
 }
 
 func TestProcessRejectsOversizedDimensions(t *testing.T) {
-	// 30000 > maxDimensionInput, so it must be rejected from the header alone,
-	// before any full-resolution buffer is allocated.
+	// 30000 > maxDimensionInput, so it must be rejected from the header alone, before any full-resolution buffer is allocated.
 	if _, err := Process(craftPNGHeader(t, 30000, 30000)); !errors.Is(err, ErrImageTooLarge) {
 		t.Fatalf("Process(oversized) = %v, want ErrImageTooLarge", err)
 	}
-	// A modest header passes the cap (then fails later for lack of pixel data,
-	// which is a different, non-ErrImageTooLarge error).
+	// A modest header passes the cap (then fails later for lack of pixel data, which is a different, non-ErrImageTooLarge error).
 	if _, err := Process(craftPNGHeader(t, 100, 100)); errors.Is(err, ErrImageTooLarge) {
 		t.Fatal("Process(100x100 header) wrongly rejected as too large")
 	}

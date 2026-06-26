@@ -1,6 +1,4 @@
-// Package ids generates the random, unguessable identifiers Skra exposes
-// externally (public_id), plus opaque session ids and share tokens. All values
-// come from crypto/rand and are URL-safe base64 without padding.
+// Package ids generates the random, unguessable identifiers Skra exposes externally (public_id), plus opaque session ids and share tokens. All values come from crypto/rand and are URL-safe base64 without padding.
 package ids
 
 import (
@@ -9,16 +7,14 @@ import (
 	"fmt"
 )
 
-// Byte lengths for the different identifier classes. public_id is >=128-bit per
-// the spec; session ids and long share tokens use more entropy.
+// Byte lengths for the different identifier classes. public_id is >=128-bit per the spec; session ids and long share tokens use more entropy.
 const (
 	publicIDBytes  = 16 // 128-bit
 	sessionIDBytes = 32 // 256-bit
 	csrfTokenBytes = 32 // 256-bit
 )
 
-// NewPublicID returns a 128-bit URL-safe identifier for externally referenced
-// rows (users, address books, contacts, share links).
+// NewPublicID returns a 128-bit URL-safe identifier for externally referenced rows (users, address books, contacts, share links).
 func NewPublicID() (string, error) {
 	return randomString(publicIDBytes)
 }
@@ -33,9 +29,7 @@ func NewCSRFToken() (string, error) {
 	return randomString(csrfTokenBytes)
 }
 
-// Random returns a URL-safe base64 string carrying n random bytes. It is the
-// building block for tokens whose entropy is chosen at the call site (e.g. the
-// >=160-bit public share tokens added in a later phase).
+// Random returns a URL-safe base64 string carrying n random bytes. It is the building block for tokens whose entropy is chosen at the call site (e.g. the >=160-bit public share tokens).
 func Random(n int) (string, error) {
 	return randomString(n)
 }

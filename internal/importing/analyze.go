@@ -2,8 +2,7 @@ package importing
 
 import "strings"
 
-// Classified is a record plus whether it duplicates an existing or
-// earlier-in-batch contact.
+// Classified is a record plus whether it duplicates an existing or earlier-in-batch contact.
 type Classified struct {
 	Record    Record
 	Duplicate bool
@@ -15,9 +14,7 @@ type Summary struct {
 	Duplicate int
 }
 
-// Analyze classifies records against the existing book keys, also treating
-// earlier records in the same batch as "existing" so intra-batch duplicates are
-// flagged. Match is by UID first, then by lowercased email.
+// Analyze classifies records against the existing book keys, also treating earlier records in the same batch as "existing" so intra-batch duplicates are flagged. Match is by UID first, then by lowercased email.
 func Analyze(records []Record, existingUIDs, existingEmails map[string]bool) ([]Classified, Summary) {
 	seenUID := make(map[string]bool)
 	seenEmail := make(map[string]bool)

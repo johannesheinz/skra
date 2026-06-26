@@ -23,9 +23,7 @@ type Authenticator struct {
 	LoginPath string
 }
 
-// LoadUser resolves the session cookie to a user and stores it in the request
-// context. A missing or invalid session simply yields an anonymous request; it
-// is not an error here (route guards decide what to require).
+// LoadUser resolves the session cookie to a user and stores it in the request context. A missing or invalid session simply yields an anonymous request; it is not an error here (route guards decide what to require).
 func (a *Authenticator) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(SessionCookieName)
@@ -51,8 +49,7 @@ func (a *Authenticator) LoadUser(next http.Handler) http.Handler {
 	})
 }
 
-// RequireAuth rejects requests without an authenticated user by redirecting to
-// the login page.
+// RequireAuth rejects requests without an authenticated user by redirecting to the login page.
 func (a *Authenticator) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if _, ok := UserFromContext(r.Context()); !ok {
@@ -63,8 +60,7 @@ func (a *Authenticator) RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
-// RequireAdmin requires an authenticated admin. Non-admins (including anonymous
-// requests) get 404 rather than 403, so the admin surface is not revealed.
+// RequireAdmin requires an authenticated admin. Non-admins (including anonymous requests) get 404 rather than 403, so the admin surface is not revealed.
 func (a *Authenticator) RequireAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := UserFromContext(r.Context())

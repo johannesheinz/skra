@@ -62,8 +62,7 @@ func (h *Handlers) BookMemberAdd(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/books/"+book.PublicID+"/members", http.StatusSeeOther)
 }
 
-// BookMemberCreate creates a new account and grants it access to this book.
-// The new account is always a normal user — a manager cannot mint admins.
+// BookMemberCreate creates a new account and grants it access to this book. The new account is always a normal user — a manager cannot mint admins.
 func (h *Handlers) BookMemberCreate(w http.ResponseWriter, r *http.Request) {
 	book, current, ok := h.authorizeBook(w, r, rbac.Write)
 	if !ok {
@@ -109,8 +108,7 @@ func (h *Handlers) BookMemberCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/books/"+book.PublicID+"/members", http.StatusSeeOther)
 }
 
-// BookMemberRevoke removes a member (POST .../members/{userPublicID}/revoke).
-// The owner's own membership cannot be removed.
+// BookMemberRevoke removes a member (POST .../members/{userPublicID}/revoke). The owner's own membership cannot be removed.
 func (h *Handlers) BookMemberRevoke(w http.ResponseWriter, r *http.Request) {
 	book, _, ok := h.authorizeBook(w, r, rbac.Write)
 	if !ok {

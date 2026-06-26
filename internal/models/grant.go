@@ -15,9 +15,7 @@ const (
 	AccessManager = "manager"
 )
 
-// GetGrant returns the access level a user holds on an address book. found is
-// false when no grant row exists, which the RBAC layer treats as
-// not-visible (404, not 403).
+// GetGrant returns the access level a user holds on an address book. found is false when no grant row exists, which the RBAC layer treats as not-visible (404, not 403).
 func GetGrant(ctx context.Context, d *db.DB, userID, addressBookID int64) (level string, found bool, err error) {
 	err = d.QueryRowContext(ctx,
 		`SELECT access_level FROM address_book_members
@@ -44,8 +42,7 @@ type Member struct {
 	AccessLevel string
 }
 
-// ListMembers returns the members of an address book with their access level,
-// ordered by username.
+// ListMembers returns the members of an address book with their access level, ordered by username.
 func ListMembers(ctx context.Context, d *db.DB, addressBookID int64) ([]Member, error) {
 	rows, err := d.QueryContext(ctx,
 		`SELECT u.id, u.public_id, u.username, u.email, u.password_hash, u.role, m.access_level

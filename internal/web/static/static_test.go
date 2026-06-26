@@ -49,8 +49,7 @@ func TestHandlerServesAssetWithCachingHeaders(t *testing.T) {
 
 func TestHandlerUnversionedRevalidates(t *testing.T) {
 	h := Handler()
-	// A non-versioned, non-font asset (e.g. app.css referenced without ?v=)
-	// revalidates via ETag rather than being cached immutably.
+	// A non-versioned, non-font asset (e.g. app.css referenced without ?v=) revalidates via ETag rather than being cached immutably.
 	req := httptest.NewRequest(http.MethodGet, "/static/css/app.css", nil)
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
@@ -65,8 +64,7 @@ func TestHandlerUnversionedRevalidates(t *testing.T) {
 
 func TestHandlerFontsAreImmutable(t *testing.T) {
 	h := Handler()
-	// Font filenames carry their version, so they are cached immutably even
-	// without a ?v= query (referenced that way from the stylesheet).
+	// Font filenames carry their version, so they are cached immutably even without a ?v= query (referenced that way from the stylesheet).
 	req := httptest.NewRequest(http.MethodGet, "/static/fonts/SpaceGrotesk-Medium-2.0.0.woff2", nil)
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)

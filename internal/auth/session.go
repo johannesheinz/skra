@@ -14,15 +14,13 @@ import (
 // SessionTTL is how long a session remains valid after creation.
 const SessionTTL = 7 * 24 * time.Hour
 
-// sessionTimeFormat matches SQLite's datetime('now') output (UTC, fixed width),
-// so stored timestamps compare correctly with datetime('now') in SQL.
+// sessionTimeFormat matches SQLite's datetime('now') output (UTC, fixed width), so stored timestamps compare correctly with datetime('now') in SQL.
 const sessionTimeFormat = "2006-01-02 15:04:05"
 
 // ErrSessionNotFound is returned when a session id is unknown or expired.
 var ErrSessionNotFound = errors.New("auth: session not found or expired")
 
-// SessionStore manages server-side sessions in the sessions table. The cookie
-// carries only the opaque, high-entropy session id; all state lives in the DB.
+// SessionStore manages server-side sessions in the sessions table. The cookie carries only the opaque, high-entropy session id; all state lives in the DB.
 type SessionStore struct {
 	db *db.DB
 }

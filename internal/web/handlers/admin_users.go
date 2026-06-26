@@ -140,8 +140,7 @@ func (h *Handlers) AdminUserPassword(w http.ResponseWriter, r *http.Request) {
 	h.renderAdminEdit(w, r, http.StatusOK, user, h.tr(r).T("msg.password_reset"))
 }
 
-// AdminUserDelete deletes a user (POST /admin/users/{publicID}/delete), with
-// guards against self-delete, removing the last admin, and orphaning owned books.
+// AdminUserDelete deletes a user (POST /admin/users/{publicID}/delete), with guards against self-delete, removing the last admin, and orphaning owned books.
 func (h *Handlers) AdminUserDelete(w http.ResponseWriter, r *http.Request) {
 	user, ok := h.adminTargetUser(w, r)
 	if !ok {

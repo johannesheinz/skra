@@ -66,8 +66,7 @@ func TestUpcomingBirthdaysOrderAndAge(t *testing.T) {
 	if got[0].FullName != "Soon" || got[1].FullName != "Yearless" || got[2].FullName != "Far" {
 		t.Errorf("order = %q/%q/%q, want Soon/Yearless/Far", got[0].FullName, got[1].FullName, got[2].FullName)
 	}
-	// "Soon" turns the age it reaches on its next occurrence (3 days out, so
-	// that occurrence's year, which may roll over near year-end).
+	// "Soon" turns the age it reaches on its next occurrence (3 days out, so that occurrence's year, which may roll over near year-end).
 	wantAge := now.AddDate(0, 0, 3).Year() - 1990
 	if !got[0].HasAge || got[0].Age != wantAge {
 		t.Errorf("Soon age = %d (hasAge=%v), want %d", got[0].Age, got[0].HasAge, wantAge)

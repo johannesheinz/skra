@@ -20,9 +20,7 @@ import (
 	"github.com/johannesheinz/skra/internal/web/static"
 )
 
-// HTTP server timeouts and body limits. Explicit (no reliance on zero-value
-// defaults) to bound slowloris/slow-body/stuck-reader exposure. Read/write are
-// generous enough for a 10 MiB upload or a large book export on a slow link.
+// HTTP server timeouts and body limits. Explicit (no reliance on zero-value defaults) to bound slowloris/slow-body/stuck-reader exposure. Read/write are generous enough for a 10 MiB upload or a large book export on a slow link.
 const (
 	serverReadHeaderTimeout = 10 * time.Second
 	serverReadTimeout       = 60 * time.Second
@@ -30,8 +28,7 @@ const (
 	serverIdleTimeout       = 120 * time.Second
 	serverMaxHeaderBytes    = 1 << 20 // 1 MiB
 
-	// defaultMaxBodyBytes caps request bodies on ordinary form routes. Upload
-	// routes (photo/import) set their own larger cap and are skipped here.
+	// defaultMaxBodyBytes caps request bodies on ordinary form routes. Upload routes (photo/import) set their own larger cap and are skipped here.
 	defaultMaxBodyBytes = 1 << 20 // 1 MiB
 )
 
@@ -147,8 +144,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Post("/contacts/{publicID}/shares/{shareID}/revoke", h.ContactShareRevoke)
 	})
 
-	// Admin-only user management. RequireAdmin returns 404 for non-admins
-	// (including anonymous), so the surface is not revealed.
+	// Admin-only user management. RequireAdmin returns 404 for non-admins (including anonymous), so the surface is not revealed.
 	r.Group(func(r chi.Router) {
 		r.Use(authenticator.RequireAdmin)
 		r.Get("/admin/users", h.AdminUsersList)
@@ -160,9 +156,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 		r.Post("/admin/users/{publicID}/delete", h.AdminUserDelete)
 	})
 
-	// Public share routes — outside RequireAuth (LoadUser still applies so the
-	// authenticated mode can see a session). Logged with the route pattern,
-	// never the raw token.
+	// Public share routes — outside RequireAuth (LoadUser still applies so the authenticated mode can see a session). Logged with the route pattern, never the raw token.
 	r.Get("/s/{token}", h.ShareEntry)
 	r.Post("/s/{token}/gate", h.ShareGateSubmit)
 	r.Get("/s/{token}/c/{contactPublicID}", h.ShareContactInBook)
@@ -174,10 +168,7 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	return r, sessions, nil
 }
 
-// limitBody caps request bodies for ordinary routes at defaultMaxBodyBytes.
-// Upload routes (paths ending in /photo or /import) set their own larger cap in
-// the handler, so they are skipped here — wrapping them at 1 MiB would break
-// uploads, since the innermost MaxBytesReader wins.
+// limitBody caps request bodies for ordinary routes at defaultMaxBodyBytes. Upload routes (paths ending in /photo or /import) set their own larger cap in the handler, so they are skipped here — wrapping them at 1 MiB would break uploads, since the innermost MaxBytesReader wins.
 func limitBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Body != nil && !isUploadPath(r.URL.Path) {
@@ -187,15 +178,12 @@ func limitBody(next http.Handler) http.Handler {
 	})
 }
 
-// isUploadPath reports whether a path is one of the multipart upload endpoints
-// that manages its own (larger) body cap.
+// isUploadPath reports whether a path is one of the multipart upload endpoints that manages its own (larger) body cap.
 func isUploadPath(p string) bool {
 	return strings.HasSuffix(p, "/photo") || strings.HasSuffix(p, "/import")
 }
 
-// securityHeaders applies a restrictive, self-only Content-Security-Policy plus
-// related hardening headers. All assets are self-hosted, so no third-party
-// origins are permitted; img-src allows data: for inline placeholders.
+// securityHeaders applies a restrictive, self-only Content-Security-Policy plus related hardening headers. All assets are self-hosted, so no third-party origins are permitted; img-src allows data: for inline placeholders.
 func securityHeaders(next http.Handler) http.Handler {
 	const csp = "default-src 'self'; img-src 'self' data:; object-src 'none'; " +
 		"base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
@@ -208,8 +196,7 @@ func securityHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// Run starts the server and blocks until ctx is cancelled, then shuts down
-// gracefully within a bounded timeout.
+// Run starts the server and blocks until ctx is cancelled, then shuts down gracefully within a bounded timeout.
 func (s *Server) Run(ctx context.Context) error {
 	go s.runMaintenance(ctx)
 
@@ -234,13 +221,10 @@ func (s *Server) Run(ctx context.Context) error {
 	}
 }
 
-// maintenanceInterval is how often stale sessions/uploads are pruned and free
-// pages reclaimed. Hourly is ample for a single-instance deployment.
+// maintenanceInterval is how often stale sessions/uploads are pruned and free pages reclaimed. Hourly is ample for a single-instance deployment.
 const maintenanceInterval = time.Hour
 
-// runMaintenance prunes expired sessions and stale import uploads and reclaims
-// free pages on a schedule, once at startup and then every maintenanceInterval,
-// until ctx is cancelled.
+// runMaintenance prunes expired sessions and stale import uploads and reclaims free pages on a schedule, once at startup and then every maintenanceInterval, until ctx is cancelled.
 func (s *Server) runMaintenance(ctx context.Context) {
 	s.maintain(ctx)
 	ticker := time.NewTicker(maintenanceInterval)

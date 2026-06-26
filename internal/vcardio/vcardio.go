@@ -1,7 +1,4 @@
-// Package vcardio converts between a contact's canonical vcard_raw and a rich,
-// editable Details struct (multiple emails/phones/addresses, name components,
-// and assorted scalar fields). It is the single place that knows the vCard
-// representation, so the rest of the app works with Details.
+// Package vcardio converts between a contact's canonical vcard_raw and a rich, editable Details struct (multiple emails/phones/addresses, name components, and assorted scalar fields). It is the single place that knows the vCard representation, so the rest of the app works with Details.
 package vcardio
 
 import (
@@ -31,8 +28,7 @@ func (a Address) Empty() bool {
 	return a.Street == "" && a.City == "" && a.PostalCode == "" && a.Country == ""
 }
 
-// SingleLine renders the address as one comma-separated line of its non-empty
-// components, suitable as a free-text geocoding query for a map link.
+// SingleLine renders the address as one comma-separated line of its non-empty components, suitable as a free-text geocoding query for a map link.
 func (a Address) SingleLine() string {
 	parts := make([]string, 0, 4)
 	for _, p := range []string{a.Street, a.City, a.PostalCode, a.Country} {
@@ -58,8 +54,7 @@ type Details struct {
 	URLs          []string
 }
 
-// DisplayName is the contact's listing name: the given/family combination when
-// present, otherwise the formatted name carried from FN.
+// DisplayName is the contact's listing name: the given/family combination when present, otherwise the formatted name carried from FN.
 func (d Details) DisplayName() string {
 	if n := strings.TrimSpace(d.GivenName + " " + d.FamilyName); n != "" {
 		return n
@@ -83,8 +78,7 @@ func (d Details) PrimaryPhone() string {
 	return ""
 }
 
-// Encode renders Details as a canonical vCard 4.0 string with the given uid.
-// PHOTO is intentionally not included; photos are stored separately.
+// Encode renders Details as a canonical vCard 4.0 string with the given uid. PHOTO is intentionally not included; photos are stored separately.
 func Encode(d Details, uid string) (string, error) {
 	card := vcard.Card{}
 	card.AddName(&vcard.Name{FamilyName: d.FamilyName, GivenName: d.GivenName})
@@ -133,8 +127,7 @@ func Encode(d Details, uid string) (string, error) {
 	return buf.String(), nil
 }
 
-// Parse reads a vCard string into Details. A card with name components absent
-// but FN present keeps the display name in GivenName so editing preserves it.
+// Parse reads a vCard string into Details. A card with name components absent but FN present keeps the display name in GivenName so editing preserves it.
 func Parse(raw string) (Details, error) {
 	card, err := vcard.NewDecoder(strings.NewReader(raw)).Decode()
 	if err != nil {

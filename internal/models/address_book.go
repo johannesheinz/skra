@@ -29,9 +29,7 @@ type AddressBookListItem struct {
 	ContactCount int
 }
 
-// CreateAddressBook creates a book and grants its owner a manager membership in
-// one transaction, so the owner can immediately manage it via the normal RBAC
-// path. The name must be non-empty.
+// CreateAddressBook creates a book and grants its owner a manager membership in one transaction, so the owner can immediately manage it via the normal RBAC path. The name must be non-empty.
 func CreateAddressBook(ctx context.Context, d *db.DB, ownerID int64, name, description string) (AddressBook, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -120,10 +118,7 @@ func UpdateAddressBook(ctx context.Context, d *db.DB, id int64, name, descriptio
 
 // DeleteAddressBook removes a book; its contacts (and their photos) cascade.
 func DeleteAddressBook(ctx context.Context, d *db.DB, id int64) error {
-	// share_links.target_id is a polymorphic reference with no FK, so its rows
-	// must be purged explicitly (in the same transaction, before the book and its
-	// cascaded contacts are removed): the book's own share links and the share
-	// links of every contact in the book.
+	// share_links.target_id is a polymorphic reference with no FK, so its rows must be purged explicitly (in the same transaction, before the book and its cascaded contacts are removed): the book's own share links and the share links of every contact in the book.
 	err := d.Write(ctx, func(tx *sql.Tx) error {
 		if _, err := tx.ExecContext(ctx, `DELETE FROM share_links WHERE scope = 'book' AND target_id = ?`, id); err != nil {
 			return err
@@ -141,8 +136,7 @@ func DeleteAddressBook(ctx context.Context, d *db.DB, id int64) error {
 	return nil
 }
 
-// ListAddressBooks returns the books visible to a user: all books for an admin,
-// otherwise books the user owns or holds a grant on, each with its contact count.
+// ListAddressBooks returns the books visible to a user: all books for an admin, otherwise books the user owns or holds a grant on, each with its contact count.
 func ListAddressBooks(ctx context.Context, d *db.DB, user User) ([]AddressBookListItem, error) {
 	const countExpr = `(SELECT COUNT(*) FROM contacts c WHERE c.address_book_id = ab.id)`
 	var (

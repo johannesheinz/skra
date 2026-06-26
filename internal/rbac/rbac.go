@@ -1,6 +1,4 @@
-// Package rbac centralizes Skra's authorization decision: every access to an
-// address book (and the contacts, photos, and exports that inherit its
-// permission) routes through Can.
+// Package rbac centralizes Skra's authorization decision: every access to an address book (and the contacts, photos, and exports that inherit its permission) routes through Can.
 package rbac
 
 import (
@@ -21,9 +19,7 @@ const (
 	Write
 )
 
-// Decision is the outcome of an authorization check. Visible distinguishes
-// 404 from 403: a resource the user may not know exists must be reported as
-// not-found, while a permitted-to-see-but-not-do action is forbidden.
+// Decision is the outcome of an authorization check. Visible distinguishes 404 from 403: a resource the user may not know exists must be reported as not-found, while a permitted-to-see-but-not-do action is forbidden.
 type Decision struct {
 	// Allow is true when the action is permitted.
 	Allow bool
@@ -31,8 +27,7 @@ type Decision struct {
 	Visible bool
 }
 
-// Evaluate is the pure authorization rule, independent of storage. isAdmin
-// short-circuits to full access; otherwise the decision derives from the grant.
+// Evaluate is the pure authorization rule, independent of storage. isAdmin short-circuits to full access; otherwise the decision derives from the grant.
 func Evaluate(isAdmin bool, level string, hasGrant bool, action Action) Decision {
 	if isAdmin {
 		return Decision{Allow: true, Visible: true}
@@ -50,8 +45,7 @@ func Evaluate(isAdmin bool, level string, hasGrant bool, action Action) Decision
 	}
 }
 
-// Can resolves the grant for user on addressBookID and evaluates action. Admins
-// bypass the grant lookup entirely (implicit manager on every book).
+// Can resolves the grant for user on addressBookID and evaluates action. Admins bypass the grant lookup entirely (implicit manager on every book).
 func Can(ctx context.Context, d *db.DB, user models.User, addressBookID int64, action Action) (Decision, error) {
 	if user.Role == models.RoleAdmin {
 		return Evaluate(true, "", false, action), nil

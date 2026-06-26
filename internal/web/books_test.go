@@ -23,8 +23,7 @@ func sessionCookieFor(t *testing.T, d *db.DB, userID int64) *http.Cookie {
 	return &http.Cookie{Name: auth.SessionCookieName, Value: id}
 }
 
-// authedGet performs a GET and returns the recorder plus the CSRF token and
-// cookie issued by the page (for a follow-up POST).
+// authedGet performs a GET and returns the recorder plus the CSRF token and cookie issued by the page (for a follow-up POST).
 func authedGet(t *testing.T, router http.Handler, session *http.Cookie, path string) (*httptest.ResponseRecorder, string, *http.Cookie) {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodGet, path, nil)

@@ -71,8 +71,7 @@ func DeleteStaleImportUploads(ctx context.Context, d *db.DB) error {
 	return nil
 }
 
-// ExistingContactKeys returns the set of UIDs and (lowercased) primary emails
-// already present in a book, for de-duplication.
+// ExistingContactKeys returns the set of UIDs and (lowercased) primary emails already present in a book, for de-duplication.
 func ExistingContactKeys(ctx context.Context, d *db.DB, addressBookID int64) (uids, emails map[string]bool, err error) {
 	rows, err := d.QueryContext(ctx,
 		`SELECT uid, primary_email FROM contacts WHERE address_book_id = ?`, addressBookID)
@@ -102,8 +101,7 @@ func ExistingContactKeys(ctx context.Context, d *db.DB, addressBookID int64) (ui
 	return uids, emails, nil
 }
 
-// PreparedImport is a fully-resolved contact ready for bulk insertion: the uid
-// and vcard_raw are final (the caller handles dedup and any uid minting).
+// PreparedImport is a fully-resolved contact ready for bulk insertion: the uid and vcard_raw are final (the caller handles dedup and any uid minting).
 type PreparedImport struct {
 	FullName  string
 	Org       string
@@ -115,8 +113,7 @@ type PreparedImport struct {
 	PhotoJPEG []byte // optional, already normalized
 }
 
-// ImportContacts inserts a batch of contacts (and any photos) into a book in a
-// single transaction, so the import is all-or-nothing. Returns the count.
+// ImportContacts inserts a batch of contacts (and any photos) into a book in a single transaction, so the import is all-or-nothing. Returns the count.
 func ImportContacts(ctx context.Context, d *db.DB, addressBookID int64, records []PreparedImport) (int, error) {
 	if len(records) == 0 {
 		return 0, nil
@@ -135,8 +132,7 @@ func ImportContacts(ctx context.Context, d *db.DB, addressBookID int64, records 
 			if len(rec.PhotoJPEG) > 0 {
 				hasPhoto = 1
 			}
-			// Derive the denormalized sort keys from the canonical card so imported
-			// contacts sort correctly immediately (not only after a restart's backfill).
+			// Derive the denormalized sort keys from the canonical card so imported contacts sort correctly immediately (not only after a restart's backfill).
 			var given, family, postal, country string
 			if details, err := vcardio.Parse(rec.VCardRaw); err == nil {
 				given, family, postal, country = sortKeysFromDetails(details)

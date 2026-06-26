@@ -13,8 +13,7 @@ import (
 	"github.com/johannesheinz/skra/internal/testutil"
 )
 
-// TestLocaleFromAcceptLanguage: an anonymous request's Accept-Language drives
-// the rendered language and the <html lang> attribute.
+// TestLocaleFromAcceptLanguage: an anonymous request's Accept-Language drives the rendered language and the <html lang> attribute.
 func TestLocaleFromAcceptLanguage(t *testing.T) {
 	d := testutil.NewDB(t)
 	router := testRouter(t, d)
@@ -33,8 +32,7 @@ func TestLocaleFromAcceptLanguage(t *testing.T) {
 	}
 }
 
-// TestLocalePreferenceOverridesHeader: a signed-in user's saved locale wins over
-// Accept-Language, and localized formatting/text appears on a real page.
+// TestLocalePreferenceOverridesHeader: a signed-in user's saved locale wins over Accept-Language, and localized formatting/text appears on a real page.
 func TestLocalePreferenceOverridesHeader(t *testing.T) {
 	d := testutil.NewDB(t)
 	router := testRouter(t, d)
