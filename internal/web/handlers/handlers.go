@@ -28,7 +28,8 @@ type Handlers struct {
 	dummyHash string
 }
 
-// New builds the handler set. It precomputes a dummy password hash for the user-enumeration defense; failing to do so is fatal to construction.
+// New builds the handler set.
+// It precomputes a dummy password hash for the user-enumeration defense; failing to do so is fatal to construction.
 func New(database *db.DB, sessions *auth.SessionStore, cookieSecure bool, externalURL, sessionKey string, logger *slog.Logger) (*Handlers, error) {
 	dummy, err := auth.HashPassword("skra-nonexistent-account")
 	if err != nil {
@@ -45,12 +46,14 @@ func New(database *db.DB, sessions *auth.SessionStore, cookieSecure bool, extern
 	}, nil
 }
 
-// render renders a page with the shared layout. It injects the authenticated user (if any) and a freshly issued CSRF token, which the base layout uses for its nav and the logout form.
+// render renders a page with the shared layout.
+// It injects the authenticated user (if any) and a freshly issued CSRF token, which the base layout uses for its nav and the logout form.
 func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, page string, data map[string]any) {
 	if data == nil {
 		data = map[string]any{}
 	}
-	// Path is where the header theme toggle returns to. Only a GET URL is safe to return to; a POST-rendered page (a form result) would 405 on GET, so fall back to home unless the caller set an explicit GET path.
+	// Path is where the header theme toggle returns to.
+	// Only a GET URL is safe to return to; a POST-rendered page (a form result) would 405 on GET, so fall back to home unless the caller set an explicit GET path.
 	if _, set := data["Path"]; !set {
 		if r.Method == http.MethodGet {
 			data["Path"] = r.URL.RequestURI()

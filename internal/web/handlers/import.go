@@ -181,7 +181,8 @@ func (h *Handlers) ImportCommit(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// buildPreparedImports converts parsed records into insertable rows, minting a fresh uid (and rebuilding the canonical vCard) whenever a record has no uid or collides with one already used, and normalizing any embedded photo. usedUIDs is seeded with the uids already present in the target book and is mutated as uids are consumed.
+// buildPreparedImports converts parsed records into insertable rows, minting a fresh uid (and rebuilding the canonical vCard) whenever a record has no uid or collides with one already used, and normalizing any embedded photo.
+// usedUIDs is seeded with the uids already present in the target book and is mutated as uids are consumed.
 func (h *Handlers) buildPreparedImports(records []importing.Record, usedUIDs map[string]bool) ([]models.PreparedImport, error) {
 	prepared := make([]models.PreparedImport, 0, len(records))
 	for _, rec := range records {
@@ -210,7 +211,8 @@ func (h *Handlers) buildPreparedImports(records []importing.Record, usedUIDs map
 	return prepared, nil
 }
 
-// BookImportNew (POST /books/import) lets an admin create a new address book and import a vCard file into it in one step, from the address-book overview. It is admin-only; the target book starts empty, so there is no dedup/preview step.
+// BookImportNew (POST /books/import) lets an admin create a new address book and import a vCard file into it in one step, from the address-book overview.
+// It is admin-only; the target book starts empty, so there is no dedup/preview step.
 func (h *Handlers) BookImportNew(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {

@@ -18,7 +18,8 @@ type CSVRow struct {
 
 var csvHeader = []string{"Full Name", "Organization", "Email", "Phone"}
 
-// WriteCSV writes rows as CSV with a header. Every field is run through the CSV-injection sanitizer; encoding/csv handles quoting of commas, quotes, and newlines.
+// WriteCSV writes rows as CSV with a header.
+// Every field is run through the CSV-injection sanitizer; encoding/csv handles quoting of commas, quotes, and newlines.
 func WriteCSV(w io.Writer, rows []CSVRow) error {
 	cw := csv.NewWriter(w)
 	if err := cw.Write(csvHeader); err != nil {
@@ -39,7 +40,8 @@ func WriteCSV(w io.Writer, rows []CSVRow) error {
 	return cw.Error()
 }
 
-// sanitizeCSVField defuses CSV/formula injection: a field starting with a character a spreadsheet treats as a formula (or a leading tab/CR that can shift the effective first character) is prefixed with a single quote so it is imported as literal text.
+// sanitizeCSVField defuses CSV/formula injection: a field starting with a character a spreadsheet treats as a formula (or a leading tab/CR that can shift the effective first character)
+// is prefixed with a single quote so it is imported as literal text.
 func sanitizeCSVField(s string) string {
 	if s == "" {
 		return s

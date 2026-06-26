@@ -184,7 +184,8 @@ func (h *Handlers) BookDelete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/books", http.StatusSeeOther)
 }
 
-// authorizeBook resolves the {publicID} book and enforces action. It writes the appropriate response (404 when the book is not visible to the user, 403 when visible but the action is not permitted) and returns ok=false in those cases.
+// authorizeBook resolves the {publicID} book and enforces action.
+// It writes the appropriate response (404 when the book is not visible to the user, 403 when visible but the action is not permitted) and returns ok=false in those cases.
 func (h *Handlers) authorizeBook(w http.ResponseWriter, r *http.Request, action rbac.Action) (models.AddressBook, models.User, bool) {
 	user, _ := auth.UserFromContext(r.Context())
 	publicID := chi.URLParam(r, "publicID")

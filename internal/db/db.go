@@ -1,4 +1,5 @@
-// Package db opens the single SQLite datastore, applies the connection pragmas the spec mandates, and runs embedded migrations. SQLite is the only datastore for Skra; photos live as BLOBs in it too.
+// Package db opens the single SQLite datastore, applies the connection pragmas the spec mandates, and runs embedded migrations.
+// SQLite is the only datastore for Skra; photos live as BLOBs in it too.
 package db
 
 import (
@@ -15,7 +16,9 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// DB wraps the connection pool with a write mutex. SQLite is single-writer; reads run concurrently against the pool (WAL), while every write goes through Write/ExecWrite, which serialize via writeMu to avoid "database is locked" contention. Read methods are promoted from the embedded *sql.DB.
+// DB wraps the connection pool with a write mutex.
+// SQLite is single-writer; reads run concurrently against the pool (WAL), while every write goes through Write/ExecWrite, which serialize via writeMu to avoid "database is locked" contention.
+// Read methods are promoted from the embedded *sql.DB.
 type DB struct {
 	*sql.DB
 	writeMu sync.Mutex
@@ -23,7 +26,8 @@ type DB struct {
 
 // connectionPragmas are applied to every connection in the pool via the DSN. journal_mode is persisted in the database header; the others are per-connection and must be re-applied on each connect, which the DSN guarantees.
 //
-// auto_vacuum is deliberately NOT here: it is a persistent header setting that cannot be changed once the file is in WAL mode, so a per-connection pragma would silently fail to persist. It is set explicitly on a fresh database in initAutoVacuum before any schema exists.
+// auto_vacuum is deliberately NOT here: it is a persistent header setting that cannot be changed once the file is in WAL mode, so a per-connection pragma would silently fail to persist.
+// It is set explicitly on a fresh database in initAutoVacuum before any schema exists.
 var connectionPragmas = []string{
 	"journal_mode(WAL)",   // concurrent reads with a single writer
 	"busy_timeout(5000)",  // wait rather than error on brief locks
@@ -31,7 +35,8 @@ var connectionPragmas = []string{
 	"synchronous(NORMAL)", // safe and fast under WAL
 }
 
-// Open opens (creating if absent) the SQLite database at path, applies pragmas, sets INCREMENTAL auto_vacuum on a brand-new database, and runs all pending migrations. The caller owns closing the returned DB.
+// Open opens (creating if absent) the SQLite database at path, applies pragmas, sets INCREMENTAL auto_vacuum on a brand-new database, and runs all pending migrations.
+// The caller owns closing the returned DB.
 func Open(path string) (*DB, error) {
 	if path == "" {
 		return nil, fmt.Errorf("db path must not be empty")
@@ -47,7 +52,9 @@ func Open(path string) (*DB, error) {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
 
-	// Bound the pool. Writes are already serialized by writeMu (SQLite is single-writer), so an unbounded reader pool has no correctness upside and can starve the writer / surface busy_timeout errors under load. A small bound tied to CPU count is plenty for a single-instance deployment.
+	// Bound the pool.
+	// Writes are already serialized by writeMu (SQLite is single-writer), so an unbounded reader pool has no correctness upside and can starve the writer / surface busy_timeout errors under load.
+	// A small bound tied to CPU count is plenty for a single-instance deployment.
 	maxConns := runtime.NumCPU()
 	if maxConns < 2 {
 		maxConns = 2
@@ -79,7 +86,8 @@ func Open(path string) (*DB, error) {
 	return &DB{DB: pool}, nil
 }
 
-// Snapshot writes a consistent, compacted copy of the database to outPath using VACUUM INTO (safe on a live WAL database). It refuses to overwrite an existing file.
+// Snapshot writes a consistent, compacted copy of the database to outPath using VACUUM INTO (safe on a live WAL database).
+// It refuses to overwrite an existing file.
 func (d *DB) Snapshot(ctx context.Context, outPath string) error {
 	if _, err := os.Stat(outPath); err == nil {
 		return fmt.Errorf("db: refusing to overwrite existing backup %q", outPath)
@@ -94,7 +102,8 @@ func (d *DB) Snapshot(ctx context.Context, outPath string) error {
 	return nil
 }
 
-// snapshotBeforeMigrations takes a one-off backup beside the database when an existing database has migrations to apply, so a failed/regretted migration is always recoverable. No-op when nothing is pending.
+// snapshotBeforeMigrations takes a one-off backup beside the database when an existing database has migrations to apply, so a failed/regretted migration is always recoverable.
+// No-op when nothing is pending.
 func snapshotBeforeMigrations(pool *sql.DB, path string) error {
 	pending, err := hasPendingMigrations(pool)
 	if err != nil || !pending {
@@ -112,7 +121,8 @@ func vacuumIntoSQL(path string) string {
 	return "VACUUM INTO '" + strings.ReplaceAll(path, "'", "''") + "'"
 }
 
-// Write runs fn inside a serialized write transaction. The mutex guarantees a single application writer at a time; the transaction is rolled back on error and committed otherwise.
+// Write runs fn inside a serialized write transaction.
+// The mutex guarantees a single application writer at a time; the transaction is rolled back on error and committed otherwise.
 func (d *DB) Write(ctx context.Context, fn func(*sql.Tx) error) error {
 	d.writeMu.Lock()
 	defer d.writeMu.Unlock()
@@ -136,7 +146,8 @@ func (d *DB) ExecWrite(ctx context.Context, query string, args ...any) (sql.Resu
 	return d.DB.ExecContext(ctx, query, args...)
 }
 
-// IncrementalVacuum reclaims free pages from the (INCREMENTAL auto_vacuum) file so it shrinks after deletes. Serialized as a write.
+// IncrementalVacuum reclaims free pages from the (INCREMENTAL auto_vacuum) file so it shrinks after deletes.
+// Serialized as a write.
 func (d *DB) IncrementalVacuum(ctx context.Context) error {
 	if _, err := d.ExecWrite(ctx, "PRAGMA incremental_vacuum"); err != nil {
 		return fmt.Errorf("db: incremental vacuum: %w", err)
@@ -144,7 +155,9 @@ func (d *DB) IncrementalVacuum(ctx context.Context) error {
 	return nil
 }
 
-// initAutoVacuum sets INCREMENTAL auto_vacuum and forces it into the database header with a VACUUM. Both statements must run on the same connection, so a single connection is pinned for the operation. VACUUM persists the mode even though the DSN has already switched the file to WAL.
+// initAutoVacuum sets INCREMENTAL auto_vacuum and forces it into the database header with a VACUUM.
+// Both statements must run on the same connection, so a single connection is pinned for the operation.
+// VACUUM persists the mode even though the DSN has already switched the file to WAL.
 func initAutoVacuum(pool *sql.DB) error {
 	ctx := context.Background()
 	conn, err := pool.Conn(ctx)

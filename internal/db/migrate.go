@@ -20,7 +20,8 @@ type migration struct {
 	sql     string
 }
 
-// migrate applies all embedded migrations that have not yet been recorded in the schema_migrations table. Each migration runs in its own transaction so a failure leaves the database at the last fully-applied version.
+// migrate applies all embedded migrations that have not yet been recorded in the schema_migrations table.
+// Each migration runs in its own transaction so a failure leaves the database at the last fully-applied version.
 func migrate(db *sql.DB) error {
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
         version    INTEGER PRIMARY KEY,
@@ -51,7 +52,8 @@ func migrate(db *sql.DB) error {
 	return nil
 }
 
-// hasPendingMigrations reports whether an existing database has embedded migrations not yet recorded in schema_migrations. If schema_migrations does not exist yet, there is nothing to snapshot (the runner will create it), so it returns false.
+// hasPendingMigrations reports whether an existing database has embedded migrations not yet recorded in schema_migrations.
+// If schema_migrations does not exist yet, there is nothing to snapshot (the runner will create it), so it returns false.
 func hasPendingMigrations(db *sql.DB) (bool, error) {
 	var exists int
 	if err := db.QueryRow(
@@ -117,7 +119,8 @@ func applyMigration(db *sql.DB, m migration) error {
 	return tx.Commit()
 }
 
-// loadMigrations reads and parses every embedded migration, sorted ascending by version. It rejects malformed filenames and duplicate versions rather than guessing intent.
+// loadMigrations reads and parses every embedded migration, sorted ascending by version.
+// It rejects malformed filenames and duplicate versions rather than guessing intent.
 func loadMigrations() ([]migration, error) {
 	entries, err := fs.ReadDir(migrationsFS, "migrations")
 	if err != nil {

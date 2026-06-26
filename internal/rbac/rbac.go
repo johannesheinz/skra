@@ -19,7 +19,8 @@ const (
 	Write
 )
 
-// Decision is the outcome of an authorization check. Visible distinguishes 404 from 403: a resource the user may not know exists must be reported as not-found, while a permitted-to-see-but-not-do action is forbidden.
+// Decision is the outcome of an authorization check.
+// Visible distinguishes 404 from 403: a resource the user may not know exists must be reported as not-found, while a permitted-to-see-but-not-do action is forbidden.
 type Decision struct {
 	// Allow is true when the action is permitted.
 	Allow bool
@@ -45,7 +46,8 @@ func Evaluate(isAdmin bool, level string, hasGrant bool, action Action) Decision
 	}
 }
 
-// Can resolves the grant for user on addressBookID and evaluates action. Admins bypass the grant lookup entirely (implicit manager on every book).
+// Can resolves the grant for user on addressBookID and evaluates action.
+// Admins bypass the grant lookup entirely (implicit manager on every book).
 func Can(ctx context.Context, d *db.DB, user models.User, addressBookID int64, action Action) (Decision, error) {
 	if user.Role == models.RoleAdmin {
 		return Evaluate(true, "", false, action), nil

@@ -13,10 +13,12 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-// ErrMismatch is returned by VerifyPassword when the password does not match the stored hash. It is deliberately generic to avoid leaking which factor failed.
+// ErrMismatch is returned by VerifyPassword when the password does not match the stored hash.
+// It is deliberately generic to avoid leaking which factor failed.
 var ErrMismatch = errors.New("auth: password does not match")
 
-// argon2Params are the cost parameters for a single argon2id hash. They are embedded in the PHC string so an old hash can always be verified with the parameters it was created with, while DefaultParams drives new hashes and the rehash policy.
+// argon2Params are the cost parameters for a single argon2id hash.
+// They are embedded in the PHC string so an old hash can always be verified with the parameters it was created with, while DefaultParams drives new hashes and the rehash policy.
 type argon2Params struct {
 	memoryKiB   uint32
 	iterations  uint32
@@ -25,7 +27,8 @@ type argon2Params struct {
 	keyLen      uint32
 }
 
-// DefaultParams follows the spec's guidance: 64 MB memory, 3 iterations, parallelism tracking available cores. Tune for the target hardware.
+// DefaultParams follows the spec's guidance: 64 MB memory, 3 iterations, parallelism tracking available cores.
+// Tune for the target hardware.
 var DefaultParams = argon2Params{
 	memoryKiB:   64 * 1024,
 	iterations:  3,
@@ -45,7 +48,8 @@ func parallelism() uint8 {
 	return uint8(n)
 }
 
-// HashPassword hashes password with DefaultParams and returns a PHC-encoded string suitable for storing in users.password_hash. The salt is generated from a CSPRNG and embedded in the output; there is no separate salt column.
+// HashPassword hashes password with DefaultParams and returns a PHC-encoded string suitable for storing in users.password_hash.
+// The salt is generated from a CSPRNG and embedded in the output; there is no separate salt column.
 func HashPassword(password string) (string, error) {
 	return hashWith(password, DefaultParams)
 }
@@ -59,7 +63,8 @@ func hashWith(password string, p argon2Params) (string, error) {
 	return encode(p, salt, key), nil
 }
 
-// VerifyPassword checks password against a PHC-encoded hash in constant time with respect to the derived key. It returns ErrMismatch on a wrong password and a different error if the stored hash is malformed.
+// VerifyPassword checks password against a PHC-encoded hash in constant time with respect to the derived key.
+// It returns ErrMismatch on a wrong password and a different error if the stored hash is malformed.
 func VerifyPassword(encoded, password string) error {
 	p, salt, want, err := decode(encoded)
 	if err != nil {

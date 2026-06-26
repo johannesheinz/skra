@@ -1,4 +1,5 @@
-// Package static embeds and serves Skrá's frontend assets (CSS, JS, fonts, logos). Everything is self-hosted and shipped inside the binary — no CDNs and no third-party origins — so the CSP can stay locked to 'self'.
+// Package static embeds and serves Skrá's frontend assets (CSS, JS, fonts, logos).
+// Everything is self-hosted and shipped inside the binary — no CDNs and no third-party origins — so the CSP can stay locked to 'self'.
 //
 // Vendored asset versions (updated manually; see README "Vendored assets"):
 //   - htmx 2.0.9            js/htmx-v2.0.9.min.js
@@ -61,7 +62,8 @@ func mustLoad() map[string]asset {
 	return loaded
 }
 
-// URL returns the cache-busting URL for an embedded asset path, e.g. URL("css/app.css") -> "/static/css/app.css?v=<hash>". It panics on an unknown path so a broken template reference fails loudly in tests rather than 404ing in production.
+// URL returns the cache-busting URL for an embedded asset path, e.g. URL("css/app.css") -> "/static/css/app.css?v=<hash>".
+// It panics on an unknown path so a broken template reference fails loudly in tests rather than 404ing in production.
 func URL(p string) string {
 	a, ok := assets[p]
 	if !ok {
@@ -70,7 +72,8 @@ func URL(p string) string {
 	return URLPrefix + p + "?v=" + a.version
 }
 
-// Handler serves embedded assets mounted under URLPrefix. The asset path is read from the trailing path; it must be passed the request with the prefix still present (mount with a wildcard, e.g. chi `/static/*`).
+// Handler serves embedded assets mounted under URLPrefix.
+// The asset path is read from the trailing path; it must be passed the request with the prefix still present (mount with a wildcard, e.g. chi `/static/*`).
 func Handler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimPrefix(path.Clean(r.URL.Path), URLPrefix)
@@ -82,7 +85,8 @@ func Handler() http.HandlerFunc {
 
 		w.Header().Set("Content-Type", a.contentType)
 		w.Header().Set("ETag", a.etag)
-		// Immutable, year-long cache for versioned requests (?v=<hash>) and for fonts, whose filenames already carry the version (SpaceGrotesk-*-2.0.0) so a new font ships under a new URL. Other bare requests revalidate cheaply via the ETag.
+		// Immutable, year-long cache for versioned requests (?v=<hash>) and for fonts, whose filenames already carry the version (SpaceGrotesk-*-2.0.0) so a new font ships under a new URL.
+		// Other bare requests revalidate cheaply via the ETag.
 		if r.URL.Query().Get("v") != "" || strings.HasSuffix(name, ".woff2") {
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 		} else {

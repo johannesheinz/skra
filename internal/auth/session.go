@@ -20,7 +20,8 @@ const sessionTimeFormat = "2006-01-02 15:04:05"
 // ErrSessionNotFound is returned when a session id is unknown or expired.
 var ErrSessionNotFound = errors.New("auth: session not found or expired")
 
-// SessionStore manages server-side sessions in the sessions table. The cookie carries only the opaque, high-entropy session id; all state lives in the DB.
+// SessionStore manages server-side sessions in the sessions table.
+// The cookie carries only the opaque, high-entropy session id; all state lives in the DB.
 type SessionStore struct {
 	db *db.DB
 }
@@ -60,7 +61,8 @@ func (s *SessionStore) UserID(ctx context.Context, sessionID string) (int64, err
 	return userID, nil
 }
 
-// Delete removes a session (logout). Deleting an unknown id is not an error.
+// Delete removes a session (logout).
+// Deleting an unknown id is not an error.
 func (s *SessionStore) Delete(ctx context.Context, sessionID string) error {
 	if _, err := s.db.ExecWrite(ctx, `DELETE FROM sessions WHERE id = ?`, sessionID); err != nil {
 		return fmt.Errorf("auth: delete session: %w", err)

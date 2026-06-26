@@ -8,14 +8,17 @@ import (
 	"github.com/johannesheinz/skra/internal/db"
 )
 
-// ThemePrefs is the user's theme choice. Empty Mode means "follow the system"; empty Flavor/Accent mean the defaults.
+// ThemePrefs is the user's theme choice.
+// Empty Mode means "follow the system"; empty Flavor/Accent mean the defaults.
 type ThemePrefs struct {
 	Mode   string `json:"mode,omitempty"`   // "" | "light" | "dark"
 	Flavor string `json:"flavor,omitempty"` // "" | "solarized"
 	Accent string `json:"accent,omitempty"` // "" | "pine" | "lime" | ...
 }
 
-// ListPrefs is the user's contact-list display choice: how many rows per page and the sort order. A zero PageSize means the default; -1 means "all". An empty Sort means the default order.
+// ListPrefs is the user's contact-list display choice: how many rows per page and the sort order.
+// A zero PageSize means the default; -1 means "all".
+// An empty Sort means the default order.
 type ListPrefs struct {
 	PageSize int    `json:"pageSize,omitempty"` // 0 = default, -1 = all, else the page size
 	Sort     string `json:"sort,omitempty"`     // "" | "first" | "last" | "age" | "location"
@@ -25,10 +28,12 @@ type ListPrefs struct {
 // DefaultPageSize is used when the user has not chosen one.
 const DefaultPageSize = 24
 
-// AllowedPageSizes are the selectable page sizes; -1 renders every row. They are multiples of 12 so rows stay evenly filled across the responsive card grid (2, 3, 4, or 6 columns).
+// AllowedPageSizes are the selectable page sizes; -1 renders every row.
+// They are multiples of 12 so rows stay evenly filled across the responsive card grid (2, 3, 4, or 6 columns).
 var AllowedPageSizes = []int{12, 24, 48, 96, -1}
 
-// AllowedSorts are the selectable sort keys mapped to their menu labels, in display order. The empty key is the default (equivalent to "first").
+// AllowedSorts are the selectable sort keys mapped to their menu labels, in display order.
+// The empty key is the default (equivalent to "first").
 var AllowedSorts = []struct{ Key, Label string }{
 	{"first", "First name"},
 	{"last", "Last name"},
@@ -36,7 +41,8 @@ var AllowedSorts = []struct{ Key, Label string }{
 	{"location", "Location"},
 }
 
-// PageLimit returns the SQL LIMIT for the chosen page size and whether the choice is "all" (no paging). An unrecognized size falls back to the default.
+// PageLimit returns the SQL LIMIT for the chosen page size and whether the choice is "all" (no paging).
+// An unrecognized size falls back to the default.
 func (l ListPrefs) PageLimit() (limit int, all bool) {
 	if l.PageSize == -1 {
 		return -1, true // SQLite treats LIMIT -1 as no limit
@@ -64,7 +70,8 @@ type A11yPrefs struct {
 	HighContrast bool `json:"highContrast,omitempty"` // force the high-contrast styling on top of any OS preference
 }
 
-// UIPreferences is the user's stored UI preferences blob. It is intentionally extensible — new settings can be added as sibling fields without a migration.
+// UIPreferences is the user's stored UI preferences blob.
+// It is intentionally extensible — new settings can be added as sibling fields without a migration.
 type UIPreferences struct {
 	Theme  ThemePrefs `json:"theme"`
 	List   ListPrefs  `json:"list"`
@@ -72,7 +79,8 @@ type UIPreferences struct {
 	Locale string     `json:"locale,omitempty"` // BCP-47 code, e.g. "de-DE"; empty = detect from Accept-Language
 }
 
-// GetPreferences loads a user's UI preferences. A missing or malformed blob yields the zero value (all defaults) rather than an error.
+// GetPreferences loads a user's UI preferences.
+// A missing or malformed blob yields the zero value (all defaults) rather than an error.
 func GetPreferences(ctx context.Context, d *db.DB, userID int64) (UIPreferences, error) {
 	var raw string
 	if err := d.QueryRowContext(ctx, "SELECT preferences FROM users WHERE id = ?", userID).Scan(&raw); err != nil {

@@ -1,4 +1,5 @@
-// Package export renders address books and contacts to downloadable vCard and CSV. It is pure transformation (no database access) so it is easy to test; callers gather the data and pass it in.
+// Package export renders address books and contacts to downloadable vCard and CSV.
+// It is pure transformation (no database access) so it is easy to test; callers gather the data and pass it in.
 package export
 
 import (
@@ -20,7 +21,8 @@ type VCardEntry struct {
 // VCardMIME is the content type for a vCard download.
 const VCardMIME = "text/vcard; charset=utf-8"
 
-// WriteVCards writes the entries as a single vCard stream. Entries without a photo are emitted verbatim (preserving stored fidelity); entries with a photo are re-encoded to inject a base64 PHOTO so the photo is not double-stored.
+// WriteVCards writes the entries as a single vCard stream.
+// Entries without a photo are emitted verbatim (preserving stored fidelity); entries with a photo are re-encoded to inject a base64 PHOTO so the photo is not double-stored.
 func WriteVCards(w io.Writer, entries []VCardEntry) error {
 	for _, e := range entries {
 		if len(e.PhotoJPEG) == 0 {

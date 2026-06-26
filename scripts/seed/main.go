@@ -1,4 +1,5 @@
-// Command seed populates a Skrá database with demo data for development and demos. It uses the real model write path, so contacts get proper vcard_raw, passwords are argon2id-hashed, and photos run through the ingest pipeline.
+// Command seed populates a Skrá database with demo data for development and demos.
+// It uses the real model write path, so contacts get proper vcard_raw, passwords are argon2id-hashed, and photos run through the ingest pipeline.
 //
 // Usage:
 //
@@ -139,7 +140,8 @@ func createUser(ctx context.Context, d *db.DB, username, email, role string) (mo
 	return models.CreateUser(ctx, d, username, email, hash, role)
 }
 
-// generateContact deterministically builds a unique, varied rich contact from an index, returning the input and a rendered avatar PNG. Name pairs are unique up to len(firstNames)*len(lastNames); beyond that a numeric suffix keeps them so.
+// generateContact deterministically builds a unique, varied rich contact from an index, returning the input and a rendered avatar PNG.
+// Name pairs are unique up to len(firstNames)*len(lastNames); beyond that a numeric suffix keeps them so.
 func generateContact(i int) (models.ContactInput, []byte) {
 	// Latin-square pairing (pools are equal length): both the first and last name advance each step, and every pair is unique within one full cycle.
 	first := firstNames[i%len(firstNames)]

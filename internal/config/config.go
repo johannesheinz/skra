@@ -1,4 +1,5 @@
-// Package config loads and validates Skra's runtime configuration from the environment. Per project policy there are no silent defaults: a missing, empty, or malformed required variable is a startup error.
+// Package config loads and validates Skra's runtime configuration from the environment.
+// Per project policy there are no silent defaults: a missing, empty, or malformed required variable is a startup error.
 package config
 
 import (
@@ -16,11 +17,14 @@ type Config struct {
 	Listen string
 	// DBPath is the SQLite file location.
 	DBPath string
-	// CookieSecure sets the Secure flag on cookies. It must be derived from the external scheme, not the internal HTTP connection: the app sees plain HTTP behind a TLS-terminating proxy, so naive code would emit non-Secure cookies on an HTTPS site.
+	// CookieSecure sets the Secure flag on cookies.
+	// It must be derived from the external scheme, not the internal HTTP connection: the app sees plain HTTP behind a TLS-terminating proxy, so naive code would emit non-Secure cookies on an HTTPS site.
 	CookieSecure bool
-	// ExternalURL is the public origin (e.g. https://contacts.example.com) used to build absolute share links. No trailing slash.
+	// ExternalURL is the public origin (e.g. https://contacts.example.com) used to build absolute share links.
+	// No trailing slash.
 	ExternalURL string
-	// SessionKey signs share-gate cookies (HMAC). Keep it secret and stable; rotating it invalidates outstanding gate cookies.
+	// SessionKey signs share-gate cookies (HMAC).
+	// Keep it secret and stable; rotating it invalidates outstanding gate cookies.
 	SessionKey string
 }
 
@@ -32,7 +36,8 @@ const (
 	envSessionKey   = "SKRA_SESSION_KEY"
 )
 
-// Load reads configuration from the environment and validates it. It returns an error describing every problem found rather than falling back to a default.
+// Load reads configuration from the environment and validates it.
+// It returns an error describing every problem found rather than falling back to a default.
 func Load() (Config, error) {
 	var problems []string
 

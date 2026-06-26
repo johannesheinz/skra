@@ -1,4 +1,5 @@
-// Package importing parses contact interchange files (currently vCard) into normalized records and classifies them for de-duplication. It does no database or image work; callers persist the results.
+// Package importing parses contact interchange files (currently vCard) into normalized records and classifies them for de-duplication.
+// It does no database or image work; callers persist the results.
 package importing
 
 import (
@@ -13,7 +14,8 @@ import (
 	"github.com/johannesheinz/skra/internal/ids"
 )
 
-// Record is one normalized contact parsed from an import. CanonicalRaw is the re-encoded vCard 4.0 (with PHOTO stripped, since photos are stored separately); PhotoData holds the decoded photo bytes before the image pipeline, or nil.
+// Record is one normalized contact parsed from an import.
+// CanonicalRaw is the re-encoded vCard 4.0 (with PHOTO stripped, since photos are stored separately); PhotoData holds the decoded photo bytes before the image pipeline, or nil.
 type Record struct {
 	FullName     string
 	Org          string
@@ -25,7 +27,8 @@ type Record struct {
 	PhotoData    []byte
 }
 
-// ParseVCards parses (possibly many concatenated) vCards, isolating per-card failures: a malformed card increments the malformed count rather than aborting the batch. Handles a leading UTF-8 BOM.
+// ParseVCards parses (possibly many concatenated) vCards, isolating per-card failures: a malformed card increments the malformed count rather than aborting the batch.
+// Handles a leading UTF-8 BOM.
 func ParseVCards(data []byte) (records []Record, malformed int) {
 	for _, block := range splitCards(stripBOM(data)) {
 		rec, err := parseCard(block)
@@ -107,7 +110,8 @@ func BuildCanonicalRaw(fullName, org, email, phone, uid string) string {
 	return buf.String()
 }
 
-// extractPhoto returns decoded photo bytes from a card's PHOTO, handling both the vCard 4.0 data: URI form and the 3.0 base64-encoded form. Remote URI photos are skipped (we never fetch external resources).
+// extractPhoto returns decoded photo bytes from a card's PHOTO, handling both the vCard 4.0 data: URI form and the 3.0 base64-encoded form.
+// Remote URI photos are skipped (we never fetch external resources).
 func extractPhoto(card vcard.Card) []byte {
 	f := card.Get(vcard.FieldPhoto)
 	if f == nil || f.Value == "" {

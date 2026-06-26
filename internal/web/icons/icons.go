@@ -1,4 +1,5 @@
-// Package icons inlines the vendored Lucide icon set (ISC-licensed; see the LICENSE file beside this package). Icons render as self-hosted inline SVG with currentColor — no icon font, no external requests, themeable and crisp.
+// Package icons inlines the vendored Lucide icon set (ISC-licensed; see the LICENSE file beside this package).
+// Icons render as self-hosted inline SVG with currentColor — no icon font, no external requests, themeable and crisp.
 package icons
 
 import (
@@ -10,7 +11,8 @@ import (
 	"strings"
 )
 
-// Version is the vendored lucide-static release. Bump it together with the SVGs under svg/ (and the README "Vendored assets" table).
+// Version is the vendored lucide-static release.
+// Bump it together with the SVGs under svg/ (and the README "Vendored assets" table).
 const Version = "1.22.0"
 
 //go:embed svg/*.svg
@@ -39,7 +41,8 @@ func mustLoad() map[string]template.HTML {
 	return loaded
 }
 
-// Inline returns the SVG markup for a Lucide icon by name (e.g. "pencil"). It panics on an unknown name so a broken reference fails loudly in tests rather than silently rendering nothing.
+// Inline returns the SVG markup for a Lucide icon by name (e.g. "pencil").
+// It panics on an unknown name so a broken reference fails loudly in tests rather than silently rendering nothing.
 func Inline(name string) template.HTML {
 	svg, ok := set[name]
 	if !ok {

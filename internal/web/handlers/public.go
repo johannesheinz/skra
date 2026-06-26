@@ -16,7 +16,8 @@ import (
 // shareDirectoryLimit caps contacts rendered in a public directory page.
 const shareDirectoryLimit = 500
 
-// ShareEntry is the public landing for a share link (GET /s/{token}). It dispatches by scope after the mode gate is satisfied, and counts the access.
+// ShareEntry is the public landing for a share link (GET /s/{token}).
+// It dispatches by scope after the mode gate is satisfied, and counts the access.
 func (h *Handlers) ShareEntry(w http.ResponseWriter, r *http.Request) {
 	link, ok := h.resolveShareForView(w, r)
 	if !ok {
@@ -217,7 +218,8 @@ func (h *Handlers) ShareGateSubmit(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/s/"+token, http.StatusSeeOther)
 }
 
-// resolveShareForView resolves the share for the current request and enforces its mode. It returns ok=false (having written a 404, a login redirect, or the gate page) when the caller must not proceed.
+// resolveShareForView resolves the share for the current request and enforces its mode.
+// It returns ok=false (having written a 404, a login redirect, or the gate page) when the caller must not proceed.
 func (h *Handlers) resolveShareForView(w http.ResponseWriter, r *http.Request) (models.ShareLink, bool) {
 	token := chi.URLParam(r, "token")
 	link, err := models.GetShareLinkByToken(r.Context(), h.DB, token)

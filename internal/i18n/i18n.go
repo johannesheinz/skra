@@ -1,6 +1,8 @@
 // Package i18n provides Skrá's localization: a small registry of supported locales (language × region), message catalogs keyed by language, and locale -aware formatting of numbers, dates, and addresses.
 //
-// A locale is a BCP-47 tag such as en-US, de-DE, or en-DK. The language subtag selects the message catalog (en-US and en-DK share the English catalog); the full tag drives number/date/address formatting (so en-DK renders English text with European formats). Contact data is user content and is never translated.
+// A locale is a BCP-47 tag such as en-US, de-DE, or en-DK.
+// The language subtag selects the message catalog (en-US and en-DK share the English catalog); the full tag drives number/date/address formatting (so en-DK renders English text with European formats).
+// Contact data is user content and is never translated.
 package i18n
 
 import (
@@ -47,7 +49,8 @@ type Locale struct {
 	postalBeforeCity bool   // address line order
 }
 
-// Lang returns the BCP-47 code for the <html lang> attribute. All shipped locales are left-to-right; RTL is intentionally not supported (see the development principles).
+// Lang returns the BCP-47 code for the <html lang> attribute.
+// All shipped locales are left-to-right; RTL is intentionally not supported (see the development principles).
 func (l Locale) Lang() string { return l.Code }
 
 // locales is the ordered registry; the first entry is the default.
@@ -175,7 +178,8 @@ func (t *Translator) lookup(key string) (entry, bool) {
 	return entry{}, false
 }
 
-// T returns the message for key. A missing key returns the key itself so gaps are visible rather than silently blank.
+// T returns the message for key.
+// A missing key returns the key itself so gaps are visible rather than silently blank.
 func (t *Translator) T(key string) string {
 	e, ok := t.lookup(key)
 	if !ok {
@@ -189,7 +193,8 @@ func (t *Translator) Tf(key string, args ...any) string {
 	return t.printer.Sprintf(t.T(key), args...)
 }
 
-// Plural returns the correct plural form for n, substituting {n} with the locale-formatted count. The catalog entry must be a plural object.
+// Plural returns the correct plural form for n, substituting {n} with the locale-formatted count.
+// The catalog entry must be a plural object.
 func (t *Translator) Plural(key string, n int) string {
 	e, ok := t.lookup(key)
 	if !ok || e.forms == nil {

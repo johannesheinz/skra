@@ -1,4 +1,5 @@
-// Package models holds the data-access functions for Skra's core entities. Internal integer ids stay within this layer and the database; callers outside reference rows by public_id.
+// Package models holds the data-access functions for Skra's core entities.
+// Internal integer ids stay within this layer and the database; callers outside reference rows by public_id.
 package models
 
 import (
@@ -11,7 +12,8 @@ import (
 	"github.com/johannesheinz/skra/internal/ids"
 )
 
-// Roles are the global account roles. There is no default; an unrecognized role is rejected.
+// Roles are the global account roles.
+// There is no default; an unrecognized role is rejected.
 const (
 	RoleAdmin = "admin"
 	RoleUser  = "user"
@@ -20,7 +22,8 @@ const (
 // ErrUserNotFound is returned when a user lookup matches no row.
 var ErrUserNotFound = errors.New("models: user not found")
 
-// User is an account. PasswordHash is the PHC-encoded argon2id string.
+// User is an account.
+// PasswordHash is the PHC-encoded argon2id string.
 type User struct {
 	ID           int64
 	PublicID     string
@@ -30,7 +33,8 @@ type User struct {
 	Role         string
 }
 
-// CreateUser inserts a new user with a freshly generated public_id and returns the stored row. The role must be RoleAdmin or RoleUser.
+// CreateUser inserts a new user with a freshly generated public_id and returns the stored row.
+// The role must be RoleAdmin or RoleUser.
 func CreateUser(ctx context.Context, d *db.DB, username, email, passwordHash, role string) (User, error) {
 	if role != RoleAdmin && role != RoleUser {
 		return User{}, fmt.Errorf("models: invalid role %q", role)
@@ -108,7 +112,8 @@ func ListUsers(ctx context.Context, d *db.DB) ([]User, error) {
 	return users, nil
 }
 
-// UpdateUser changes a user's email and role (username is immutable) and bumps updated_at. The role must be RoleAdmin or RoleUser.
+// UpdateUser changes a user's email and role (username is immutable) and bumps updated_at.
+// The role must be RoleAdmin or RoleUser.
 func UpdateUser(ctx context.Context, d *db.DB, id int64, email, role string) error {
 	if role != RoleAdmin && role != RoleUser {
 		return fmt.Errorf("models: invalid role %q", role)
@@ -122,7 +127,8 @@ func UpdateUser(ctx context.Context, d *db.DB, id int64, email, role string) err
 	return nil
 }
 
-// DeleteUser removes a user. It fails if the user still owns address books (owner_id is ON DELETE RESTRICT); the caller surfaces that as a usage error.
+// DeleteUser removes a user.
+// It fails if the user still owns address books (owner_id is ON DELETE RESTRICT); the caller surfaces that as a usage error.
 func DeleteUser(ctx context.Context, d *db.DB, id int64) error {
 	if _, err := d.ExecWrite(ctx, `DELETE FROM users WHERE id = ?`, id); err != nil {
 		return fmt.Errorf("models: delete user: %w", err)

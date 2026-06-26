@@ -80,7 +80,8 @@ func TestProcessStripsMetadata(t *testing.T) {
 }
 
 func TestRotate90Clockwise(t *testing.T) {
-	// 2x1 image: pixel (0,0) red (left), (1,0) blue (right). Rotating the strip 90° clockwise stands it upright with red on top and blue on the bottom.
+	// 2x1 image: pixel (0,0) red (left), (1,0) blue (right).
+	// Rotating the strip 90° clockwise stands it upright with red on top and blue on the bottom.
 	src := image.NewRGBA(image.Rect(0, 0, 2, 1))
 	red := color.RGBA{255, 0, 0, 255}
 	blue := color.RGBA{0, 0, 255, 255}

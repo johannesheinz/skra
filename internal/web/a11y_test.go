@@ -15,7 +15,9 @@ import (
 	"github.com/johannesheinz/skra/internal/vcardio"
 )
 
-// TestAccessibilityInvariants renders every page and asserts a set of concrete, unambiguous accessibility invariants. It is a dependency-free regression guard that runs in the normal CI test pass (rather than pulling a Node/axe toolchain into the build, which the local-first principle rules out); a manual axe/Lighthouse spot-check remains a recommended periodic complement.
+// TestAccessibilityInvariants renders every page and asserts a set of concrete, unambiguous accessibility invariants.
+// It is a dependency-free regression guard that runs in the normal CI test pass, rather than pulling a Node/axe toolchain into the build (which the local-first principle rules out).
+// A manual axe/Lighthouse spot-check remains a recommended periodic complement.
 func TestAccessibilityInvariants(t *testing.T) {
 	d := testutil.NewDB(t)
 	router := testRouter(t, d)

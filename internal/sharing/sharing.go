@@ -1,4 +1,5 @@
-// Package sharing holds the primitives for public share links: mode/scope constants, per-mode token generation, and the signed gate cookie. Validity of a stored link (revoked/expired/uses-exhausted) lives with the model that owns the row; this package stays free of database concerns.
+// Package sharing holds the primitives for public share links: mode/scope constants, per-mode token generation, and the signed gate cookie.
+// Validity of a stored link (revoked/expired/uses-exhausted) lives with the model that owns the row; this package stays free of database concerns.
 package sharing
 
 import (
@@ -20,7 +21,8 @@ const (
 	ScopeContact = "contact"
 )
 
-// GateMaxFailures is how many wrong secret attempts lock a gated link until a manager revokes/recreates it. Proxy rate limiting is too coarse for slow per-link guessing, so this is enforced in the app.
+// GateMaxFailures is how many wrong secret attempts lock a gated link until a manager revokes/recreates it.
+// Proxy rate limiting is too coarse for slow per-link guessing, so this is enforced in the app.
 const GateMaxFailures = 10
 
 const (

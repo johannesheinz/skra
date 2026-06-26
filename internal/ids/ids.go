@@ -1,4 +1,5 @@
-// Package ids generates the random, unguessable identifiers Skra exposes externally (public_id), plus opaque session ids and share tokens. All values come from crypto/rand and are URL-safe base64 without padding.
+// Package ids generates the random, unguessable identifiers Skra exposes externally (public_id), plus opaque session ids and share tokens.
+// All values come from crypto/rand and are URL-safe base64 without padding.
 package ids
 
 import (
@@ -29,7 +30,8 @@ func NewCSRFToken() (string, error) {
 	return randomString(csrfTokenBytes)
 }
 
-// Random returns a URL-safe base64 string carrying n random bytes. It is the building block for tokens whose entropy is chosen at the call site (e.g. the >=160-bit public share tokens).
+// Random returns a URL-safe base64 string carrying n random bytes.
+// It is the building block for tokens whose entropy is chosen at the call site (e.g. the >=160-bit public share tokens).
 func Random(n int) (string, error) {
 	return randomString(n)
 }

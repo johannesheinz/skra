@@ -1,4 +1,6 @@
-// Package templates embeds and renders Skrá's server-rendered HTML. Each page is parsed together with the shared base layout into its own template set, so the page's "title"/"content" blocks override the base without colliding across pages. Sets are built once per supported locale, each with locale-bound translation/formatting functions, so rendering is a map lookup with no per-request parsing.
+// Package templates embeds and renders Skrá's server-rendered HTML.
+// Each page is parsed together with the shared base layout into its own template set, so the page's "title"/"content" blocks override the base without colliding across pages.
+// Sets are built once per supported locale, each with locale-bound translation/formatting functions, so rendering is a map lookup with no per-request parsing.
 package templates
 
 import (
@@ -112,7 +114,8 @@ func RenderFragment(w http.ResponseWriter, localeCode, name string, data any) er
 	return err
 }
 
-// Render executes a page (composed with the base layout) for the locale into a buffer first, so a template error yields a clean 500 instead of a half-written 200. An unknown locale falls back to the default.
+// Render executes a page (composed with the base layout) for the locale into a buffer first, so a template error yields a clean 500 instead of a half-written 200.
+// An unknown locale falls back to the default.
 func Render(w http.ResponseWriter, status int, localeCode, page string, data any) error {
 	set, ok := pages[localeCode]
 	if !ok {

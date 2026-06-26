@@ -113,7 +113,8 @@ type PreparedImport struct {
 	PhotoJPEG []byte // optional, already normalized
 }
 
-// ImportContacts inserts a batch of contacts (and any photos) into a book in a single transaction, so the import is all-or-nothing. Returns the count.
+// ImportContacts inserts a batch of contacts (and any photos) into a book in a single transaction, so the import is all-or-nothing.
+// Returns the count.
 func ImportContacts(ctx context.Context, d *db.DB, addressBookID int64, records []PreparedImport) (int, error) {
 	if len(records) == 0 {
 		return 0, nil

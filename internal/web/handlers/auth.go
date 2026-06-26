@@ -8,7 +8,8 @@ import (
 	"github.com/johannesheinz/skra/internal/models"
 )
 
-// LoginForm renders the login page (GET /login). An already-authenticated user is redirected home.
+// LoginForm renders the login page (GET /login).
+// An already-authenticated user is redirected home.
 func (h *Handlers) LoginForm(w http.ResponseWriter, r *http.Request) {
 	if _, ok := auth.UserFromContext(r.Context()); ok {
 		http.Redirect(w, r, "/", http.StatusSeeOther)

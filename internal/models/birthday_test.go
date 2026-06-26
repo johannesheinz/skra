@@ -48,7 +48,8 @@ func TestUpcomingBirthdaysOrderAndAge(t *testing.T) {
 	if _, err := models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "Soon", Birthday: inDays(3, 1990)}); err != nil {
 		t.Fatal(err)
 	}
-	// No birthday -> excluded. Year-less -> included but no age.
+	// No birthday -> excluded.
+	// Year-less -> included but no age.
 	if _, err := models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "None"}); err != nil {
 		t.Fatal(err)
 	}

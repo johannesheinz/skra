@@ -44,7 +44,9 @@ type NewShareLinkParams struct {
 	CreatedBy  int64
 }
 
-// CreateShareLink inserts a share link after enforcing the cross-cutting invariant that a gated link must carry a secret. The token is generated for the mode (public_long is high-entropy). Returns the stored link.
+// CreateShareLink inserts a share link after enforcing the cross-cutting invariant that a gated link must carry a secret.
+// The token is generated for the mode (public_long is high-entropy).
+// Returns the stored link.
 func CreateShareLink(ctx context.Context, d *db.DB, p NewShareLinkParams) (ShareLink, error) {
 	if !sharing.ValidMode(p.Mode) {
 		return ShareLink{}, fmt.Errorf("models: invalid share mode %q", p.Mode)
