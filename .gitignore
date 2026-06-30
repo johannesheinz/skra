@@ -16,6 +16,9 @@ skra.env
 *.out
 /dist/
 
+# Claude Code personal settings (shared config in .claude/ is committed)
+.claude/settings.local.json
+
 # Editor / OS noise
 .DS_Store
 .idea/
