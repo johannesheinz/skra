@@ -1,6 +1,8 @@
 # Skrá — Operations
 
-How to run Skrá in production. It binds internally behind a reverse proxy that terminates TLS; the app owns authorization, the CSP, cookie flags, and per-share throttling. See [`architecture.md`](architecture.md) for why the trust model is split this way.
+How to run Skrá in production.
+It binds internally behind a reverse proxy that terminates TLS; the app owns authorization, the CSP, cookie flags, and per-share throttling.
+See [`architecture.md`](architecture.md) for why the trust model is split this way.
 
 ## Configuration and reverse proxy
 
@@ -19,19 +21,25 @@ Rules that matter:
 
 - Absolute URLs and the `Secure` cookie flag derive from `SKRA_EXTERNAL_URL` / `SKRA_COOKIE_SECURE`, **not** the internal HTTP connection — the app sees plain HTTP behind the proxy, so naive code would set non-`Secure` cookies on an HTTPS site.
 - Honor `X-Forwarded-Proto` / `-Host` / `-For` only from `SKRA_TRUSTED_PROXIES`.
-- Division of responsibility — Proxy: TLS, coarse rate limiting, HSTS. App: authorization, CSP, `Referrer-Policy`, per-share throttling, secure-cookie flags.
-- For a public share link the secret token is in the URL path, so the proxy's access log records it. Configure the proxy to omit path/query logging for `/s/*`, keep short log retention, and rely on expiry and revocation.
+- Division of responsibility — Proxy: TLS, coarse rate limiting, HSTS.
+  App: authorization, CSP, `Referrer-Policy`, per-share throttling, secure-cookie flags.
+- For a public share link the secret token is in the URL path, so the proxy's access log records it.
+  Configure the proxy to omit path/query logging for `/s/*`, keep short log retention, and rely on expiry and revocation.
 
 ## Health and readiness
 
-- `GET /healthz` — liveness; always 200 while the process is up. Point your process supervisor / uptime monitor here.
-- `GET /readyz` — readiness; runs a cheap `SELECT 1` and returns 200 when the database is reachable, 503 otherwise. Use it for load-balancer readiness gating.
+- `GET /healthz` — liveness; always 200 while the process is up.
+  Point your process supervisor / uptime monitor here.
+- `GET /readyz` — readiness; runs a cheap `SELECT 1` and returns 200 when the database is reachable, 503 otherwise.
+  Use it for load-balancer readiness gating.
 
 ## Backups
 
 The single SQLite file (BLOBs included) is the entire dataset. **Never `cp` a live WAL database.**
 
-- **On-demand snapshot:** `skra backup --out /path/to/skra-YYYYMMDD.db` — a consistent, compacted copy via `VACUUM INTO`, safe on a live database. Refuses to overwrite an existing file. Needs only `SKRA_DB_PATH`.
+- **On-demand snapshot:** `skra backup --out /path/to/skra-YYYYMMDD.db` — a consistent, compacted copy via `VACUUM INTO`, safe on a live database.
+  Refuses to overwrite an existing file.
+  Needs only `SKRA_DB_PATH`.
 - **Automatic pre-migration snapshot:** on startup, when an existing database has migrations to apply, Skrá writes `‹db›.pre-migrate-‹unixtime›.bak` beside it before applying them, so a regretted migration is always recoverable.
 
 The binary does not do the following — operate these around it:
@@ -75,11 +83,14 @@ WantedBy=multi-user.target
 
 ## Logging and rotation
 
-Skrá logs via `log/slog` (JSON in production) to stdout. It logs the request id, method, route pattern (e.g. `/s/:token`, never the raw path), status, latency, and user id. It never logs contact PII or share tokens.
+Skrá logs via `log/slog` (JSON in production) to stdout.
+It logs the request id, method, route pattern (e.g. `/s/:token`, never the raw path), status, latency, and user id.
+It never logs contact PII or share tokens.
 
 Choose one rotation approach:
 
-- **journald (simplest):** log to stdout; configure `/etc/systemd/journald.conf` (`SystemMaxUse=500M`, `MaxRetentionSec=2week`). Read with `journalctl -u skra`.
+- **journald (simplest):** log to stdout; configure `/etc/systemd/journald.conf` (`SystemMaxUse=500M`, `MaxRetentionSec=2week`).
+  Read with `journalctl -u skra`.
 - **file + logrotate:**
 
 ```
@@ -99,12 +110,14 @@ Choose one rotation approach:
 }
 ```
 
-> The `postrotate` SIGHUP assumes the app reopens its log on SIGHUP. If it doesn't, use `copytruncate` and drop `postrotate` — but note `copytruncate` has a small line-loss race.
+> The `postrotate` SIGHUP assumes the app reopens its log on SIGHUP.
+> If it doesn't, use `copytruncate` and drop `postrotate` — but note `copytruncate` has a small line-loss race.
 
 ## Monitoring
 
 - External uptime monitor on `/healthz` (Uptime Kuma, UptimeRobot, or healthchecks.io).
-- **Backup dead-man's-switch:** the backup job pings a healthcheck URL on success; silence triggers an alert. This is the highest-value monitor — it catches the failure mode that loses data.
+- **Backup dead-man's-switch:** the backup job pings a healthcheck URL on success; silence triggers an alert.
+  This is the highest-value monitor — it catches the failure mode that loses data.
 - Optional Prometheus `/metrics`.
 
 Signals that matter most for this app:

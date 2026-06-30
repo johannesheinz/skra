@@ -1,6 +1,9 @@
 # Skrá — Architecture
 
-> **Origin note.** This began as the baseline plan written during the initialization phase — it fixed the decisions Skrá was first built against, and it remains the reference for the data model, security model, and rationale. It is **not** a live status report: some designs and implementations have changed since, and the app has grown beyond the original scope. For what the app does today see [`features.md`](features.md), for running it see [`operations.md`](operations.md), and for coding conventions see [`development.md`](development.md). The non-negotiable constraints at the end remain the standing invariants and should still hold.
+> **Origin note.** This began as the baseline plan written during the initialization phase — it fixed the decisions Skrá was first built against, and it remains the reference for the data model, security model, and rationale.
+> It is **not** a live status report: some designs and implementations have changed since, and the app has grown beyond the original scope.
+> For what the app does today see [`features.md`](features.md), for running it see [`operations.md`](operations.md), and for coding conventions see [`development.md`](development.md).
+> The non-negotiable constraints at the end remain the standing invariants and should still hold.
 
 A self-hosted application for storing, managing, and sharing/presenting contacts.
 
@@ -10,8 +13,11 @@ A self-hosted application for storing, managing, and sharing/presenting contacts
 
 The decisions in this document all serve a small set of principles that still hold:
 
-- **Self-hosted and self-contained.** One static, CGO-free Go binary plus one SQLite file — photos included. Assets are embedded and served locally; no CDNs, no external services, no background daemons. It should be trivial to run and trivial to move.
-- **Single instance, multi-user — not multi-tenant SaaS.** A global admin/user role plus per–address-book grants (viewer/manager). People without accounts get in through share links.
+- **Self-hosted and self-contained.** One static, CGO-free Go binary plus one SQLite file — photos included.
+  Assets are embedded and served locally; no CDNs, no external services, no background daemons.
+  It should be trivial to run and trivial to move.
+- **Single instance, multi-user — not multi-tenant SaaS.** A global admin/user role plus per–address-book grants (viewer/manager).
+  People without accounts get in through share links.
 - **Easy to share, easy to customize.** Books and individual contacts can be shared publicly or behind a PIN gate; each user customizes their own experience (theme, locale, list preferences).
 - **Security first.** argon2id, server-side sessions, CSRF, a self-only Content-Security-Policy, unguessable public IDs, no personal data in URLs or logs, formula-injection-safe CSV.
 - **Easy to operate.** Single-command run, environment-only config with no silent defaults, consistent `VACUUM INTO` backups, liveness/readiness endpoints, a non-root distroless image.
@@ -20,27 +26,29 @@ The decisions in this document all serve a small set of principles that still ho
 
 ## Build history
 
-The app was built in roughly this order. It has since grown beyond the original scope; this is the sequence, not a live status report.
+The app was built in roughly this order.
+It has since grown beyond the original scope; this is the sequence, not a live status report.
 
 1. **Skeleton** — static CGO-free binary; SQLite with the mandated pragmas and an embedded migration runner; chi router with structured logging, graceful shutdown, and a health check; `skra serve`.
-2. **Data & auth** — argon2id password hashing with lazy rehash; server-side sessions; CSRF on the auth forms; the RBAC resolver with 404-not-403 semantics; a contact-photo endpoint with strong ETag and conditional GET; `skra create-admin` bootstrap.
-3. **Contacts** — the self-hosted, embedded asset foundation with a self-only CSP; address-book CRUD with per-book authorization; contact list, detail, and CRUD via the hybrid write path (structured columns plus a regenerated `vcard_raw`); the photo ingest pipeline (orient, strip metadata, downscale, re-encode).
+2. **Data & auth** — argon2id password hashing with lazy rehash; server-side sessions; CSRF on the auth forms;
+   the RBAC resolver with 404-not-403 semantics; a contact-photo endpoint with strong ETag and conditional GET; `skra create-admin` bootstrap.
+3. **Contacts** — the self-hosted, embedded asset foundation with a self-only CSP; address-book CRUD with per-book authorization;
+   contact list, detail, and CRUD via the hybrid write path (structured columns plus a regenerated `vcard_raw`); the photo ingest pipeline (orient, strip metadata, downscale, re-encode).
 4. **Presentation & export** — a permission-gated contact directory; vCard export (whole book or single contact, with embedded photos) and CSV export with formula-injection sanitization.
 5. **Public sharing** — share links for a book or contact in three modes, manager-only to create, with an HMAC-signed gate and failure throttling for the short-link mode; public `/s/{token}` serving that reuses the directory presentation.
 6. **User management** — admin account management, per-book membership management for managers, and self-service password change.
 7. **Import** — vCard (.vcf) import with per-card error isolation, a dry-run preview, and a transactional commit with UID/email de-duplication; plus an admin one-step "create a new book and import into it".
 8. **Backups & ops** — `skra backup` writing a consistent `VACUUM INTO` snapshot; an automatic startup snapshot before applying pending migrations; a `/readyz` DB-readiness endpoint.
-9. **Beyond the baseline** — multi-value contact fields that round-trip through `vcard_raw`; per-user theming (light/dark/system); a fully localized interface with locale-aware formatting; an accessibility pass with an automatic and opt-in high-contrast mode and a CI invariant test; responsive and print stylesheets; an upcoming-birthdays dashboard; and a security/hardening pass.
+9. **Beyond the baseline** — multi-value contact fields that round-trip through `vcard_raw`; per-user theming (light/dark/system); a fully localized interface with locale-aware formatting;
+   an accessibility pass with an automatic and opt-in high-contrast mode and a CI invariant test; responsive and print stylesheets; an upcoming-birthdays dashboard; and a security/hardening pass.
 
 ---
 
 ## 1. Overview
 
-**Skrá** (Old Norse / Icelandic for "register, list, record") is a contacts
-application inspired by Forgejo: a **single Go binary** that serves both the
-backend and the server-rendered frontend, storing **all data in one SQLite
-file** (photos included). It targets a **single instance with many users** — not
-multi-tenant SaaS — and runs on a plain Linux host behind a reverse proxy.
+**Skrá** (Old Norse / Icelandic for "register, list, record") is a contacts application inspired by Forgejo:
+a **single Go binary** that serves both the backend and the server-rendered frontend, storing **all data in one SQLite file** (photos included).
+It targets a **single instance with many users** — not multi-tenant SaaS — and runs on a plain Linux host behind a reverse proxy.
 
 Fixed top-level decisions:
 
@@ -71,8 +79,10 @@ CGO_ENABLED=0 go build -o skra .
 ## 2. Technology stack
 
 - **Go** + **chi** router.
-- **`modernc.org/sqlite`** — pure-Go SQLite driver; this is the load-bearing choice that keeps the binary static and cross-compilable. Do not switch to a CGO driver.
-- **`html/template` + htmx**, CSS (Tailwind compiled at build time or plain CSS). All templates, CSS, JS, and the font files embedded via `embed.FS`.
+- **`modernc.org/sqlite`** — pure-Go SQLite driver; this is the load-bearing choice that keeps the binary static and cross-compilable.
+  Do not switch to a CGO driver.
+- **`html/template` + htmx**, CSS (Tailwind compiled at build time or plain CSS).
+  All templates, CSS, JS, and the font files embedded via `embed.FS`.
 - **`log/slog`** for structured logging (JSON in production).
 - **argon2id** for password hashing.
 - Embedded SQL migrations run by a startup migration runner.
@@ -93,32 +103,27 @@ PRAGMA foreign_keys = ON;       -- enforce FKs (off by default in SQLite)
 PRAGMA synchronous = NORMAL;    -- safe and fast under WAL
 ```
 
-`auto_vacuum` must be set **on the brand-new empty database, before any schema is
-created** (it cannot be changed later without a full `VACUUM`):
+`auto_vacuum` must be set **on the brand-new empty database, before any schema is created** (it cannot be changed later without a full `VACUUM`):
 
 ```sql
 PRAGMA auto_vacuum = INCREMENTAL;
 ```
 
-Reclaim freed pages (e.g. after photo deletes) periodically with
-`PRAGMA incremental_vacuum;`.
+Reclaim freed pages (e.g. after photo deletes) periodically with `PRAGMA incremental_vacuum;`.
 
 ### Writer discipline
 
-SQLite is single-writer. Serialize writes (a single write connection or a write
-mutex) and rely on WAL + `busy_timeout` to avoid `database is locked`. Write
-volume for a contacts app is low, so this is sufficient; it does, however, mean
-the app is single-node and does not scale horizontally. If the product ever
-pivots to true multi-tenant SaaS at scale, that is the point to reconsider
-PostgreSQL.
+SQLite is single-writer.
+Serialize writes (a single write connection or a write mutex) and rely on WAL + `busy_timeout` to avoid `database is locked`.
+Write volume for a contacts app is low, so this is sufficient; it does, however, mean the app is single-node and does not scale horizontally.
+If the product ever pivots to true multi-tenant SaaS at scale, that is the point to reconsider PostgreSQL.
 
 ---
 
 ## 4. Database schema
 
-Consolidated initial schema (`internal/db/migrations/0001_init.sql`). Integer
-`id` columns are internal and never exposed; `public_id` columns are what appear
-in URLs and API responses.
+Consolidated initial schema (`internal/db/migrations/0001_init.sql`).
+Integer `id` columns are internal and never exposed; `public_id` columns are what appear in URLs and API responses.
 
 ```sql
 CREATE TABLE users (
@@ -211,12 +216,9 @@ CREATE INDEX idx_sessions_user ON sessions(user_id);
 
 ### Contact storage model (hybrid)
 
-Each contact keeps **structured columns** (name, org, primary email/phone) for
-fast listing and search, **and** a canonical **`vcard_raw`** blob holding the
-full record (multiple emails/phones/addresses, vendor `X-` fields, etc.). Edits
-update the structured columns and regenerate `vcard_raw` + `etag`. `uid`, `etag`,
-and `updated_at` exist from day one specifically so CardDAV can be added later
-without a migration.
+Each contact keeps **structured columns** (name, org, primary email/phone) for fast listing and search, **and** a canonical **`vcard_raw`** blob holding the full record (multiple emails/phones/addresses, vendor `X-` fields, etc.).
+Edits update the structured columns and regenerate `vcard_raw` + `etag`.
+`uid`, `etag`, and `updated_at` exist from day one specifically so CardDAV can be added later without a migration.
 
 ---
 
@@ -231,9 +233,7 @@ without a migration.
   - `viewer` — read + download/export for that book.
   - `manager` — full CRUD on the book, plus manage its share links and its members.
 
-This expresses the required scenario directly: a "manager" is a user holding
-`manager` grants on their books (e.g. ~10), while a limited user holds `viewer`
-grants on only the books they may see (e.g. 2) and sees nothing else.
+This expresses the required scenario directly: a "manager" is a user holding `manager` grants on their books (e.g. ~10), while a limited user holds `viewer` grants on only the books they may see (e.g. 2) and sees nothing else.
 
 ### Enforcement
 
@@ -248,17 +248,19 @@ can(user, book, action):
     if action == write: return grant == manager
 ```
 
-Contacts, photos, and exports inherit their book's permission — never check them
-in isolation. Authorization is enforced **server-side on every route**, including
-photo and export endpoints (a photo is PII). UI gating is not a substitute.
+Contacts, photos, and exports inherit their book's permission — never check them in isolation.
+Authorization is enforced **server-side on every route**, including photo and export endpoints (a photo is PII).
+UI gating is not a substitute.
 
 ---
 
 ## 6. Identifiers & PII protection
 
-- **Two-tier IDs:** internal integer `id` (never exposed) + random `public_id` (≥128-bit, base64url) used in all URLs, responses, templates, and error messages. Do not expose sequential IDs; do not use ULIDs externally (their ordering leaks counts/sequence).
+- **Two-tier IDs:** internal integer `id` (never exposed) + random `public_id` (≥128-bit, base64url) used in all URLs, responses, templates, and error messages.
+  Do not expose sequential IDs; do not use ULIDs externally (their ordering leaks counts/sequence).
 - **No IDOR:** every external reference resolves `public_id → id` and runs `can(...)` before returning anything.
-- **404, not 403, for resources the user may not know exist.** Returning 403 confirms existence. Use 403 only for an action denied *within* a book the user can already see.
+- **404, not 403, for resources the user may not know exist.** Returning 403 confirms existence.
+  Use 403 only for an action denied *within* a book the user can already see.
 - **Keep PII out of URLs** (reference by `public_id`, never name/email) so it never lands in proxy logs, history, or `Referer`.
 - **Constant-time comparison** for tokens/secrets; lookups indexed so found-vs-not timing does not leak.
 - **Scrub PII from logs**; never log contact records, emails, or share tokens.
@@ -268,8 +270,7 @@ photo and export endpoints (a photo is PII). UI gating is not a substitute.
 
 ## 7. Sharing & presenting
 
-Capabilities: public read-only links, a polished directory/presentation view, and
-export/download (vCard + CSV).
+Capabilities: public read-only links, a polished directory/presentation view, and export/download (vCard + CSV).
 
 ### Three share modes
 
@@ -285,18 +286,17 @@ Creation rules (enforced):
 - All modes support `expires_at`, `max_uses`, and `revoked`.
 
 Verification flow:
-1. Look up by `token` (indexed; constant-time on the secret). Reject if revoked/expired/uses-exhausted.
+1. Look up by `token` (indexed; constant-time on the secret).
+   Reject if revoked/expired/uses-exhausted.
 2. `authenticated` → require a valid session (and matching grant if configured).
 3. `public_long` → serve anonymously.
-4. `gated_short` → show a gate; verify PIN/OTP (argon2id, constant-time); on success set a short-lived signed cookie scoped to that share. Throttle failed attempts via `failed_count` (proxy rate limiting is too coarse to stop slow per-link guessing).
+4. `gated_short` → show a gate; verify PIN/OTP (argon2id, constant-time); on success set a short-lived signed cookie scoped to that share.
+   Throttle failed attempts via `failed_count` (proxy rate limiting is too coarse to stop slow per-link guessing).
 
-Presentation view: a single shared template powers both the authenticated browse
-and the public share, with edit controls toggled by permission.
+Presentation view: a single shared template powers both the authenticated browse and the public share, with edit controls toggled by permission.
 
-**Operational caveat:** for `public_long`, the secret token is in the URL path,
-so the reverse proxy's access log will record it. Configure the proxy to omit
-path/query logging for share routes (`/s/*`), keep short log retention, and rely
-on expiry + revocation.
+**Operational caveat:** for `public_long`, the secret token is in the URL path, so the reverse proxy's access log will record it.
+Configure the proxy to omit path/query logging for share routes (`/s/*`), keep short log retention, and rely on expiry + revocation.
 
 ---
 
@@ -310,12 +310,12 @@ on expiry + revocation.
 
 ### Pipeline
 
-A parser per format yields a **normalized contact struct**; one unified writer
-maps that struct to `vcard_raw` + structured columns. Adding a format later means
-writing one parser, not touching the write path.
+A parser per format yields a **normalized contact struct**; one unified writer maps that struct to `vcard_raw` + structured columns.
+Adding a format later means writing one parser, not touching the write path.
 
 - **vCard:** parse all versions (e.g. `emersion/go-vcard`); normalize to a canonical version but preserve `vcard_raw` for fidelity.
-- **CSV:** detect known schemas by header signature; for unknown CSVs, present a column-mapping step. Escape leading `= + - @` on both import and export (CSV injection).
+- **CSV:** detect known schemas by header signature; for unknown CSVs, present a column-mapping step.
+  Escape leading `= + - @` on both import and export (CSV injection).
 - **Encoding:** handle UTF-8 + BOM, Latin-1, quoted-printable (vCard 2.1).
 - **De-duplication/merge:** match on email/phone/source UID; offer skip / overwrite / merge / create-new; preserve source `UID` when present, else generate one.
 - **Robustness:** isolate per-record failures (one bad card never aborts the batch); run a **dry-run** showing new/duplicate/error counts, then commit in a transaction.
@@ -339,11 +339,9 @@ This is what keeps BLOB storage small; never store originals.
 
 ### Format
 
-Store a **single normalized JPEG master**. JPEG serves directly to the browser
-*and* embeds directly into a vCard `PHOTO` on export — no transcoding anywhere,
-which is the most convenient path. (If storage size later becomes a concern, a
-WebP master with JPEG-on-export is the fallback, since some clients reject WebP
-in vCard `PHOTO`.)
+Store a **single normalized JPEG master**.
+JPEG serves directly to the browser *and* embeds directly into a vCard `PHOTO` on export — no transcoding anywhere, which is the most convenient path.
+(If storage size later becomes a concern, a WebP master with JPEG-on-export is the fallback, since some clients reject WebP in vCard `PHOTO`.)
 
 ### Serving & export
 
@@ -354,38 +352,38 @@ in vCard `PHOTO`.)
 
 ### HEIC caveat
 
-iPhone HEIC decoding generally needs libheif via CGO, which conflicts with the
-CGO-free binary. Decide deliberately: either reject HEIC with a clear message, or
-shell out to an optional external converter if present.
+iPhone HEIC decoding generally needs libheif via CGO, which conflicts with the CGO-free binary.
+Decide deliberately: either reject HEIC with a clear message, or shell out to an optional external converter if present.
 
 ---
 
 ## 10. CardDAV (deferred)
 
-Not in the initial scope. The schema is already shaped for it: stable `uid`,
-per-contact `etag`, `updated_at`, and canonical `vcard_raw`. When added, each
-address book becomes a CardDAV collection and the implementation adds the WebDAV
-verbs (`PROPFIND`, `REPORT`, `GET`, `PUT`, `DELETE`) plus a sync-token over the
-existing data. Native clients (Thunderbird, iOS/macOS Contacts, DAVx⁵) then sync
-directly.
+Not in the initial scope.
+The schema is already shaped for it: stable `uid`, per-contact `etag`, `updated_at`, and canonical `vcard_raw`.
+When added, each address book becomes a CardDAV collection and the implementation adds the WebDAV verbs (`PROPFIND`, `REPORT`, `GET`, `PUT`, `DELETE`) plus a sync-token over the existing data.
+Native clients (Thunderbird, iOS/macOS Contacts, DAVx⁵) then sync directly.
 
 ---
 
 ## 11. Configuration & reverse proxy
 
-The app runs behind a reverse proxy that terminates TLS and does coarse rate limiting and HSTS. The app binds internally and is told its external identity through `SKRA_*` environment variables (listed in [`operations.md`](operations.md)).
+The app runs behind a reverse proxy that terminates TLS and does coarse rate limiting and HSTS.
+The app binds internally and is told its external identity through `SKRA_*` environment variables (listed in [`operations.md`](operations.md)).
 
 The security-relevant rules:
 - All generated absolute URLs use `SKRA_EXTERNAL_URL`, never the internal `host:port`.
 - **Drive the `Secure` cookie flag (and cookie domain) from `SKRA_EXTERNAL_URL`/`SKRA_COOKIE_SECURE`, not the internal HTTP connection.** The app sees plain HTTP internally; naive code would set non-`Secure` cookies on an HTTPS site.
 - Honor `X-Forwarded-Proto`/`-Host`/`-For` **only** from `SKRA_TRUSTED_PROXIES`.
-- Division of responsibility — Proxy: TLS, coarse rate limiting, HSTS. App: authorization, CSP, `Referrer-Policy`, per-share throttling, secure-cookie flags, and the `/s/*` log-hygiene guidance.
+- Division of responsibility — Proxy: TLS, coarse rate limiting, HSTS.
+  App: authorization, CSP, `Referrer-Policy`, per-share throttling, secure-cookie flags, and the `/s/*` log-hygiene guidance.
 
 ---
 
 ## 12. Backups & operations
 
-The SQLite file (with its BLOBs) is the entire dataset, so it must never be naively `cp`'d from a live WAL database. The design principle is a consistent snapshot via `VACUUM INTO` (exposed as `skra backup`), an automatic snapshot before migrations, encryption before anything leaves the host, and offsite copies.
+The SQLite file (with its BLOBs) is the entire dataset, so it must never be naively `cp`'d from a live WAL database.
+The design principle is a consistent snapshot via `VACUUM INTO` (exposed as `skra backup`), an automatic snapshot before migrations, encryption before anything leaves the host, and offsite copies.
 
 Running Skrá on a plain Linux host — the config and reverse-proxy setup, the `systemd` unit, log rotation, backups, and monitoring — is covered end to end in [`operations.md`](operations.md).
 

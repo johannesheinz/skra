@@ -141,7 +141,8 @@ It is not automatic — enable it once (see [`docs/github-setup.md`](docs/github
 
 ## Operations
 
-- **Backups.** `skra backup --out <path>` writes a consistent `VACUUM INTO` snapshot while the server is running. On startup, an existing database is snapshotted automatically before any pending migrations are applied.
+- **Backups.** `skra backup --out <path>` writes a consistent `VACUUM INTO` snapshot while the server is running.
+  On startup, an existing database is snapshotted automatically before any pending migrations are applied.
 - **Health.** `GET /healthz` is a liveness check; `GET /readyz` adds a database-readiness check.
 
 Rotation, encryption, offsite copies, `systemd`, and monitoring are covered in [`docs/operations.md`](docs/operations.md).
