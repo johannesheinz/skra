@@ -6,6 +6,34 @@ A self-hosted application for storing, managing, and sharing/presenting contacts
 
 ---
 
+## Guiding spirit
+
+The decisions in this document all serve a small set of principles that still hold:
+
+- **Self-hosted and self-contained.** One static, CGO-free Go binary plus one SQLite file — photos included. Assets are embedded and served locally; no CDNs, no external services, no background daemons. It should be trivial to run and trivial to move.
+- **Single instance, multi-user — not multi-tenant SaaS.** A global admin/user role plus per–address-book grants (viewer/manager). People without accounts get in through share links.
+- **Easy to share, easy to customize.** Books and individual contacts can be shared publicly or behind a PIN gate; each user customizes their own experience (theme, locale, list preferences).
+- **Security first.** argon2id, server-side sessions, CSRF, a self-only Content-Security-Policy, unguessable public IDs, no personal data in URLs or logs, formula-injection-safe CSV.
+- **Easy to operate.** Single-command run, environment-only config with no silent defaults, consistent `VACUUM INTO` backups, liveness/readiness endpoints, a non-root distroless image.
+- **Internationalization and accessibility as first-class concerns.** Locale-aware text, number, date, and address formatting; accessible names, keyboard focus management, and a high-contrast mode — verified by CI.
+- **A best-practices mindset overall.** Modern Go, tests and linters in CI, and supply-chain hygiene (SHA-pinned actions, vulnerability scanning, automated dependency updates).
+
+## Build history
+
+The app was built in roughly this order. It has since grown beyond the original scope; this is the sequence, not a live status report.
+
+1. **Skeleton** — static CGO-free binary; SQLite with the mandated pragmas and an embedded migration runner; chi router with structured logging, graceful shutdown, and a health check; `skra serve`.
+2. **Data & auth** — argon2id password hashing with lazy rehash; server-side sessions; CSRF on the auth forms; the RBAC resolver with 404-not-403 semantics; a contact-photo endpoint with strong ETag and conditional GET; `skra create-admin` bootstrap.
+3. **Contacts** — the self-hosted, embedded asset foundation with a self-only CSP; address-book CRUD with per-book authorization; contact list, detail, and CRUD via the hybrid write path (structured columns plus a regenerated `vcard_raw`); the photo ingest pipeline (orient, strip metadata, downscale, re-encode).
+4. **Presentation & export** — a permission-gated contact directory; vCard export (whole book or single contact, with embedded photos) and CSV export with formula-injection sanitization.
+5. **Public sharing** — share links for a book or contact in three modes, manager-only to create, with an HMAC-signed gate and failure throttling for the short-link mode; public `/s/{token}` serving that reuses the directory presentation.
+6. **User management** — admin account management, per-book membership management for managers, and self-service password change.
+7. **Import** — vCard (.vcf) import with per-card error isolation, a dry-run preview, and a transactional commit with UID/email de-duplication; plus an admin one-step "create a new book and import into it".
+8. **Backups & ops** — `skra backup` writing a consistent `VACUUM INTO` snapshot; an automatic startup snapshot before applying pending migrations; a `/readyz` DB-readiness endpoint.
+9. **Beyond the baseline** — multi-value contact fields that round-trip through `vcard_raw`; per-user theming (light/dark/system); a fully localized interface with locale-aware formatting; an accessibility pass with an automatic and opt-in high-contrast mode and a CI invariant test; responsive and print stylesheets; an upcoming-birthdays dashboard; and a security/hardening pass.
+
+---
+
 ## 1. Overview
 
 **Skrá** (Old Norse / Icelandic for "register, list, record") is a contacts
