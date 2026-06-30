@@ -1,6 +1,6 @@
-# Skrá — Baseline Specification
+# Skrá — Architecture
 
-> **Historical document.** This is the baseline plan written during the initialization phase — it fixed the decisions Skrá was first built against. It is kept for its architecture and rationale, **not** as a live status report: some designs, decisions, and implementations have changed since, and the app has grown well beyond this original scope (theming, i18n, accessibility, and the 1.1.0 hardening pass, among others). For the current shipped state see the [README](../README.md); for conventions and later decisions see [`01_skra-development-principles.md`](01_skra-development-principles.md). The **non-negotiable constraints (§17)** remain the standing invariants and should still hold.
+> **Origin note.** This began as the baseline plan written during the initialization phase — it fixed the decisions Skrá was first built against, and it remains the reference for the data model, security model, and rationale. It is **not** a live status report: some designs and implementations have changed since, and the app has grown beyond the original scope. For what the app does today see [`features.md`](features.md), for running it see [`operations.md`](operations.md), and for coding conventions see [`development.md`](development.md). The non-negotiable constraints at the end remain the standing invariants and should still hold.
 
 A self-hosted application for storing, managing, and sharing/presenting contacts.
 
@@ -373,19 +373,9 @@ directly.
 
 ## 11. Configuration & reverse proxy
 
-The app runs behind a reverse proxy that terminates TLS and does coarse rate
-limiting and HSTS. The app binds internally and is told its external identity.
+The app runs behind a reverse proxy that terminates TLS and does coarse rate limiting and HSTS. The app binds internally and is told its external identity through `SKRA_*` environment variables (listed in [`operations.md`](operations.md)).
 
-| Env var | Example | Purpose |
-|---|---|---|
-| `SKRA_LISTEN` | `127.0.0.1:3000` | Bind to localhost so only the proxy reaches it |
-| `SKRA_EXTERNAL_URL` | `https://contacts.example.com` | Public origin — builds absolute share links, OTP/email links, redirects |
-| `SKRA_TRUSTED_PROXIES` | `127.0.0.1/32,10.0.0.0/8` | Only honor `X-Forwarded-*` from these sources |
-| `SKRA_COOKIE_SECURE` | `true` | Force `Secure` cookies |
-| `SKRA_SESSION_KEY` | (random) | Sign/encrypt session + share-gate cookies |
-| `SKRA_DB_PATH` | `/var/lib/skra/skra.db` | SQLite file location |
-
-Rules:
+The security-relevant rules:
 - All generated absolute URLs use `SKRA_EXTERNAL_URL`, never the internal `host:port`.
 - **Drive the `Secure` cookie flag (and cookie domain) from `SKRA_EXTERNAL_URL`/`SKRA_COOKIE_SECURE`, not the internal HTTP connection.** The app sees plain HTTP internally; naive code would set non-`Secure` cookies on an HTTPS site.
 - Honor `X-Forwarded-Proto`/`-Host`/`-For` **only** from `SKRA_TRUSTED_PROXIES`.
@@ -393,109 +383,15 @@ Rules:
 
 ---
 
-## 12. Backups
+## 12. Backups & operations
 
-The SQLite file (with its BLOBs) is the entire dataset. Never naively `cp` a live
-WAL database.
+The SQLite file (with its BLOBs) is the entire dataset, so it must never be naively `cp`'d from a live WAL database. The design principle is a consistent snapshot via `VACUUM INTO` (exposed as `skra backup`), an automatic snapshot before migrations, encryption before anything leaves the host, and offsite copies.
 
-Baseline (always):
-- **Consistent snapshot via `VACUUM INTO`**, exposed as `skra backup --out <path>` — safe on a live DB, single compacted file.
-- **Auto-snapshot before migrations** run on startup.
-- **GFS rotation** (e.g. hourly→24h, daily→30d, weekly→1y), timestamped.
-- **Encrypt at rest** before leaving the host (PII).
-- **3-2-1 offsite** to S3-compatible storage or another host.
-- **Verify**: periodic `PRAGMA integrity_check` on a backup + real restore tests.
-
-Enhanced (optional, for low RPO / point-in-time): **Litestream** sidecar
-streaming WAL changes to object storage, in addition to periodic snapshots.
+Running Skrá on a plain Linux host — the config and reverse-proxy setup, the `systemd` unit, log rotation, backups, and monitoring — is covered end to end in [`operations.md`](operations.md).
 
 ---
 
-## 13. Operations (plain Linux, no Kubernetes)
-
-### systemd
-
-```ini
-# /etc/systemd/system/skra.service
-[Unit]
-Description=Skra
-After=network.target
-
-[Service]
-Type=simple                 # "notify" if implementing sd_notify/watchdog
-User=skra
-Group=skra
-WorkingDirectory=/opt/skra
-ExecStart=/opt/skra/skra serve
-EnvironmentFile=/etc/skra/skra.env
-Restart=on-failure
-RestartSec=5
-OnFailure=notify-failure@%n.service
-# WatchdogSec=30            # with Type=notify
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
-PrivateTmp=true
-ReadWritePaths=/var/lib/skra /var/log/skra
-
-[Install]
-WantedBy=multi-user.target
-```
-
-> `ProtectSystem=strict` makes the filesystem read-only — the SQLite data dir and
-> log dir **must** appear in `ReadWritePaths` or writes and backups fail.
-
-### Logging & rotation
-
-Use `log/slog` with JSON in production. Log request id, method, **route pattern**
-(e.g. `/s/:token`, never the raw path), status, latency, user id. Never log
-contact PII or share tokens.
-
-Choose one rotation approach:
-
-- **journald (simplest):** log to stdout; configure `/etc/systemd/journald.conf` (`SystemMaxUse=500M`, `MaxRetentionSec=2week`). Read with `journalctl -u skra`.
-- **file + logrotate:**
-
-```
-# /etc/logrotate.d/skra
-/var/log/skra/*.log {
-    daily
-    rotate 14
-    missingok
-    notifempty
-    compress
-    delaycompress
-    create 0640 skra skra
-    sharedscripts
-    postrotate
-        systemctl kill -s HUP skra.service 2>/dev/null || true
-    endscript
-}
-```
-
-> The `postrotate` SIGHUP assumes the app reopens its log on SIGHUP. If it
-> doesn't, use `copytruncate` and drop `postrotate` — but note `copytruncate`
-> has a small line-loss race.
-
-### Monitoring
-
-- Build `/healthz` (liveness) and `/readyz` (readiness — cheap DB check, e.g. `SELECT 1`).
-- External uptime monitor on `/healthz` (Uptime Kuma, UptimeRobot, or healthchecks.io).
-- **Backup dead-man's-switch**: the backup job pings a healthcheck URL on success; silence triggers an alert. This is the highest-value monitor because it catches the failure mode that loses data.
-- Optional Prometheus `/metrics`.
-
-Signals that matter most for this app:
-- **Disk space (#1)** — SQLite + photo BLOBs grow; alert at ~80%.
-- Backup freshness; DB/WAL size trend.
-- 5xx rate and p99 latency.
-- Spikes in failed logins and failed share-gate attempts (brute-force signal).
-- CPU/memory (image transcoding spikes).
-
-Alerting can be as light as **monit**, cron + mail, or healthchecks.io built-ins.
-
----
-
-## 14. CLI
+## 13. CLI
 
 - `skra serve` — run the HTTP server.
 - `skra backup --out <path>` — consistent `VACUUM INTO` snapshot.
@@ -504,7 +400,7 @@ Alerting can be as light as **monit**, cron + mail, or healthchecks.io built-ins
 
 ---
 
-## 15. Branding & assets
+## 14. Branding & assets
 
 - Display name **Skrá**; ASCII `skra` for binary, repo, module path, config keys, URLs.
 - UI/wordmark font: **Space Grotesk** (Medium / 500) — self-host the WOFF2 files (served by the binary) for UI text.
@@ -517,7 +413,7 @@ Alerting can be as light as **monit**, cron + mail, or healthchecks.io built-ins
 
 ---
 
-## 16. Suggested project layout
+## 15. Suggested project layout
 
 ```
 skra/
@@ -543,7 +439,7 @@ skra/
 
 ---
 
-## 17. Non-negotiable constraints (do not regress)
+## 16. Non-negotiable constraints (do not regress)
 
 1. CGO-free build (`modernc.org/sqlite`) — keep the single static binary.
 2. SQLite is the only datastore; photos stay as BLOBs (single source of truth).

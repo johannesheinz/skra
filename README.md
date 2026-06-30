@@ -126,7 +126,7 @@ skra/
 
 ### Vendored assets and dependency updates
 
-Frontend assets are self-hosted and embedded — no CDNs, no third-party origins (see [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md)).
+Frontend assets are self-hosted and embedded — no CDNs, no third-party origins (see [`docs/development.md`](docs/development.md)).
 They live under `internal/web/static/` (and `internal/web/icons/` for the icon set); there is no `package.json`.
 The binary files are refreshed by hand, but the recorded versions are watched automatically: [`renovate.json`](renovate.json) opens a PR bumping the version string when a new upstream release appears, and each PR names the exact path to update.
 
@@ -137,21 +137,23 @@ The binary files are refreshed by hand, but the recorded versions are watched au
 | Lucide icons | 1.22.0 | https://github.com/lucide-icons/lucide (subset, inlined) |
 
 Renovate also watches Go modules, the SHA-pinned GitHub Actions, and the Dockerfile builder image.
-It is not automatic — enable it once (see [`docs/03_skra-github-setup.md`](docs/03_skra-github-setup.md)).
+It is not automatic — enable it once (see [`docs/github-setup.md`](docs/github-setup.md)).
 
 ## Operations
 
 - **Backups.** `skra backup --out <path>` writes a consistent `VACUUM INTO` snapshot while the server is running. On startup, an existing database is snapshotted automatically before any pending migrations are applied.
 - **Health.** `GET /healthz` is a liveness check; `GET /readyz` adds a database-readiness check.
 
-Rotation, encryption, offsite copies, `systemd`, and monitoring are covered in [`docs/02_skra-operations.md`](docs/02_skra-operations.md).
+Rotation, encryption, offsite copies, `systemd`, and monitoring are covered in [`docs/operations.md`](docs/operations.md).
 
 ## Documentation
 
-- [`docs/00_skra-baseline-spec.md`](docs/00_skra-baseline-spec.md) — the original architecture, rationale, and guiding spirit (historical).
-- [`docs/01_skra-development-principles.md`](docs/01_skra-development-principles.md) — conventions, decisions, and the i18n/accessibility/release notes.
-- [`docs/02_skra-operations.md`](docs/02_skra-operations.md) — running Skrá in production.
-- [`docs/03_skra-github-setup.md`](docs/03_skra-github-setup.md) — one-time GitHub setup (Renovate, CI, releases).
+- [`docs/features.md`](docs/features.md) — user guide: what the app does and how to use it.
+- [`docs/architecture.md`](docs/architecture.md) — data model, security model, and design rationale.
+- [`docs/development.md`](docs/development.md) — coding conventions, the i18n pipeline, accessibility, and the release process.
+- [`docs/operations.md`](docs/operations.md) — running Skrá in production.
+- [`docs/github-setup.md`](docs/github-setup.md) — one-time GitHub setup (Renovate, CI, releases).
+- [`docs/ideas.md`](docs/ideas.md) — backlog of not-yet-built changes.
 
 ## License
 

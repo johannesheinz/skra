@@ -1,6 +1,6 @@
 # Skrá — Development Principles
 
-Shared conventions for working on Skrá. These complement the architecture rules in [`00_skra-baseline-spec.md`](00_skra-baseline-spec.md) (§17 non-negotiables) — read that for the data/security architecture; this file is about how we write and structure the code, assets, and docs.
+Shared conventions for working on Skrá. These complement the architecture rules in [`architecture.md`](architecture.md) (see its non-negotiable constraints) — read that for the data and security architecture; this file is about how we write and structure the code, assets, and docs.
 
 ## Code
 
@@ -110,11 +110,12 @@ Skrá follows semantic versioning. The version lives in one place — `const Ver
 - `docker` builds and pushes the image to GHCR, tagged `X.Y.Z`, `X.Y`, `latest`, and `sha-…`.
 - `release` cross-compiles static CGO-free binaries (linux/darwin × amd64/arm64), writes `SHA256SUMS`, and publishes a GitHub Release whose notes lead with the matching `docker pull` command.
 
-Preconditions: the tag must match `v*`, the `test` and `docker` jobs must pass, and the workflow must exist **at the tagged commit** (tagging an older commit won't run the current release job). First-time repository setup (Actions permissions, image visibility, Renovate) is in [`03_skra-github-setup.md`](03_skra-github-setup.md).
+Preconditions: the tag must match `v*`, the `test` and `docker` jobs must pass, and the workflow must exist **at the tagged commit** (tagging an older commit won't run the current release job). First-time repository setup (Actions permissions, image visibility, Renovate) is in [`github-setup.md`](github-setup.md).
 
 **Supply chain.** Every action in the workflow is pinned to a full commit SHA with a `# vN` comment; Renovate's `github-actions` manager keeps those SHAs current. Do not reintroduce mutable `@vN` action refs.
 
 ## Documentation & commit messages
 
-- **Do not hard-wrap prose at a fixed column.** In Markdown, config-file comments, code comments, and commit message bodies, break lines only where it is semantically meaningful (paragraphs, list items, distinct clauses). `gofmt` does not reflow comments, so Go comments are single long lines too.
-- Keep docs and the README in step with the code as phases land.
+- **Break lines at meaning, not at a fixed column.** In Markdown, config-file comments, code comments, and commit message bodies, break where it is semantically meaningful — sentence end, distinct clause, list item — not to hit a width. Avoid the opposite extreme too: a very long line (roughly >250 characters) is hard to read, so a multi-sentence comment usually reads best with a break at each sentence. `gofmt` does not reflow comments, so this is on us for Go.
+- **Don't reference moment-in-time planning artifacts** (development phases, roadmap or spec section numbers) in code comments or long-lived docs — they get renumbered or deleted. Describe the thing itself, or link a durable doc by name.
+- Keep the docs and README in step with the code as it changes.

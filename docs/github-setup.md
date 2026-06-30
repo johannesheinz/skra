@@ -28,7 +28,7 @@ git tag -a v1.1.1 -m "Skrá 1.1.1" && git push origin v1.1.1
 # (or move v1.1.0: git tag -d v1.1.0 && git tag -a v1.1.0 -m "…" && git push -f origin v1.1.0)
 ```
 
-Pushing the tag builds + pushes the image and creates a published GitHub Release with the cross-compiled binaries, `SHA256SUMS`, and a link to the image. See [Releases](01_skra-development-principles.md#releases).
+Pushing the tag builds + pushes the image and creates a published GitHub Release with the cross-compiled binaries, `SHA256SUMS`, and a link to the image. See [Releases](development.md#releases).
 
 ## 4. Make the container image public (optional)
 
@@ -43,7 +43,7 @@ Leave it private if pulls should require `docker login ghcr.io`.
 Renovate only runs once enabled — `renovate.json` alone does nothing:
 
 - Install the **Renovate GitHub App** (github.com/apps/renovate) on the repo, **or** add a self-hosted `renovatebot/github-action` workflow. Merge the onboarding PR it opens.
-- It then keeps Go modules, GitHub Actions SHAs, the Dockerfile builder image, and the vendored asset versions up to date (see the [Dependency & asset updates](../README.md#dependency--asset-updates-renovate) section of the README).
+- It then keeps Go modules, GitHub Actions SHAs, the Dockerfile builder image, and the vendored asset versions up to date (see [Vendored assets and dependency updates](../README.md#vendored-assets-and-dependency-updates) in the README).
 
 ## 6. Recommended hardening (optional)
 
