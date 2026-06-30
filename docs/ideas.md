@@ -195,7 +195,7 @@ tests for the privileged/public paths, full server timeouts + body cap, bounded 
 These lower-severity items were deferred and are worth scheduling:
 
 - **Login rate limiting / lockout** — `/login` has no throttle, so online brute force is possible and every attempt runs the expensive argon2 hash (a CPU-DoS lever).
-  Add per-IP + per-username throttling and temporary lockout (`internal/web/handlers/auth.go`).
+  Add per-username throttling and temporary lockout (`internal/web/handlers/auth.go`); per-IP throttling additionally needs the app to trust a proxy-supplied client IP (`X-Forwarded-For` from configured trusted proxies), which it does not do today.
 - **Bootstrap-admin password strength** — `skra create-admin` accepts any length while every in-app path enforces ≥8 characters; apply the same minimum (`main.go`, `createAdmin`).
 - **Defined-type enums (anemic models)** — roles, access levels, and share modes are bare strings validated procedurally, so an invalid value like `User{Role:"root"}` is representable.
   Consider named types with validating constructors.
@@ -208,3 +208,26 @@ These lower-severity items were deferred and are worth scheduling:
 - **Index on `share_links(scope, target_id)`** — the shares-management lookup full-scans the table; negligible today, cheap to add when it grows.
 - **Operational observability** — no container `HEALTHCHECK`, no `/metrics`, a fixed log level, and no access log (`/healthz` + `/readyz` already exist).
   Add as operational maturity grows.
+
+---
+
+## 7. Trusted reverse proxy (forwarded client IP)
+
+The app runs behind a TLS-terminating reverse proxy but does not currently consume `X-Forwarded-*` headers: it takes its external identity only from `SKRA_EXTERNAL_URL` / `SKRA_COOKIE_SECURE` and never trusts forwarded client data.
+That is safe, but it means the real client IP is not available to the app — a prerequisite for per-IP features such as login rate limiting (item 6).
+
+Shape:
+
+- Add a `SKRA_TRUSTED_PROXIES` config value (a list of CIDRs) and honor `X-Forwarded-Proto` / `-Host` / `-For` **only** when the immediate peer is in that list; ignore the headers otherwise so a direct client cannot spoof them.
+- Resolve the client IP from the rightmost untrusted hop in `X-Forwarded-For`, and expose it to handlers (login throttle) and the access log.
+- Keep absolute URLs and the `Secure` cookie flag deriving from `SKRA_EXTERNAL_URL` / `SKRA_COOKIE_SECURE`; forwarded headers inform request-scoped data (client IP, scheme), not the app's configured identity.
+
+When implemented, move the operator-facing documentation back to where it was drafted:
+
+- **`operations.md`** — restore the config-table row and the rule:
+  - `| SKRA_TRUSTED_PROXIES | 127.0.0.1/32,10.0.0.0/8 | Only honor X-Forwarded-* from these sources |`
+  - Honor `X-Forwarded-Proto` / `-Host` / `-For` only from `SKRA_TRUSTED_PROXIES`.
+- **`architecture.md`** (Configuration & reverse proxy) — restore the rule:
+  - Honor `X-Forwarded-Proto` / `-Host` / `-For` **only** from `SKRA_TRUSTED_PROXIES`.
+
+Effort/risk: low–medium — config parsing plus a small trusted-peer middleware; pairs naturally with the login rate-limiting item.

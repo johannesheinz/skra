@@ -15,12 +15,10 @@ All configuration comes from `SKRA_*` environment variables; there are no defaul
 | `SKRA_COOKIE_SECURE` | `true` | Force the `Secure` cookie flag |
 | `SKRA_SESSION_KEY` | (random, ≥32 chars) | Signs session and share-gate cookies; keep stable and secret |
 | `SKRA_DB_PATH` | `/var/lib/skra/skra.db` | SQLite file location |
-| `SKRA_TRUSTED_PROXIES` | `127.0.0.1/32,10.0.0.0/8` | Only honor `X-Forwarded-*` from these sources |
 
 Rules that matter:
 
 - Absolute URLs and the `Secure` cookie flag derive from `SKRA_EXTERNAL_URL` / `SKRA_COOKIE_SECURE`, **not** the internal HTTP connection — the app sees plain HTTP behind the proxy, so naive code would set non-`Secure` cookies on an HTTPS site.
-- Honor `X-Forwarded-Proto` / `-Host` / `-For` only from `SKRA_TRUSTED_PROXIES`.
 - Division of responsibility — Proxy: TLS, coarse rate limiting, HSTS.
   App: authorization, CSP, `Referrer-Policy`, per-share throttling, secure-cookie flags.
 - For a public share link the secret token is in the URL path, so the proxy's access log records it.

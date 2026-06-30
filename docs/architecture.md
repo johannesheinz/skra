@@ -374,7 +374,6 @@ The app binds internally and is told its external identity through `SKRA_*` envi
 The security-relevant rules:
 - All generated absolute URLs use `SKRA_EXTERNAL_URL`, never the internal `host:port`.
 - **Drive the `Secure` cookie flag (and cookie domain) from `SKRA_EXTERNAL_URL`/`SKRA_COOKIE_SECURE`, not the internal HTTP connection.** The app sees plain HTTP internally; naive code would set non-`Secure` cookies on an HTTPS site.
-- Honor `X-Forwarded-Proto`/`-Host`/`-For` **only** from `SKRA_TRUSTED_PROXIES`.
 - Division of responsibility — Proxy: TLS, coarse rate limiting, HSTS.
   App: authorization, CSP, `Referrer-Policy`, per-share throttling, secure-cookie flags, and the `/s/*` log-hygiene guidance.
 
