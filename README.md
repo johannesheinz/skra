@@ -1,4 +1,6 @@
-# Skrá
+<p align="center">
+  <img src="docs/assets/skra-logo.svg" alt="Skrá" width="300">
+</p>
 
 **Skrá** (Old Norse / Icelandic for "register, list, record") is a self-hosted app for storing, managing, and sharing contacts.
 Run it on your own server and keep your address book — and your contacts' personal data — off third-party services.
