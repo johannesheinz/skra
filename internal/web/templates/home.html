@@ -24,8 +24,8 @@
 {{if .Books}}
 <ul class="card-grid">
   {{range .Books}}
-  <li class="contact-card">
-    <a class="contact-card-head" href="/books/{{.PublicID}}"><span class="book-dot book-hue-{{bookHue .PublicID}}" aria-hidden="true"></span> <span class="contact-card-name">{{.Name}}</span></a>
+  <li class="contact-card book-card book-spine book-hue-{{bookHue .PublicID}}">
+    <a class="contact-card-head" href="/books/{{.PublicID}}"><span class="book-dot" aria-hidden="true"></span> <span class="contact-card-name">{{.Name}}</span></a>
     <span class="muted">{{tn "contacts.count" .ContactCount}}</span>
   </li>
   {{end}}
@@ -38,7 +38,7 @@
 <h2 class="dash-heading">{{t "home.upcoming_birthdays"}}</h2>
 <div class="bday-row">
   {{range .Birthdays}}
-  <a class="bday-card" href="/contacts/{{.PublicID}}">
+  <a class="bday-card book-spine book-hue-{{bookHue .BookPublicID}}" href="/contacts/{{.PublicID}}">
     <span class="bday-count">
       {{if eq .DaysUntil 0}}<span class="bday-count-word">{{t "home.today"}}</span>
       {{else if eq .DaysUntil 1}}<span class="bday-count-word">{{t "home.tomorrow"}}</span>
@@ -50,7 +50,7 @@
     <span class="avatar avatar-md avatar-placeholder" aria-hidden="true">{{initial .FullName}}</span>
     {{end}}
     <span class="bday-name">{{.FullName}}</span>
-    <span class="bday-book"><span class="book-dot book-hue-{{bookHue .BookPublicID}}" aria-hidden="true"></span> {{.BookName}}</span>
+    <span class="bday-book"><span class="book-dot" aria-hidden="true"></span> {{.BookName}}</span>
     <span class="bday-date">{{icon "cake"}} {{monthday .Month .Day}}{{if .HasAge}} · {{tf "home.turns" .Age}}{{end}}</span>
   </a>
   {{end}}
@@ -61,7 +61,7 @@
 <h2 class="dash-heading">{{t "home.recently_added"}}</h2>
 <div class="recent-strip">
   {{range .Recent}}
-  <a class="recent-pill" href="/contacts/{{.PublicID}}">
+  <a class="recent-pill book-spine book-hue-{{bookHue .BookPublicID}}" href="/contacts/{{.PublicID}}">
     {{if .HasPhoto}}
     <img class="avatar avatar-sm" src="/contacts/{{.PublicID}}/photo" alt="" width="52" height="52">
     {{else}}
@@ -69,7 +69,7 @@
     {{end}}
     <span class="recent-pill-text">
       <span class="recent-pill-name">{{.FullName}}</span>
-      <span class="recent-pill-book"><span class="book-dot book-hue-{{bookHue .BookPublicID}}" aria-hidden="true"></span> {{.BookName}}</span>
+      <span class="recent-pill-book"><span class="book-dot" aria-hidden="true"></span> {{.BookName}}</span>
     </span>
   </a>
   {{end}}

@@ -696,6 +696,17 @@ td form { margin: 0; }
 .recent-pill-name { font-weight: 700; overflow-wrap: anywhere; }
 .recent-pill-book { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 
+/* Book-hue spine: a card standing for a single book wears that book's colour on
+   its leading edge. Defined after every card's :hover rule so it keeps the book
+   colour on hover, where the base card recolours only its other edges to the
+   accent. Shared by the dashboard book-legend cards and the cross-book contact
+   cards (search results, upcoming birthdays, recently added); the legend cards
+   also enlarge the dot. On the fully-rounded recent pills the leading edge is
+   drawn as a thicker coloured cap. */
+.book-spine { border-left: 4px solid var(--book-color); }
+.book-spine:hover { border-left-color: var(--book-color); }
+.book-card .book-dot { width: 0.85em; height: 0.85em; }
+
 /* ---- Account settings ---- */
 .notice { color: var(--accent-strong); font-weight: 700; }
 section.card + section.card { margin-top: var(--space-5); }

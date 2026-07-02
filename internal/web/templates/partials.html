@@ -1,7 +1,7 @@
 {{define "contact_cards"}}
 <ul class="card-grid">
   {{range .}}
-  <li class="contact-card">
+  <li class="contact-card{{if .BookName}} book-spine book-hue-{{bookHue .BookPublicID}}{{end}}">
     <a class="contact-card-head" href="{{.URL}}">
       {{if .HasPhoto}}
       <img class="avatar avatar-sm" src="{{.PhotoURL}}" alt="" width="56" height="56">
@@ -12,7 +12,7 @@
     </a>
     {{if .Org}}<span class="muted">{{.Org}}</span>{{end}}
     {{if .Email}}<a class="muted" href="mailto:{{.Email}}">{{.Email}}</a>{{end}}
-    {{if .BookName}}<a class="card-book" href="{{.BookURL}}"><span class="book-dot book-hue-{{bookHue .BookPublicID}}" aria-hidden="true"></span> {{.BookName}}</a>{{end}}
+    {{if .BookName}}<a class="card-book" href="{{.BookURL}}"><span class="book-dot" aria-hidden="true"></span> {{.BookName}}</a>{{end}}
   </li>
   {{end}}
 </ul>
