@@ -90,6 +90,12 @@ func (h *Handlers) renderShares(w http.ResponseWriter, r *http.Request, status i
 	now := time.Now()
 	views := make([]shareView, 0, len(links))
 	for _, l := range links {
+		// A revoked link stays in the list for the audit trail but carries no
+		// revoke action; without a RevokeURL the template renders no button.
+		revokeURL := ""
+		if !l.Revoked {
+			revokeURL = sharesURL + "/" + strconv.FormatInt(l.ID, 10) + "/revoke"
+		}
 		views = append(views, shareView{
 			ID:        l.ID,
 			Mode:      l.Mode,
@@ -97,7 +103,7 @@ func (h *Handlers) renderShares(w http.ResponseWriter, r *http.Request, status i
 			Status:    shareStatus(l, now),
 			UseCount:  l.UseCount,
 			MaxUses:   l.MaxUses,
-			RevokeURL: sharesURL + "/" + strconv.FormatInt(l.ID, 10) + "/revoke",
+			RevokeURL: revokeURL,
 		})
 	}
 	h.render(w, r, status, "shares.html", map[string]any{
@@ -154,9 +160,11 @@ func (h *Handlers) revokeShare(w http.ResponseWriter, r *http.Request, backURL, 
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+	// Match only a live link: an already-revoked id is treated as not found, so a
+	// hand-crafted repeat POST cannot re-revoke it (and reveals nothing).
 	owned := false
 	for _, l := range links {
-		if l.ID == id {
+		if l.ID == id && !l.Revoked {
 			owned = true
 			break
 		}

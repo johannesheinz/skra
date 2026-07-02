@@ -21,7 +21,7 @@
   <label>{{t "shares.expires"}}
     <input type="date" name="expires">
   </label>
-  <button type="submit">{{t "shares.create_link"}}</button>
+  <button class="btn" type="submit">{{t "shares.create_link"}}</button>
 </form>
 
 <h2>{{t "shares.existing"}}</h2>
@@ -33,13 +33,15 @@
   <tr>
     <td>{{.Mode}}</td>
     <td><code>{{.URL}}</code></td>
-    <td>{{.Status}}</td>
+    <td>{{t (printf "status.%s" .Status)}}</td>
     <td>{{.UseCount}}{{if .MaxUses}} / {{.MaxUses}}{{end}}</td>
     <td>
-      <form method="post" action="{{.RevokeURL}}">
+      {{if .RevokeURL}}
+      <form method="post" action="{{.RevokeURL}}" data-confirm="{{t "confirm.revoke"}}">
         <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
-        <button class="btn-secondary" type="submit">{{t "common.revoke"}}</button>
+        <button class="btn btn-ghost btn-danger btn-sm" type="submit">{{t "common.revoke"}}</button>
       </form>
+      {{end}}
     </td>
   </tr>
   {{end}}

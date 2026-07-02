@@ -288,5 +288,10 @@
   "confirm.delete_contact": "Diesen Kontakt löschen? Dies kann nicht rückgängig gemacht werden.",
   "confirm.delete_book": "Dieses Adressbuch und alle enthaltenen Kontakte löschen? Dies kann nicht rückgängig gemacht werden.",
   "confirm.delete_user": "Diesen Benutzer löschen? Dies kann nicht rückgängig gemacht werden.",
-  "confirm.revoke": "Diesen Zugriff widerrufen?"
+  "confirm.revoke": "Diesen Zugriff widerrufen?",
+  "status.active": "aktiv",
+  "status.revoked": "entzogen",
+  "status.locked": "gesperrt",
+  "status.exhausted": "aufgebraucht",
+  "status.expired": "abgelaufen"
 }

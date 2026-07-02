@@ -288,5 +288,10 @@
   "confirm.delete_contact": "Delete this contact? This can't be undone.",
   "confirm.delete_book": "Delete this address book and every contact in it? This can't be undone.",
   "confirm.delete_user": "Delete this user? This can't be undone.",
-  "confirm.revoke": "Revoke this access?"
+  "confirm.revoke": "Revoke this access?",
+  "status.active": "active",
+  "status.revoked": "revoked",
+  "status.locked": "locked",
+  "status.exhausted": "exhausted",
+  "status.expired": "expired"
 }
