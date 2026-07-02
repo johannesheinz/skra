@@ -68,9 +68,16 @@ func (h *Handlers) shareContact(w http.ResponseWriter, r *http.Request, link mod
 		h.shareTargetError(w, r, err)
 		return
 	}
+	_, details, err := models.GetContactDetails(r.Context(), h.DB, contact.PublicID)
+	if err != nil {
+		h.Logger.Error("load shared contact details failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 	base := "/s/" + link.Token
 	h.render(w, r, http.StatusOK, "share_contact.html", map[string]any{
 		"Contact":     contact,
+		"Details":     details,
 		"PhotoURL":    base + "/photo",
 		"DownloadURL": base + "/export.vcf",
 	})
@@ -82,9 +89,16 @@ func (h *Handlers) ShareContactInBook(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	_, details, err := models.GetContactDetails(r.Context(), h.DB, contact.PublicID)
+	if err != nil {
+		h.Logger.Error("load shared contact details failed", "err", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 	base := "/s/" + link.Token + "/c/" + contact.PublicID
 	h.render(w, r, http.StatusOK, "share_contact.html", map[string]any{
 		"Contact":  contact,
+		"Details":  details,
 		"PhotoURL": base + "/photo",
 		// Per-contact download is omitted in a book share; the directory offers a whole-book export.
 	})

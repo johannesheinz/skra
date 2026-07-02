@@ -35,34 +35,7 @@
   </div>
 </div>
 
-<dl class="details">
-  {{range .Details.Emails}}
-  <dt>{{t "contact.email"}}{{if .Type}} ({{typelabel .Type}}){{end}}</dt><dd><a href="mailto:{{.Value}}">{{.Value}}</a></dd>
-  {{end}}
-  {{range .Details.Phones}}
-  <dt>{{t "contact.phone"}}{{if .Type}} ({{typelabel .Type}}){{end}}</dt><dd><a href="tel:{{.Value}}">{{.Value}}</a></dd>
-  {{end}}
-  {{range .Details.Addresses}}
-  <dt>{{t "contact.address"}}{{if .Type}} ({{typelabel .Type}}){{end}}</dt>
-  <dd>
-    {{with .Street}}{{.}}<br>{{end}}{{if postalBeforeCity}}{{.PostalCode}} {{.City}}{{else}}{{.City}} {{.PostalCode}}{{end}}{{with .Country}}<br>{{.}}{{end}}
-    {{$q := .SingleLine}}
-    {{if $q}}
-    <span class="map-links">
-      {{icon "map-pin"}}
-      <a href="https://www.openstreetmap.org/search?query={{$q}}" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
-      <a href="https://www.google.com/maps/search/?api=1&query={{$q}}" target="_blank" rel="noopener noreferrer">Google Maps</a>
-      <a href="https://www.google.com/maps/dir/?api=1&destination={{$q}}" target="_blank" rel="noopener noreferrer">{{t "contact.map_directions"}}</a>
-    </span>
-    {{end}}
-  </dd>
-  {{end}}
-  {{range .Details.URLs}}
-  <dt>{{t "contact.link"}}</dt><dd><a href="{{.}}" rel="noopener noreferrer">{{.}}</a></dd>
-  {{end}}
-  {{with .Details.Birthday}}<dt>{{t "contact.birthday"}}</dt><dd>{{birthday .}}</dd>{{end}}
-  {{with .Details.Note}}<dt>{{t "contact.note"}}</dt><dd>{{.}}</dd>{{end}}
-</dl>
+{{template "contact_record" .Details}}
 
 <p><a class="backlink" href="/contacts/{{.Contact.PublicID}}/export.vcf">{{icon "download"}} {{t "contact.download_vcard"}}</a></p>
 

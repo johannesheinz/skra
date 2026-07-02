@@ -1,16 +1,20 @@
 {{define "title"}}{{.Contact.FullName}} · Skrá{{end}}
 {{define "content"}}
-<h1>{{.Contact.FullName}}</h1>
+<div class="contact-header">
+  {{if .Contact.HasPhoto}}
+  <img class="avatar avatar-lg" src="{{.PhotoURL}}" alt="" width="128" height="128">
+  {{else}}
+  <span class="avatar avatar-lg avatar-placeholder" aria-hidden="true">{{initial .Contact.FullName}}</span>
+  {{end}}
+  <div class="contact-headings">
+    <h1>{{.Contact.FullName}}</h1>
+    {{if or .Details.Title .Details.Org}}
+    <p class="muted">{{.Details.Title}}{{if and .Details.Title .Details.Org}} · {{end}}{{.Details.Org}}</p>
+    {{end}}
+  </div>
+</div>
 
-{{if .Contact.HasPhoto}}
-<img class="avatar" src="{{.PhotoURL}}" alt="" width="160" height="160">
-{{end}}
+{{template "contact_record" .Details}}
 
-<dl class="details">
-  {{if .Contact.Org}}<dt>{{t "contact.organization"}}</dt><dd>{{.Contact.Org}}</dd>{{end}}
-  {{if .Contact.PrimaryEmail}}<dt>{{t "contact.email"}}</dt><dd><a href="mailto:{{.Contact.PrimaryEmail}}">{{.Contact.PrimaryEmail}}</a></dd>{{end}}
-  {{if .Contact.PrimaryPhone}}<dt>{{t "contact.phone"}}</dt><dd><a href="tel:{{.Contact.PrimaryPhone}}">{{.Contact.PrimaryPhone}}</a></dd>{{end}}
-</dl>
-
-{{if .DownloadURL}}<p><a href="{{.DownloadURL}}">{{t "share.download_vcard"}}</a></p>{{end}}
+{{if .DownloadURL}}<p><a class="backlink" href="{{.DownloadURL}}">{{icon "download"}} {{t "share.download_vcard"}}</a></p>{{end}}
 {{end}}
