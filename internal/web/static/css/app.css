@@ -142,11 +142,9 @@
 :root[data-accent="lavender"] { --accent: #c4b5fd; --accent-strong: #a78bfa; --accent-fg: #241a4a; }
 
 /* ---- Book colour cue ----
-   A small dot beside a book's name, tinting contacts by which book they belong
-   to. The bucket is chosen in Go (bookHue over the book's public_id) and emitted
-   as a book-hue-N class; the colours live here because the self-only CSP forbids
-   inline styles. Twelve evenly spread hues, each with a brighter dark-mode value
-   so the dot stays legible on the dark surface. */
+   A small dot beside a book's name, tinting contacts by which book they belong to.
+   The bucket is chosen in Go (bookHue over the book's public_id) and emitted as a book-hue-N class; the colours live here because the self-only CSP forbids inline styles.
+   Twelve evenly spread hues, each with a brighter dark-mode value so the dot stays legible on the dark surface. */
 .book-dot {
   display: inline-block;
   width: 0.62em;
@@ -289,8 +287,7 @@ p { margin: 0 0 var(--space-3); }
 .brand-mark { height: 1.75rem; width: auto; color: var(--accent); display: block; }
 .brand-word { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.01em; }
 
-/* Theme toggle: a standalone round icon control that carries no `.btn`, so the
-   button tiers above never apply — this is its complete styling. */
+/* Theme toggle: a standalone round icon control that carries no `.btn`, so the button tiers above never apply — this is its complete styling. */
 .theme-toggle-form { margin: 0; }
 .appbar button.theme-toggle {
   display: inline-flex;
@@ -314,15 +311,10 @@ p { margin: 0 0 var(--space-3); }
 .actions form { margin: 0; }
 
 /* ---- Buttons ----
-   Every button carries `.btn`; that class is the styling base (default = the
-   primary accent fill). Variants below are single classes that come later in
-   source, so equal specificity resolves in their favour — no attribute-selector
-   in the base, which is what let a bare `.btn-secondary` lose the specificity
-   race and render as the primary fill. Three tiers: primary (`.btn`) for the one
-   main action, secondary (`.btn-secondary`) for supporting actions with a
-   visible edge, and ghost (`.btn-ghost`) for the quiet, integrated actions that
-   should recede until hovered. `.btn-danger` marks the destructive intent in
-   either the solid (standalone) or ghost (`.btn-ghost.btn-danger`) form. */
+   Every button carries `.btn`; that class is the styling base (default = the primary accent fill).
+   Variants below are single classes that come later in source, so equal specificity resolves in their favour — no attribute-selector in the base, which is what let a bare `.btn-secondary` lose the specificity race and render as the primary fill.
+   Three tiers: primary (`.btn`) for the one main action, secondary (`.btn-secondary`) for supporting actions with a visible edge, and ghost (`.btn-ghost`) for the quiet, integrated actions that should recede until hovered.
+   `.btn-danger` marks the destructive intent in either the solid (standalone) or ghost (`.btn-ghost.btn-danger`) form. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -349,14 +341,12 @@ p { margin: 0 0 var(--space-3); }
   border-color: var(--border-strong);
 }
 .btn-secondary:hover { background: var(--surface-sunken); color: var(--ink); border-color: var(--muted); }
-/* Ghost: no fill or edge at rest, so rows of supporting actions read as quiet
-   text-with-icon; a faint surface and the accent surface only on hover/focus. */
+/* Ghost: no fill or edge at rest, so rows of supporting actions read as quiet text-with-icon; a faint surface and the accent surface only on hover/focus. */
 .btn-ghost { background: transparent; color: var(--muted); border-color: transparent; }
 .btn-ghost:hover { background: var(--surface-sunken); color: var(--accent); border-color: transparent; }
 .btn-danger { background: var(--danger); color: #fff; border-color: transparent; }
 .btn-danger:hover { background: var(--danger); filter: brightness(0.92); color: #fff; }
-/* Ghost-danger: a destructive action that stays out of the way until reached,
-   then declares itself in red rather than shouting in solid fill at rest. */
+/* Ghost-danger: a destructive action that stays out of the way until reached, then declares itself in red rather than shouting in solid fill at rest. */
 .btn-ghost.btn-danger { background: transparent; color: var(--danger); border-color: transparent; filter: none; }
 .btn-ghost.btn-danger:hover { background: color-mix(in srgb, var(--danger) 10%, var(--surface)); color: var(--danger); border-color: var(--danger); }
 
@@ -413,9 +403,7 @@ legend { padding: 0 var(--space-2); }
 }
 .fab-add:hover { background: var(--accent-strong); box-shadow: 0 5px 14px -3px rgba(0, 0, 0, 0.5); }
 .fab-add svg { width: 1.4rem; height: 1.4rem; }
-/* The label rides along only where the FAB stretches into a full-width bar
-   (narrow screens); on desktop the round FAB is icon-only, named via its
-   aria-label/title. */
+/* The label rides along only where the FAB stretches into a full-width bar (narrow screens); on desktop the round FAB is icon-only, named via its aria-label/title. */
 .fab-label { display: none; }
 
 /* Birthday: full date picker or month/day selects, plus the "no year" toggle. */
@@ -503,11 +491,10 @@ legend { padding: 0 var(--space-2); }
 .contact-header { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-5); margin-bottom: var(--space-5); }
 .contact-headings h1 { margin-bottom: var(--space-1); }
 
-/* Photo control: the avatar itself is the edit surface. A camera badge on its
-   lower edge opens the picker; picking a file auto-submits (photo.js), so there
-   is no separate Save step with JS. A trash badge (only when a photo exists)
-   removes it. `.photo-form` uses display:contents so its children position
-   against the avatar, not a form box. */
+/* Photo control: the avatar itself is the edit surface.
+   A camera badge on its lower edge opens the picker; picking a file auto-submits (photo.js), so there is no separate Save step with JS.
+   A trash badge (only when a photo exists) removes it.
+   `.photo-form` uses display:contents so its children position against the avatar, not a form box. */
 .photo-edit { display: flex; justify-content: center; }
 .avatar-control { position: relative; display: inline-flex; }
 .photo-form { display: contents; }
@@ -540,9 +527,8 @@ legend { padding: 0 var(--space-2); }
 }
 .photo-remove:hover { color: var(--danger); border-color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--surface)); }
 .photo-remove svg { width: 1rem; height: 1rem; }
-/* No-JS fallback: the Save button sits below the avatar (JS hides it and
-   auto-submits instead). Absolutely placed so it never grows the control box
-   that the badges are positioned against. */
+/* No-JS fallback: the Save button sits below the avatar (JS hides it and auto-submits instead).
+   Absolutely placed so it never grows the control box that the badges are positioned against. */
 .photo-save { position: absolute; top: calc(100% + var(--space-2)); left: 50%; transform: translateX(-50%); white-space: nowrap; }
 .btn-sm { min-height: 2rem; padding: var(--space-1) var(--space-3); font-size: 0.85rem; }
 /* Icon-only button: square, label carried by aria-label/title. */
@@ -612,8 +598,7 @@ td form { margin: 0; }
   .details dt:not(:first-of-type) { margin-top: var(--space-2); }
   .field-row { flex-direction: column; align-items: stretch; }
   .field-row select, .field-row input { width: 100%; }
-  /* The corner FAB straddling a border is a desktop affordance; on narrow
-     screens it becomes a clear, labelled full-width "Add …" bar in the flow. */
+  /* The corner FAB straddling a border is a desktop affordance; on narrow screens it becomes a clear, labelled full-width "Add …" bar in the flow. */
   .field-group { padding-bottom: 0; }
   .fab-add {
     position: static;
