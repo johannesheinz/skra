@@ -261,8 +261,9 @@ func mod(a, b float64) float64 {
 }
 
 var (
-	firstNames = []string{"Grace", "Alan", "Ada", "Katherine", "Dennis", "Jamie", "Priya", "Tom", "Mei", "Omar", "Sofia", "Liam", "Noor", "Hiro", "Elena", "Kwame", "Ingrid", "Diego", "Yuki", "Fatima"}
-	lastNames  = []string{"Hopper", "Turing", "Lovelace", "Johnson", "Ritchie", "Rivera", "Nair", "Okafor", "Lin", "Haddad", "Costa", "Murphy", "Khan", "Sato", "Petrova", "Mensah", "Larsen", "Reyes", "Tanaka", "Aziz"}
+	// firstNames and lastNames must stay equal length: generateContact pairs them as a Latin square so every combination is unique within one full cycle.
+	firstNames = []string{"Grace", "Alan", "Ada", "Katherine", "Dennis", "Jamie", "Priya", "Tom", "Mei", "Omar", "Sofia", "Liam", "Noor", "Hiro", "Elena", "Kwame", "Ingrid", "Diego", "Yuki", "Fatima", "Amara", "Bjorn", "Chen", "Dmitri", "Esme", "Farah", "Gael", "Hana", "Idris", "Juno", "Kenji", "Lucia", "Mateo", "Nadia", "Oskar", "Petra", "Quinn", "Ravi", "Salma", "Tariq"}
+	lastNames  = []string{"Hopper", "Turing", "Lovelace", "Johnson", "Ritchie", "Rivera", "Nair", "Okafor", "Lin", "Haddad", "Costa", "Murphy", "Khan", "Sato", "Petrova", "Mensah", "Larsen", "Reyes", "Tanaka", "Aziz", "Bello", "Cruz", "Delgado", "Eriksson", "Farooq", "Gupta", "Hansen", "Ibrahim", "Jensen", "Kowalski", "Lindqvist", "Moreno", "Nguyen", "Park", "Quintero", "Rossi", "Silva", "Vasquez", "Wu", "Zhao"}
 	orgs       = []string{"Acme", "Globex", "Initech", "Umbrella", "Hooli", "Soylent", "Stark Industries", "Wayne Enterprises"}
 	titles     = []string{"Engineer", "Designer", "Manager", "Analyst", "Director", "Consultant", "Researcher", "Coordinator"}
 	cities     = []string{"Portland", "Austin", "Denver", "Seattle", "Boston", "Atlanta", "Chicago", "Madison"}
