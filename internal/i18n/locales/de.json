@@ -284,5 +284,9 @@
   "msg.invalid_share_mode": "Wähle einen gültigen Freigabemodus.",
   "msg.gated_needs_secret": "Ein geschützter Link erfordert ein Geheimnis.",
   "msg.max_uses_invalid": "Maximale Nutzungen müssen eine nicht-negative Zahl sein.",
-  "msg.expiry_invalid": "Das Ablaufdatum muss ein gültiges Datum sein."
+  "msg.expiry_invalid": "Das Ablaufdatum muss ein gültiges Datum sein.",
+  "confirm.delete_contact": "Diesen Kontakt löschen? Dies kann nicht rückgängig gemacht werden.",
+  "confirm.delete_book": "Dieses Adressbuch und alle enthaltenen Kontakte löschen? Dies kann nicht rückgängig gemacht werden.",
+  "confirm.delete_user": "Diesen Benutzer löschen? Dies kann nicht rückgängig gemacht werden.",
+  "confirm.revoke": "Diesen Zugriff widerrufen?"
 }

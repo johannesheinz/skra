@@ -15,9 +15,9 @@
     <td>{{if .IsOwner}}{{t "members.owner"}}{{else}}{{t (printf "level.%s" .Level)}}{{end}}</td>
     <td>
       {{if not .IsOwner}}
-      <form method="post" action="{{.RevokeURL}}">
+      <form method="post" action="{{.RevokeURL}}" data-confirm="{{t "confirm.revoke"}}">
         <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
-        <button class="btn-secondary" type="submit">{{t "common.revoke"}}</button>
+        <button class="btn btn-ghost btn-danger btn-sm" type="submit">{{t "common.revoke"}}</button>
       </form>
       {{end}}
     </td>
@@ -39,7 +39,7 @@
       <option value="manager">{{t "level.manager"}}</option>
     </select>
   </label>
-  <button type="submit">{{t "members.grant"}}</button>
+  <button class="btn" type="submit">{{t "members.grant"}}</button>
 </form>
 
 <h2>{{t "members.create_new"}}</h2>
@@ -54,6 +54,6 @@
       <option value="manager">{{t "level.manager"}}</option>
     </select>
   </label>
-  <button type="submit">{{t "members.create_grant"}}</button>
+  <button class="btn" type="submit">{{t "members.create_grant"}}</button>
 </form>
 {{end}}

@@ -10,7 +10,7 @@
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <label>{{t "account.username"}} <input type="text" value="{{.User.Username}}" disabled></label>
     <label>{{t "account.email"}} <input type="email" name="email" value="{{.Email}}" required></label>
-    <button type="submit">{{icon "check"}} {{t "account.save_profile"}}</button>
+    <button class="btn" type="submit">{{icon "check"}} {{t "account.save_profile"}}</button>
   </form>
 </section>
 
@@ -24,7 +24,7 @@
         {{range .Locales}}<option value="{{.Code}}" {{if eq $.CurrentLocale .Code}}selected{{end}}>{{.Name}}</option>{{end}}
       </select>
     </label>
-    <button type="submit" data-js-hide>{{t "account.save_language"}}</button>
+    <button class="btn" type="submit" data-js-hide>{{t "account.save_language"}}</button>
   </form>
 </section>
 
@@ -59,7 +59,7 @@
         {{end}}
       </div>
     </fieldset>
-    <button type="submit">{{icon "check"}} {{t "account.save_appearance"}}</button>
+    <button class="btn" type="submit">{{icon "check"}} {{t "account.save_appearance"}}</button>
   </form>
 </section>
 
@@ -69,7 +69,7 @@
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <label class="checkbox"><input type="checkbox" name="high_contrast" value="1" data-autosubmit-control{{if .HighContrast}} checked{{end}}> {{t "account.high_contrast"}}</label>
     <p class="muted">{{t "account.high_contrast_hint"}}</p>
-    <button type="submit" data-js-hide>{{t "common.save"}}</button>
+    <button class="btn" type="submit" data-js-hide>{{t "common.save"}}</button>
   </form>
 </section>
 
@@ -97,7 +97,7 @@
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <label>{{t "account.current_password"}} <input type="password" name="current_password" required></label>
     <label>{{t "account.new_password"}} <input type="password" name="new_password" required></label>
-    <button type="submit">{{icon "key-round"}} {{t "account.change_password"}}</button>
+    <button class="btn" type="submit">{{icon "key-round"}} {{t "account.change_password"}}</button>
   </form>
 </section>
 {{end}}

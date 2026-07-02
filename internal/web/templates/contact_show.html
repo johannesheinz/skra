@@ -67,10 +67,10 @@
 {{if .CanManage}}
 <div class="actions">
   <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/edit">{{icon "pencil"}} {{t "contact.edit"}}</a>
-  <a class="btn btn-secondary" href="/contacts/{{.Contact.PublicID}}/shares">{{icon "share-2"}} {{t "contact.manage_sharing"}}</a>
-  <form method="post" action="/contacts/{{.Contact.PublicID}}/delete">
+  <a class="btn btn-ghost" href="/contacts/{{.Contact.PublicID}}/shares">{{icon "share-2"}} {{t "contact.manage_sharing"}}</a>
+  <form method="post" action="/contacts/{{.Contact.PublicID}}/delete" data-confirm="{{t "confirm.delete_contact"}}">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    <button class="btn-danger" type="submit">{{icon "trash-2"}} {{t "common.delete"}}</button>
+    <button class="btn btn-ghost btn-danger" type="submit">{{icon "trash-2"}} {{t "common.delete"}}</button>
   </form>
 </div>
 {{end}}

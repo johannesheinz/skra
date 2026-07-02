@@ -17,6 +17,7 @@
   <script src="{{static "js/prefs.js"}}" defer></script>
   <script src="{{static "js/birthday.js"}}" defer></script>
   <script src="{{static "js/a11y.js"}}" defer></script>
+  <script src="{{static "js/confirm.js"}}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">{{t "skip_to_content"}}</a>
@@ -42,7 +43,7 @@
         {{if eq .Role "admin"}}<a href="/admin/users" aria-label="{{t "nav.users"}}" title="{{t "nav.users"}}">{{icon "users"}} <span class="nav-label">{{t "nav.users"}}</span></a>{{end}}
         <a href="/account" aria-label="{{t "nav.account"}}" title="{{.Username}}">{{icon "settings"}} <span class="nav-label">{{.Username}}</span></a>
         <form method="post" action="/logout">
-          <button class="btn-secondary" type="submit" aria-label="{{t "nav.sign_out"}}" title="{{t "nav.sign_out"}}">{{icon "log-out"}} <span class="nav-label">{{t "nav.sign_out"}}</span></button>
+          <button class="btn btn-ghost" type="submit" aria-label="{{t "nav.sign_out"}}" title="{{t "nav.sign_out"}}">{{icon "log-out"}} <span class="nav-label">{{t "nav.sign_out"}}</span></button>
           <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
         </form>
       </nav>

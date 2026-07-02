@@ -284,5 +284,9 @@
   "msg.invalid_share_mode": "Choose a valid share mode.",
   "msg.gated_needs_secret": "A gated link requires a secret.",
   "msg.max_uses_invalid": "Max uses must be a non-negative number.",
-  "msg.expiry_invalid": "Expiry must be a valid date."
+  "msg.expiry_invalid": "Expiry must be a valid date.",
+  "confirm.delete_contact": "Delete this contact? This can't be undone.",
+  "confirm.delete_book": "Delete this address book and every contact in it? This can't be undone.",
+  "confirm.delete_user": "Delete this user? This can't be undone.",
+  "confirm.revoke": "Revoke this access?"
 }

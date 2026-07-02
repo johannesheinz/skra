@@ -22,7 +22,7 @@
   {{if .IsNew}}
   <label>{{t "admin.password"}} <input type="password" name="password" required></label>
   {{end}}
-  <button type="submit">{{t "common.save"}}</button>
+  <button class="btn" type="submit">{{t "common.save"}}</button>
 </form>
 
 {{if not .IsNew}}
@@ -30,13 +30,13 @@
 <form class="stack" method="post" action="/admin/users/{{.PublicID}}/password" autocomplete="off">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
   <label>{{t "admin.new_password"}} <input type="password" name="password" required></label>
-  <button class="btn-secondary" type="submit">{{t "admin.reset_password"}}</button>
+  <button class="btn btn-secondary" type="submit">{{t "admin.reset_password"}}</button>
 </form>
 
 <h2>{{t "admin.delete_heading"}}</h2>
-<form method="post" action="/admin/users/{{.PublicID}}/delete">
+<form method="post" action="/admin/users/{{.PublicID}}/delete" data-confirm="{{t "confirm.delete_user"}}">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <button class="btn-danger" type="submit">{{t "admin.delete_user"}}</button>
+  <button class="btn btn-ghost btn-danger" type="submit">{{icon "trash-2"}} {{t "admin.delete_user"}}</button>
 </form>
 {{end}}
 {{end}}

@@ -235,9 +235,8 @@ p { margin: 0 0 var(--space-3); }
 .brand-mark { height: 1.75rem; width: auto; color: var(--accent); display: block; }
 .brand-word { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.01em; }
 
-/* Theme toggle. Scoped under .appbar so it outranks the generic
-   button[type="submit"] styling when the logged-in toggle is a form submit
-   (same specificity otherwise, and the button rule comes later). */
+/* Theme toggle: a standalone round icon control that carries no `.btn`, so the
+   button tiers above never apply — this is its complete styling. */
 .theme-toggle-form { margin: 0; }
 .appbar button.theme-toggle {
   display: inline-flex;
@@ -260,8 +259,17 @@ p { margin: 0 0 var(--space-3); }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .actions form { margin: 0; }
 
-/* ---- Buttons ---- */
-.btn, button[type="submit"] {
+/* ---- Buttons ----
+   Every button carries `.btn`; that class is the styling base (default = the
+   primary accent fill). Variants below are single classes that come later in
+   source, so equal specificity resolves in their favour — no attribute-selector
+   in the base, which is what let a bare `.btn-secondary` lose the specificity
+   race and render as the primary fill. Three tiers: primary (`.btn`) for the one
+   main action, secondary (`.btn-secondary`) for supporting actions with a
+   visible edge, and ghost (`.btn-ghost`) for the quiet, integrated actions that
+   should recede until hovered. `.btn-danger` marks the destructive intent in
+   either the solid (standalone) or ghost (`.btn-ghost.btn-danger`) form. */
+.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -277,18 +285,26 @@ p { margin: 0 0 var(--space-3); }
   background: var(--accent);
   color: var(--accent-fg);
   text-decoration: none;
-  transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.05s ease;
 }
-.btn:hover, button[type="submit"]:hover { background: var(--accent-strong); color: var(--accent-fg); }
-.btn:active, button[type="submit"]:active { transform: translateY(1px); }
+.btn:hover { background: var(--accent-strong); color: var(--accent-fg); }
+.btn:active { transform: translateY(1px); }
 .btn-secondary {
   background: var(--surface);
   color: var(--ink);
   border-color: var(--border-strong);
 }
 .btn-secondary:hover { background: var(--surface-sunken); color: var(--ink); border-color: var(--muted); }
-.btn-danger { background: var(--danger); color: #fff; }
+/* Ghost: no fill or edge at rest, so rows of supporting actions read as quiet
+   text-with-icon; a faint surface and the accent surface only on hover/focus. */
+.btn-ghost { background: transparent; color: var(--muted); border-color: transparent; }
+.btn-ghost:hover { background: var(--surface-sunken); color: var(--accent); border-color: transparent; }
+.btn-danger { background: var(--danger); color: #fff; border-color: transparent; }
 .btn-danger:hover { background: var(--danger); filter: brightness(0.92); color: #fff; }
+/* Ghost-danger: a destructive action that stays out of the way until reached,
+   then declares itself in red rather than shouting in solid fill at rest. */
+.btn-ghost.btn-danger { background: transparent; color: var(--danger); border-color: transparent; filter: none; }
+.btn-ghost.btn-danger:hover { background: color-mix(in srgb, var(--danger) 10%, var(--surface)); color: var(--danger); border-color: var(--danger); }
 
 /* ---- Focus ---- */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
