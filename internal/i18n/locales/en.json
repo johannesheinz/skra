@@ -293,5 +293,10 @@
   "status.revoked": "revoked",
   "status.locked": "locked",
   "status.exhausted": "exhausted",
-  "status.expired": "expired"
+  "status.expired": "expired",
+  "search.title": "Search",
+  "search.placeholder": "Search all contacts",
+  "search.prompt": "Search across all your address books.",
+  "search.no_match": "No contacts match “%s”.",
+  "search.truncated": "Showing the first matches. Narrow your search to see more."
 }

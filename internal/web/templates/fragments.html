@@ -33,6 +33,17 @@
 </div>
 {{end}}
 
+{{define "search_results"}}
+{{if .Cards}}
+{{template "contact_cards" .Cards}}
+{{if .Truncated}}<p class="muted">{{t "search.truncated"}}</p>{{end}}
+{{else if .Query}}
+<p class="muted">{{tf "search.no_match" .Query}}</p>
+{{else}}
+<p class="muted">{{t "search.prompt"}}</p>
+{{end}}
+{{end}}
+
 {{define "address_row"}}
 <fieldset class="field-row address-row">
   <select name="adr_type" aria-label="{{t "field.address_type"}}">{{template "type_options" .Type}}</select>

@@ -2,6 +2,14 @@
 {{define "content"}}
 <h1>{{tf "home.welcome" .User.Username}}</h1>
 
+<form class="global-search" role="search" method="get" action="/search"
+      hx-get="/search" hx-target="#search-results" hx-swap="innerHTML"
+      hx-trigger="input changed delay:300ms, search, submit" hx-push-url="true">
+  <input type="search" name="q" placeholder="{{t "search.placeholder"}}" aria-label="{{t "search.placeholder"}}" autocomplete="off">
+  <button class="btn btn-secondary btn-icon" type="submit" aria-label="{{t "common.search"}}" title="{{t "common.search"}}">{{icon "search"}}</button>
+</form>
+<div id="search-results" aria-live="polite"></div>
+
 <div class="stats">
   <div class="stat"><span class="stat-num">{{num .TotalContacts}}</span><span class="stat-label">{{t "home.contacts"}}</span></div>
   <div class="stat"><span class="stat-num">{{num .BookCount}}</span><span class="stat-label">{{t "home.address_books"}}</span></div>

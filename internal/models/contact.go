@@ -262,6 +262,64 @@ func RecentContactsForUser(ctx context.Context, d *db.DB, user User, limit int) 
 	return out, nil
 }
 
+// SearchResult is a cross-book contact hit with its owning book, for global search.
+type SearchResult struct {
+	PublicID     string
+	FullName     string
+	Org          string
+	PrimaryEmail string
+	HasPhoto     bool
+	BookName     string
+	BookPublicID string
+}
+
+// SearchContactsForUser finds contacts matching a case-insensitive substring across the structured columns, across every book the user may see (admins see all), ordered by name.
+// An empty query returns no rows without touching the database. Visibility is enforced in the query, so results never include books the user cannot read.
+func SearchContactsForUser(ctx context.Context, d *db.DB, user User, query string, limit int) ([]SearchResult, error) {
+	q := strings.TrimSpace(query)
+	if q == "" {
+		return nil, nil
+	}
+	like := "%" + q + "%"
+	// org and primary_email are nullable columns; coalesce so a NULL scans as "".
+	const cols = `SELECT c.public_id, c.full_name, COALESCE(c.org, ''), COALESCE(c.primary_email, ''), c.has_photo, ab.name, ab.public_id
+		FROM contacts c JOIN address_books ab ON ab.id = c.address_book_id`
+	const match = ` (c.full_name LIKE ? OR c.org LIKE ? OR c.primary_email LIKE ? OR c.primary_phone LIKE ?)`
+	const order = ` ORDER BY c.full_name COLLATE NOCASE, c.id LIMIT ?`
+	var (
+		rows *sql.Rows
+		err  error
+	)
+	if user.Role == RoleAdmin {
+		rows, err = d.QueryContext(ctx, cols+` WHERE`+match+order, like, like, like, like, limit)
+	} else {
+		rows, err = d.QueryContext(ctx, cols+`
+			WHERE`+match+`
+			  AND (ab.owner_id = ?
+			       OR EXISTS (SELECT 1 FROM address_book_members m WHERE m.address_book_id = ab.id AND m.user_id = ?))`+order,
+			like, like, like, like, user.ID, user.ID, limit)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("models: search contacts: %w", err)
+	}
+	defer rows.Close()
+
+	var out []SearchResult
+	for rows.Next() {
+		var sr SearchResult
+		var hasPhoto int64
+		if err := rows.Scan(&sr.PublicID, &sr.FullName, &sr.Org, &sr.PrimaryEmail, &hasPhoto, &sr.BookName, &sr.BookPublicID); err != nil {
+			return nil, fmt.Errorf("models: scan search result: %w", err)
+		}
+		sr.HasPhoto = hasPhoto != 0
+		out = append(out, sr)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("models: iterate search results: %w", err)
+	}
+	return out, nil
+}
+
 // NormalizeBirthday canonicalises a birthday string to YYYY-MM-DD for the denormalized birthday column.
 // A year-less birthday (vCard "--MMDD" / "--MM-DD") keeps year 0000.
 // Anything unparseable — including an empty value — yields "", which the schema treats as "no birthday" (distinct from a NULL column that has not been backfilled yet).

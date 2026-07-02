@@ -76,6 +76,7 @@ func localeFuncs(tr *i18n.Translator) template.FuncMap {
 var pageFiles = []string{
 	"login.html",
 	"home.html",
+	"search.html",
 	"books_list.html",
 	"book_form.html",
 	"book_show.html",
@@ -109,7 +110,8 @@ func mustParse() (map[string]map[string]*template.Template, map[string]*template
 			set[page] = t
 		}
 		pageSets[loc.Code] = set
-		fragSets[loc.Code] = template.Must(template.New("fragments").Funcs(funcs).ParseFS(files, "fragments.html"))
+		// partials.html is parsed in too so fragments (e.g. search_results) can reuse shared partials like contact_cards.
+		fragSets[loc.Code] = template.Must(template.New("fragments").Funcs(funcs).ParseFS(files, "fragments.html", "partials.html"))
 	}
 	return pageSets, fragSets
 }

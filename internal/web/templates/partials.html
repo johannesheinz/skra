@@ -12,6 +12,7 @@
     </a>
     {{if .Org}}<span class="muted">{{.Org}}</span>{{end}}
     {{if .Email}}<a class="muted" href="mailto:{{.Email}}">{{.Email}}</a>{{end}}
+    {{if .BookName}}<a class="card-book" href="{{.BookURL}}"><span class="book-dot book-hue-{{bookHue .BookPublicID}}" aria-hidden="true"></span> {{.BookName}}</a>{{end}}
   </li>
   {{end}}
 </ul>

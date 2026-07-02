@@ -293,5 +293,10 @@
   "status.revoked": "entzogen",
   "status.locked": "gesperrt",
   "status.exhausted": "aufgebraucht",
-  "status.expired": "abgelaufen"
+  "status.expired": "abgelaufen",
+  "search.title": "Suche",
+  "search.placeholder": "Alle Kontakte durchsuchen",
+  "search.prompt": "Durchsuche alle deine Adressbücher.",
+  "search.no_match": "Keine Kontakte passen zu „%s“.",
+  "search.truncated": "Es werden die ersten Treffer angezeigt. Grenze die Suche ein, um mehr zu sehen."
 }

@@ -29,6 +29,11 @@ type ContactCard struct {
 	URL      string
 	PhotoURL string
 	HasPhoto bool
+	// Set only in cross-book contexts (global search), so the card can show which
+	// book a contact belongs to; empty in single-book browse and share views.
+	BookName     string
+	BookURL      string
+	BookPublicID string
 }
 
 // buildContactCards maps contacts to cards, deriving each card's detail and photo URL via the supplied functions (which differ per context).
@@ -42,6 +47,26 @@ func buildContactCards(contacts []models.Contact, detailURL, photoURL func(publi
 			URL:      detailURL(c.PublicID),
 			PhotoURL: photoURL(c.PublicID),
 			HasPhoto: c.HasPhoto,
+		})
+	}
+	return cards
+}
+
+// buildSearchCards maps cross-book search results to cards, carrying each hit's
+// owning book so the grid shows where a contact lives.
+func buildSearchCards(results []models.SearchResult) []ContactCard {
+	cards := make([]ContactCard, 0, len(results))
+	for _, s := range results {
+		cards = append(cards, ContactCard{
+			Name:         s.FullName,
+			Org:          s.Org,
+			Email:        s.PrimaryEmail,
+			URL:          "/contacts/" + s.PublicID,
+			PhotoURL:     "/contacts/" + s.PublicID + "/photo",
+			HasPhoto:     s.HasPhoto,
+			BookName:     s.BookName,
+			BookURL:      "/books/" + s.BookPublicID,
+			BookPublicID: s.BookPublicID,
 		})
 	}
 	return cards

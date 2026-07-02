@@ -39,6 +39,7 @@
     <div class="appbar-right">
       {{with .User}}
       <nav class="appnav" aria-label="{{t "nav.primary"}}">
+        <a href="/search" aria-label="{{t "search.title"}}" title="{{t "search.title"}}">{{icon "search"}} <span class="nav-label">{{t "search.title"}}</span></a>
         <a href="/books" aria-label="{{t "nav.address_books"}}" title="{{t "nav.address_books"}}">{{icon "book-open"}} <span class="nav-label">{{t "nav.address_books"}}</span></a>
         {{if eq .Role "admin"}}<a href="/admin/users" aria-label="{{t "nav.users"}}" title="{{t "nav.users"}}">{{icon "users"}} <span class="nav-label">{{t "nav.users"}}</span></a>{{end}}
         <a href="/account" aria-label="{{t "nav.account"}}" title="{{.Username}}">{{icon "settings"}} <span class="nav-label">{{.Username}}</span></a>
