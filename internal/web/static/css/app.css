@@ -141,6 +141,60 @@
 :root[data-accent="peach"]    { --accent: #fdba74; --accent-strong: #fb923c; --accent-fg: #3a1e07; }
 :root[data-accent="lavender"] { --accent: #c4b5fd; --accent-strong: #a78bfa; --accent-fg: #241a4a; }
 
+/* ---- Book colour cue ----
+   A small dot beside a book's name, tinting contacts by which book they belong
+   to. The bucket is chosen in Go (bookHue over the book's public_id) and emitted
+   as a book-hue-N class; the colours live here because the self-only CSP forbids
+   inline styles. Twelve evenly spread hues, each with a brighter dark-mode value
+   so the dot stays legible on the dark surface. */
+.book-dot {
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  border-radius: 50%;
+  background: var(--book-color, var(--muted));
+  vertical-align: -0.04em;
+  flex: 0 0 auto;
+}
+.book-hue-0  { --book-color: #3f8a76; }
+.book-hue-1  { --book-color: #3f79a8; }
+.book-hue-2  { --book-color: #5b57c4; }
+.book-hue-3  { --book-color: #8a57b0; }
+.book-hue-4  { --book-color: #b0559a; }
+.book-hue-5  { --book-color: #b85570; }
+.book-hue-6  { --book-color: #b06a45; }
+.book-hue-7  { --book-color: #9a8630; }
+.book-hue-8  { --book-color: #6f9e3f; }
+.book-hue-9  { --book-color: #3f9e6a; }
+.book-hue-10 { --book-color: #3f9a9e; }
+.book-hue-11 { --book-color: #6f7f8a; }
+:root[data-theme="dark"] .book-hue-0  { --book-color: #63b9a3; }
+:root[data-theme="dark"] .book-hue-1  { --book-color: #6fb0e0; }
+:root[data-theme="dark"] .book-hue-2  { --book-color: #9a92f0; }
+:root[data-theme="dark"] .book-hue-3  { --book-color: #c4a0e0; }
+:root[data-theme="dark"] .book-hue-4  { --book-color: #e88fd0; }
+:root[data-theme="dark"] .book-hue-5  { --book-color: #f090a8; }
+:root[data-theme="dark"] .book-hue-6  { --book-color: #e0a075; }
+:root[data-theme="dark"] .book-hue-7  { --book-color: #d0bb60; }
+:root[data-theme="dark"] .book-hue-8  { --book-color: #a8d070; }
+:root[data-theme="dark"] .book-hue-9  { --book-color: #70d0a0; }
+:root[data-theme="dark"] .book-hue-10 { --book-color: #70cdd0; }
+:root[data-theme="dark"] .book-hue-11 { --book-color: #9aa8b4; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .book-hue-0  { --book-color: #63b9a3; }
+  :root:not([data-theme="light"]) .book-hue-1  { --book-color: #6fb0e0; }
+  :root:not([data-theme="light"]) .book-hue-2  { --book-color: #9a92f0; }
+  :root:not([data-theme="light"]) .book-hue-3  { --book-color: #c4a0e0; }
+  :root:not([data-theme="light"]) .book-hue-4  { --book-color: #e88fd0; }
+  :root:not([data-theme="light"]) .book-hue-5  { --book-color: #f090a8; }
+  :root:not([data-theme="light"]) .book-hue-6  { --book-color: #e0a075; }
+  :root:not([data-theme="light"]) .book-hue-7  { --book-color: #d0bb60; }
+  :root:not([data-theme="light"]) .book-hue-8  { --book-color: #a8d070; }
+  :root:not([data-theme="light"]) .book-hue-9  { --book-color: #70d0a0; }
+  :root:not([data-theme="light"]) .book-hue-10 { --book-color: #70cdd0; }
+  :root:not([data-theme="light"]) .book-hue-11 { --book-color: #9aa8b4; }
+}
+
 /* ---- Reset & base ---- */
 *, *::before, *::after { box-sizing: border-box; }
 /* Ensure the hidden attribute wins over component display rules (e.g. buttons
@@ -625,6 +679,7 @@ td form { margin: 0; }
 .bday-count-unit, .bday-count-word { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
 .bday-count-word { font-size: 0.95rem; padding-block: 0.2rem; }
 .bday-name { font-weight: 700; overflow-wrap: anywhere; }
+.bday-book { display: inline-flex; align-items: center; gap: var(--space-1); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); overflow-wrap: anywhere; }
 .bday-date { display: inline-flex; align-items: center; gap: var(--space-1); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); }
 .bday-date svg { width: 0.95rem; height: 0.95rem; }
 

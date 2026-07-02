@@ -17,7 +17,7 @@
 <ul class="card-grid">
   {{range .Books}}
   <li class="contact-card">
-    <a class="contact-card-head" href="/books/{{.PublicID}}">{{icon "book-open"}} <span class="contact-card-name">{{.Name}}</span></a>
+    <a class="contact-card-head" href="/books/{{.PublicID}}"><span class="book-dot book-hue-{{bookHue .PublicID}}" aria-hidden="true"></span> <span class="contact-card-name">{{.Name}}</span></a>
     <span class="muted">{{tn "contacts.count" .ContactCount}}</span>
   </li>
   {{end}}
@@ -42,6 +42,7 @@
     <span class="avatar avatar-md avatar-placeholder" aria-hidden="true">{{initial .FullName}}</span>
     {{end}}
     <span class="bday-name">{{.FullName}}</span>
+    <span class="bday-book"><span class="book-dot book-hue-{{bookHue .BookPublicID}}" aria-hidden="true"></span> {{.BookName}}</span>
     <span class="bday-date">{{icon "cake"}} {{monthday .Month .Day}}{{if .HasAge}} · {{tf "home.turns" .Age}}{{end}}</span>
   </a>
   {{end}}
@@ -60,7 +61,7 @@
     {{end}}
     <span class="recent-pill-text">
       <span class="recent-pill-name">{{.FullName}}</span>
-      <span class="recent-pill-book">{{.BookName}}</span>
+      <span class="recent-pill-book"><span class="book-dot book-hue-{{bookHue .BookPublicID}}" aria-hidden="true"></span> {{.BookName}}</span>
     </span>
   </a>
   {{end}}
