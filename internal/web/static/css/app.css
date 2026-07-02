@@ -436,8 +436,48 @@ legend { padding: 0 var(--space-2); }
 [data-photo-input]:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
 .contact-header { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-5); margin-bottom: var(--space-5); }
 .contact-headings h1 { margin-bottom: var(--space-1); }
-.photo-edit { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
-.photo-form { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); max-width: 15rem; }
+
+/* Photo control: the avatar itself is the edit surface. A camera badge on its
+   lower edge opens the picker; picking a file auto-submits (photo.js), so there
+   is no separate Save step with JS. A trash badge (only when a photo exists)
+   removes it. `.photo-form` uses display:contents so its children position
+   against the avatar, not a form box. */
+.photo-edit { display: flex; justify-content: center; }
+.avatar-control { position: relative; display: inline-flex; }
+.photo-form { display: contents; }
+.photo-trigger, .photo-remove {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+}
+.photo-trigger {
+  right: 2px; bottom: 2px;
+  width: 2.4rem; height: 2.4rem;
+  background: var(--accent); color: var(--accent-fg);
+  border: 2px solid var(--surface);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+}
+.photo-trigger:hover { background: var(--accent-strong); }
+.photo-trigger:active { transform: translateY(1px); }
+.photo-trigger svg { width: 1.2rem; height: 1.2rem; }
+/* Surface the visually-hidden file input's keyboard focus onto its label badge. */
+[data-photo-input]:focus-visible + .photo-trigger { outline: 2px solid var(--accent); outline-offset: 2px; }
+.photo-remove {
+  right: 0; top: 0;
+  width: 2rem; height: 2rem;
+  background: var(--surface); color: var(--muted);
+  border: 1px solid var(--border-strong);
+}
+.photo-remove:hover { color: var(--danger); border-color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--surface)); }
+.photo-remove svg { width: 1rem; height: 1rem; }
+/* No-JS fallback: the Save button sits below the avatar (JS hides it and
+   auto-submits instead). Absolutely placed so it never grows the control box
+   that the badges are positioned against. */
+.photo-save { position: absolute; top: calc(100% + var(--space-2)); left: 50%; transform: translateX(-50%); white-space: nowrap; }
 .btn-sm { min-height: 2rem; padding: var(--space-1) var(--space-3); font-size: 0.85rem; }
 /* Icon-only button: square, label carried by aria-label/title. */
 .btn-icon { padding: var(--space-2); min-width: 2.5rem; gap: 0; }

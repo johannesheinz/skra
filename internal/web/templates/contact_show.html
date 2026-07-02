@@ -5,25 +5,27 @@
 
 <div class="contact-header">
   <div class="photo-edit">
-    {{if .Contact.HasPhoto}}
-    <img class="avatar avatar-lg" id="contact-avatar" src="/contacts/{{.Contact.PublicID}}/photo" alt="" width="128" height="128">
-    {{else}}
-    <span class="avatar avatar-lg avatar-placeholder" id="contact-avatar" aria-hidden="true">{{initial .Contact.FullName}}</span>
-    {{end}}
-    {{if .CanManage}}
-    <form class="photo-form" method="post" action="/contacts/{{.Contact.PublicID}}/photo" enctype="multipart/form-data" data-photo-form>
-      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-      <input class="visually-hidden" type="file" id="photo-input" name="photo" accept="image/jpeg,image/png" data-photo-input required>
-      <label class="btn btn-secondary btn-sm" for="photo-input">{{icon "camera"}} {{t "contact.change_photo"}}</label>
-      <button class="btn btn-sm" type="submit">{{icon "check"}} {{t "common.save"}}</button>
-      {{if .Contact.HasPhoto}}<button class="btn btn-secondary btn-sm" type="submit" form="remove-photo">{{icon "x"}} {{t "contact.remove_photo"}}</button>{{end}}
-    </form>
-    {{if .Contact.HasPhoto}}
-    <form id="remove-photo" method="post" action="/contacts/{{.Contact.PublicID}}/photo/delete">
-      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    </form>
-    {{end}}
-    {{end}}
+    <div class="avatar-control">
+      {{if .Contact.HasPhoto}}
+      <img class="avatar avatar-lg" id="contact-avatar" src="/contacts/{{.Contact.PublicID}}/photo" alt="" width="128" height="128">
+      {{else}}
+      <span class="avatar avatar-lg avatar-placeholder" id="contact-avatar" aria-hidden="true">{{initial .Contact.FullName}}</span>
+      {{end}}
+      {{if .CanManage}}
+      <form class="photo-form" method="post" action="/contacts/{{.Contact.PublicID}}/photo" enctype="multipart/form-data" data-photo-form>
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <input class="visually-hidden" type="file" id="photo-input" name="photo" accept="image/jpeg,image/png" data-photo-input required>
+        <label class="photo-trigger" for="photo-input" title="{{t "contact.change_photo"}}" aria-label="{{t "contact.change_photo"}}">{{icon "camera"}}</label>
+        <button class="btn btn-sm photo-save" type="submit" data-js-hide>{{icon "check"}} {{t "common.save"}}</button>
+      </form>
+      {{if .Contact.HasPhoto}}
+      <button class="photo-remove" type="submit" form="remove-photo" title="{{t "contact.remove_photo"}}" aria-label="{{t "contact.remove_photo"}}">{{icon "trash-2"}}</button>
+      <form id="remove-photo" method="post" action="/contacts/{{.Contact.PublicID}}/photo/delete">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      </form>
+      {{end}}
+      {{end}}
+    </div>
   </div>
   <div class="contact-headings">
     <h1>{{.Contact.FullName}}</h1>
