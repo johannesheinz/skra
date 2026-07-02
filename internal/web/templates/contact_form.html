@@ -12,25 +12,25 @@
   <fieldset class="field-group">
     <legend>{{t "contact_form.emails"}}</legend>
     <div id="emails">{{range .D.Emails}}{{template "email_row" .}}{{end}}</div>
-    <button type="button" class="fab-add" hx-get="/ui/rows/email" hx-target="#emails" hx-swap="beforeend" aria-label="{{t "contact_form.add_email"}}" title="{{t "contact_form.add_email"}}">{{icon "plus"}}</button>
+    <button type="button" class="fab-add" hx-get="/ui/rows/email" hx-target="#emails" hx-swap="beforeend" aria-label="{{t "contact_form.add_email"}}" title="{{t "contact_form.add_email"}}">{{icon "plus"}}<span class="fab-label">{{t "contact_form.add_email"}}</span></button>
   </fieldset>
 
   <fieldset class="field-group">
     <legend>{{t "contact_form.phones"}}</legend>
     <div id="phones">{{range .D.Phones}}{{template "phone_row" .}}{{end}}</div>
-    <button type="button" class="fab-add" hx-get="/ui/rows/phone" hx-target="#phones" hx-swap="beforeend" aria-label="{{t "contact_form.add_phone"}}" title="{{t "contact_form.add_phone"}}">{{icon "plus"}}</button>
+    <button type="button" class="fab-add" hx-get="/ui/rows/phone" hx-target="#phones" hx-swap="beforeend" aria-label="{{t "contact_form.add_phone"}}" title="{{t "contact_form.add_phone"}}">{{icon "plus"}}<span class="fab-label">{{t "contact_form.add_phone"}}</span></button>
   </fieldset>
 
   <fieldset class="field-group">
     <legend>{{t "contact_form.addresses"}}</legend>
     <div id="addresses">{{range .D.Addresses}}{{template "address_row" .}}{{end}}</div>
-    <button type="button" class="fab-add" hx-get="/ui/rows/address" hx-target="#addresses" hx-swap="beforeend" aria-label="{{t "contact_form.add_address"}}" title="{{t "contact_form.add_address"}}">{{icon "plus"}}</button>
+    <button type="button" class="fab-add" hx-get="/ui/rows/address" hx-target="#addresses" hx-swap="beforeend" aria-label="{{t "contact_form.add_address"}}" title="{{t "contact_form.add_address"}}">{{icon "plus"}}<span class="fab-label">{{t "contact_form.add_address"}}</span></button>
   </fieldset>
 
   <fieldset class="field-group">
     <legend>{{t "contact_form.links"}}</legend>
     <div id="urls">{{range .D.URLs}}{{template "url_row" .}}{{end}}</div>
-    <button type="button" class="fab-add" hx-get="/ui/rows/url" hx-target="#urls" hx-swap="beforeend" aria-label="{{t "contact_form.add_link"}}" title="{{t "contact_form.add_link"}}">{{icon "plus"}}</button>
+    <button type="button" class="fab-add" hx-get="/ui/rows/url" hx-target="#urls" hx-swap="beforeend" aria-label="{{t "contact_form.add_link"}}" title="{{t "contact_form.add_link"}}">{{icon "plus"}}<span class="fab-label">{{t "contact_form.add_link"}}</span></button>
   </fieldset>
 
   <label>{{t "contact_form.org"}} <input name="org" value="{{.D.Org}}"></label>

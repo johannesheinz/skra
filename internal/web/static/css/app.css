@@ -359,6 +359,10 @@ legend { padding: 0 var(--space-2); }
 }
 .fab-add:hover { background: var(--accent-strong); box-shadow: 0 5px 14px -3px rgba(0, 0, 0, 0.5); }
 .fab-add svg { width: 1.4rem; height: 1.4rem; }
+/* The label rides along only where the FAB stretches into a full-width bar
+   (narrow screens); on desktop the round FAB is icon-only, named via its
+   aria-label/title. */
+.fab-label { display: none; }
 
 /* Birthday: full date picker or month/day selects, plus the "no year" toggle. */
 .birthday-field { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
@@ -546,6 +550,23 @@ td form { margin: 0; }
   .details dt:not(:first-of-type) { margin-top: var(--space-2); }
   .field-row { flex-direction: column; align-items: stretch; }
   .field-row select, .field-row input { width: 100%; }
+  /* The corner FAB straddling a border is a desktop affordance; on narrow
+     screens it becomes a clear, labelled full-width "Add …" bar in the flow. */
+  .field-group { padding-bottom: 0; }
+  .fab-add {
+    position: static;
+    transform: none;
+    width: 100%;
+    height: auto;
+    min-height: 2.75rem;
+    margin-top: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    gap: var(--space-2);
+    border-radius: var(--radius-sm);
+    box-shadow: none;
+  }
+  .fab-add svg { width: 1.15rem; height: 1.15rem; }
+  .fab-label { display: inline; font-weight: 700; }
   th, td { padding: var(--space-2); }
   /* The toolbar's search and actions each take a full row. */
   .toolbar > form[role="search"] { display: flex; width: 100%; }
