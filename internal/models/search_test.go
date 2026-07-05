@@ -88,3 +88,23 @@ func TestSearchContactsForUserScopingAndNullOrg(t *testing.T) {
 		t.Errorf("empty query = (%v, %v), want (nil, nil)", got, err)
 	}
 }
+
+func TestSearchContactsForUserSetsBookColor(t *testing.T) {
+	d := testutil.NewDB(t)
+	ctx := context.Background()
+	owner, _ := models.CreateUser(ctx, d, "owner", "o@example.com", "h", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Book", "")
+	if _, err := models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "Zoe Zulu"}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := models.SearchContactsForUser(ctx, d, owner, "Zoe", 50)
+	if err != nil {
+		t.Fatalf("search: %v", err)
+	}
+	if len(got) != 1 {
+		t.Fatalf("got %d results, want 1", len(got))
+	}
+	if got[0].BookColor != book.Color() {
+		t.Errorf("result BookColor = %d, want %d (book's colour)", got[0].BookColor, book.Color())
+	}
+}

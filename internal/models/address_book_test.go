@@ -9,6 +9,72 @@ import (
 	"github.com/johannesheinz/skra/internal/testutil"
 )
 
+func TestListAddressBooksManageFlag(t *testing.T) {
+	d := testutil.NewDB(t)
+	ctx := context.Background()
+	owner, _ := models.CreateUser(ctx, d, "owner", "o@example.com", "h", models.RoleUser)
+	viewer, _ := models.CreateUser(ctx, d, "viewer", "v@example.com", "h", models.RoleUser)
+	manager, _ := models.CreateUser(ctx, d, "manager", "m@example.com", "h", models.RoleUser)
+	admin, _ := models.CreateUser(ctx, d, "admin", "a@example.com", "h", models.RoleAdmin)
+
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Book", "")
+	grant := func(u models.User, level string) {
+		if _, err := d.ExecWrite(ctx,
+			`INSERT INTO address_book_members (address_book_id, user_id, access_level) VALUES (?, ?, ?)`,
+			book.ID, u.ID, level); err != nil {
+			t.Fatalf("grant %s: %v", level, err)
+		}
+	}
+	grant(viewer, models.AccessViewer)
+	grant(manager, models.AccessManager)
+
+	manageFor := func(u models.User) bool {
+		items, err := models.ListAddressBooks(ctx, d, u)
+		if err != nil {
+			t.Fatalf("list for %s: %v", u.Username, err)
+		}
+		for _, it := range items {
+			if it.ID == book.ID {
+				return it.Manage
+			}
+		}
+		t.Fatalf("%s cannot see the book", u.Username)
+		return false
+	}
+
+	if !manageFor(owner) {
+		t.Error("owner should manage the book")
+	}
+	if manageFor(viewer) {
+		t.Error("viewer should not manage the book")
+	}
+	if !manageFor(manager) {
+		t.Error("manager should manage the book")
+	}
+	if !manageFor(admin) {
+		t.Error("admin should manage every book")
+	}
+}
+
+func TestAddressBookColorFromID(t *testing.T) {
+	d := testutil.NewDB(t)
+	ctx := context.Background()
+	owner, _ := models.CreateUser(ctx, d, "owner", "o@example.com", "h", models.RoleUser)
+	for i := 0; i < 3; i++ {
+		b, err := models.CreateAddressBook(ctx, d, owner.ID, "Book", "")
+		if err != nil {
+			t.Fatalf("create book: %v", err)
+		}
+		want := int(b.ID % models.BookColorCount)
+		if got := b.Color(); got != want {
+			t.Errorf("book id %d: Color() = %d, want %d", b.ID, got, want)
+		}
+		if b.Color() < 0 || b.Color() >= models.BookColorCount {
+			t.Errorf("book id %d: Color() = %d out of range", b.ID, b.Color())
+		}
+	}
+}
+
 func TestCreateAddressBookGrantsOwnerManager(t *testing.T) {
 	d := testutil.NewDB(t)
 	ctx := context.Background()

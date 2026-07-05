@@ -145,3 +145,91 @@ func TestBookAuthorization(t *testing.T) {
 		t.Errorf("viewer edit = %d, want 403", viewerEdit.Code)
 	}
 }
+
+func TestGlobalSearchFoldedIntoDashboard(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	user := seedUser(t, d, "u", "pw", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, user.ID, "Book", "")
+	if _, err := models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "Zoe Zulu"}); err != nil {
+		t.Fatal(err)
+	}
+	session := sessionCookieFor(t, d, user.ID)
+
+	// Full-page dashboard search.
+	full := get(router, "/?q=Zoe", session)
+	if full.Code != http.StatusOK || !strings.Contains(full.Body.String(), "Zoe Zulu") {
+		t.Fatalf("dashboard search = %d, missing result", full.Code)
+	}
+	if !strings.Contains(strings.ToLower(full.Body.String()), "<!doctype") {
+		t.Error("full-page search should render the whole page")
+	}
+
+	// htmx request returns only the results fragment.
+	req := httptest.NewRequest(http.MethodGet, "/?q=Zoe", nil)
+	req.AddCookie(session)
+	req.Header.Set("HX-Request", "true")
+	frag := httptest.NewRecorder()
+	router.ServeHTTP(frag, req)
+	if frag.Code != http.StatusOK || !strings.Contains(frag.Body.String(), "Zoe Zulu") {
+		t.Fatalf("htmx search = %d, missing result", frag.Code)
+	}
+	if strings.Contains(strings.ToLower(frag.Body.String()), "<!doctype") {
+		t.Error("htmx search should return the fragment only, not the whole page")
+	}
+
+	// The standalone /search page is gone.
+	if rec := get(router, "/search?q=Zoe", session); rec.Code != http.StatusNotFound {
+		t.Errorf("/search = %d, want 404", rec.Code)
+	}
+}
+
+func TestBookContactSearchLiveFragment(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Clients", "")
+	if _, err := models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "Zoe Zulu"}); err != nil {
+		t.Fatal(err)
+	}
+	session := sessionCookieFor(t, d, owner.ID)
+	base := "/books/" + book.PublicID
+
+	// Full page has the whole document and the book title.
+	full := get(router, base, session)
+	if full.Code != http.StatusOK || !strings.Contains(strings.ToLower(full.Body.String()), "<!doctype") {
+		t.Fatalf("book page = %d, not a full page", full.Code)
+	}
+
+	// htmx search returns just the results region (the count heading, no full page).
+	req := httptest.NewRequest(http.MethodGet, base+"?q=Zoe", nil)
+	req.AddCookie(session)
+	req.Header.Set("HX-Request", "true")
+	frag := httptest.NewRecorder()
+	router.ServeHTTP(frag, req)
+	if frag.Code != http.StatusOK || !strings.Contains(frag.Body.String(), "Zoe Zulu") {
+		t.Fatalf("book htmx search = %d, missing result", frag.Code)
+	}
+	if strings.Contains(strings.ToLower(frag.Body.String()), "<!doctype") {
+		t.Error("book htmx search should return the results fragment only")
+	}
+}
+
+func TestBookEditCancelReturnsToBook(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Clients", "")
+	session := sessionCookieFor(t, d, owner.ID)
+
+	rec, _, _ := authedGet(t, router, session, "/books/"+book.PublicID+"/edit")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("edit page = %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `href="/books/`+book.PublicID+`"`) {
+		t.Error("edit cancel should return to the book, not the overview")
+	}
+}

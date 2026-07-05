@@ -227,3 +227,59 @@ func TestShareManagementCreateValidateRevoke(t *testing.T) {
 		t.Error("link not revoked")
 	}
 }
+
+func TestSharePhotoServedOnFinalUse(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Friends", "")
+	contact, _ := models.CreateContact(ctx, d, book.ID, models.ContactInput{FullName: "Jane Doe"})
+	if err := models.SetContactPhoto(ctx, d, contact.ID, []byte{0xFF, 0xD8, 0xFF, 0xD9}); err != nil {
+		t.Fatalf("set photo: %v", err)
+	}
+	link, _ := models.CreateShareLink(ctx, d, models.NewShareLinkParams{
+		Mode: sharing.ModePublicLong, Scope: sharing.ScopeContact, TargetID: contact.ID, CreatedBy: owner.ID, MaxUses: 1,
+	})
+	base := "/s/" + link.Token
+
+	// The single permitted view consumes the last use.
+	if rec := get(router, base); rec.Code != http.StatusOK {
+		t.Fatalf("first view = %d, want 200", rec.Code)
+	}
+	// Its photo must still load even though the view just exhausted the link.
+	if rec := get(router, base+"/photo"); rec.Code != http.StatusOK {
+		t.Errorf("photo after final view = %d, want 200", rec.Code)
+	}
+	// A second page view is refused (uses exhausted).
+	if rec := get(router, base); rec.Code != http.StatusNotFound {
+		t.Errorf("second view = %d, want 404 (exhausted)", rec.Code)
+	}
+}
+
+func TestRevokeRejectsAlreadyRevoked(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Friends", "")
+	link, _ := models.CreateShareLink(ctx, d, models.NewShareLinkParams{
+		Mode: sharing.ModePublicLong, Scope: sharing.ScopeBook, TargetID: book.ID, CreatedBy: owner.ID,
+	})
+	session := sessionCookieFor(t, d, owner.ID)
+	sharesURL := "/books/" + book.PublicID + "/shares"
+	_, token, csrf := authedGet(t, router, session, sharesURL)
+	revokeURL := sharesURL + "/" + strconv.FormatInt(link.ID, 10) + "/revoke"
+
+	if rec := authedPostForm(router, session, csrf, revokeURL, url.Values{auth.CSRFFormField: {token}}); rec.Code != http.StatusSeeOther {
+		t.Fatalf("first revoke = %d, want 303", rec.Code)
+	}
+	// Soft-deleted: still present for the audit trail.
+	if _, err := models.GetShareLinkByToken(ctx, d, link.Token); err != nil {
+		t.Errorf("revoked link should still exist: %v", err)
+	}
+	// Revoking it again is refused.
+	if rec := authedPostForm(router, session, csrf, revokeURL, url.Values{auth.CSRFFormField: {token}}); rec.Code != http.StatusNotFound {
+		t.Errorf("second revoke = %d, want 404", rec.Code)
+	}
+}

@@ -80,20 +80,25 @@ func TestShareLinkUsable(t *testing.T) {
 	cases := []struct {
 		name string
 		link models.ShareLink
-		want bool
+		// usable gates a counted view; servable gates a sub-resource (photo) of an
+		// already-counted view — everything usable checks except uses-exhausted.
+		usable, servable bool
 	}{
-		{"fresh", models.ShareLink{}, true},
-		{"revoked", models.ShareLink{Revoked: true}, false},
-		{"exhausted", models.ShareLink{MaxUses: 2, UseCount: 2}, false},
-		{"under max uses", models.ShareLink{MaxUses: 2, UseCount: 1}, true},
-		{"locked by failures", models.ShareLink{FailedCount: sharing.GateMaxFailures}, false},
-		{"expired", models.ShareLink{ExpiresAt: past}, false},
-		{"not yet expired", models.ShareLink{ExpiresAt: future}, true},
+		{"fresh", models.ShareLink{}, true, true},
+		{"revoked", models.ShareLink{Revoked: true}, false, false},
+		{"exhausted", models.ShareLink{MaxUses: 2, UseCount: 2}, false, true},
+		{"under max uses", models.ShareLink{MaxUses: 2, UseCount: 1}, true, true},
+		{"locked by failures", models.ShareLink{FailedCount: sharing.GateMaxFailures}, false, false},
+		{"expired", models.ShareLink{ExpiresAt: past}, false, false},
+		{"not yet expired", models.ShareLink{ExpiresAt: future}, true, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := tc.link.Usable(now); got != tc.want {
-				t.Errorf("Usable = %v, want %v", got, tc.want)
+			if got := tc.link.Usable(now); got != tc.usable {
+				t.Errorf("Usable = %v, want %v", got, tc.usable)
+			}
+			if got := tc.link.Servable(now); got != tc.servable {
+				t.Errorf("Servable = %v, want %v", got, tc.servable)
 			}
 		})
 	}

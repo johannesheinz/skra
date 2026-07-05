@@ -4,7 +4,48 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/johannesheinz/skra/internal/vcardio"
 )
+
+func TestCSVRowFromDetails(t *testing.T) {
+	d := vcardio.Details{
+		GivenName:  "Ada",
+		FamilyName: "Lovelace",
+		Org:        "Analytical Engines",
+		Title:      "Countess",
+		Birthday:   "1815-12-10",
+		Emails:     []vcardio.Typed{{Type: "home", Value: "ada@home.test"}, {Type: "work", Value: "ada@work.test"}},
+		Phones:     []vcardio.Typed{{Value: "+1 555 0001"}},
+		Addresses:  []vcardio.Address{{Type: "home", Street: "1 Engine Rd", City: "London", PostalCode: "EC1", Country: "UK"}},
+		URLs:       []string{"https://ada.test", "https://example.test/ada"},
+		Note:       "First programmer",
+	}
+	row := CSVRowFromDetails("Ada Lovelace", d)
+
+	if row.FullName != "Ada Lovelace" || row.GivenName != "Ada" || row.FamilyName != "Lovelace" {
+		t.Errorf("names = %q/%q/%q", row.FullName, row.GivenName, row.FamilyName)
+	}
+	if row.Org != "Analytical Engines" || row.Title != "Countess" || row.Birthday != "1815-12-10" || row.Note != "First programmer" {
+		t.Errorf("scalar fields wrong: %+v", row)
+	}
+	// Typed multi-values join with type prefixes; untyped values stand alone.
+	if row.Emails != "home: ada@home.test | work: ada@work.test" {
+		t.Errorf("Emails = %q", row.Emails)
+	}
+	if row.Phones != "+1 555 0001" {
+		t.Errorf("Phones = %q", row.Phones)
+	}
+	if row.Links != "https://ada.test | https://example.test/ada" {
+		t.Errorf("Links = %q", row.Links)
+	}
+	// Address is flattened to a single typed line; assert the pieces survive.
+	for _, want := range []string{"home:", "1 Engine Rd", "London"} {
+		if !strings.Contains(row.Addresses, want) {
+			t.Errorf("Addresses %q missing %q", row.Addresses, want)
+		}
+	}
+}
 
 func TestWriteCSVSanitizesInjection(t *testing.T) {
 	var buf bytes.Buffer
