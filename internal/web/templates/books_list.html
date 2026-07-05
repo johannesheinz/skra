@@ -10,7 +10,6 @@
 </form>
 <div id="search-results" aria-live="polite">{{if .Query}}{{template "search_results" .}}{{end}}</div>
 
-<p><a class="btn" href="/books/new">{{icon "plus"}} {{t "home.new_book"}}</a></p>
 {{if .Books}}
 <div class="table-wrap"><table>
   <thead><tr><th>{{t "books.col_name"}}</th><th>{{t "books.col_contacts"}}</th><th>{{t "books.col_role"}}</th><th></th></tr></thead>
@@ -37,6 +36,8 @@
 {{else}}
 <p class="muted">{{t "books.none"}}</p>
 {{end}}
+
+<p><a class="btn" href="/books/new">{{icon "plus"}} {{t "home.new_book"}}</a></p>
 
 <h2 class="dash-heading">{{t "books.import_heading"}}</h2>
 <p class="muted">{{t "books.import_desc"}}</p>
