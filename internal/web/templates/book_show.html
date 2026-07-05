@@ -6,9 +6,9 @@
     {{if .Book.Description}}<p class="muted">{{.Book.Description}}</p>{{end}}
   </div>
   <div class="book-tools">
-    {{if .CanManage}}<a class="btn btn-secondary btn-icon" href="/books/{{.Book.PublicID}}/edit" aria-label="{{t "book.edit"}}" title="{{t "book.edit"}}">{{icon "pencil"}}</a>{{end}}
+    {{if .CanManage}}<a class="btn btn-ghost btn-icon" href="/books/{{.Book.PublicID}}/edit" aria-label="{{t "book.edit"}}" title="{{t "book.edit"}}">{{icon "pencil"}}</a>{{end}}
     <details class="menu">
-      <summary class="btn btn-secondary btn-icon" aria-label="{{t "book.more_actions"}}" title="{{t "book.more_actions"}}">{{icon "ellipsis-vertical"}}</summary>
+      <summary class="btn btn-ghost btn-icon" aria-label="{{t "book.more_actions"}}" title="{{t "book.more_actions"}}">{{icon "ellipsis-vertical"}}</summary>
       <div class="menu-panel">
         {{if .CanManage}}
         <a class="menu-item" href="/books/{{.Book.PublicID}}/members">{{icon "users"}} {{t "book.members"}}</a>

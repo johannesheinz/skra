@@ -46,6 +46,7 @@ func (h *Handlers) BookNew(w http.ResponseWriter, r *http.Request) {
 	h.render(w, r, http.StatusOK, "book_form.html", map[string]any{
 		"HeadingKey": "book_form.new",
 		"FormAction": "/books",
+		"CancelURL":  "/books",
 	})
 }
 
@@ -63,6 +64,7 @@ func (h *Handlers) BookCreate(w http.ResponseWriter, r *http.Request) {
 		h.render(w, r, http.StatusUnprocessableEntity, "book_form.html", map[string]any{
 			"HeadingKey":  "book_form.new",
 			"FormAction":  "/books",
+			"CancelURL":   "/books",
 			"Name":        name,
 			"Description": description,
 			"Error":       h.tr(r).T("msg.name_required"),
@@ -171,6 +173,7 @@ func (h *Handlers) BookEdit(w http.ResponseWriter, r *http.Request) {
 	h.render(w, r, http.StatusOK, "book_form.html", map[string]any{
 		"HeadingKey":  "book_form.edit",
 		"FormAction":  "/books/" + book.PublicID + "/edit",
+		"CancelURL":   "/books/" + book.PublicID,
 		"Name":        book.Name,
 		"Description": book.Description,
 		"ShowColor":   true,
@@ -194,6 +197,7 @@ func (h *Handlers) BookUpdate(w http.ResponseWriter, r *http.Request) {
 		h.render(w, r, http.StatusUnprocessableEntity, "book_form.html", map[string]any{
 			"HeadingKey":  "book_form.edit",
 			"FormAction":  "/books/" + book.PublicID + "/edit",
+			"CancelURL":   "/books/" + book.PublicID,
 			"Name":        name,
 			"Description": description,
 			"Error":       h.tr(r).T("msg.name_required"),
