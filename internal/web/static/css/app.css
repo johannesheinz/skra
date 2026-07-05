@@ -632,7 +632,7 @@ td form { margin: 0; }
 }
 
 /* ---- Dashboard ---- */
-.stats { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-5); }
+.stats { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-4); margin-bottom: var(--space-5); }
 .stat {
   display: flex; flex-direction: column;
   min-width: 8rem; padding: var(--space-4) var(--space-5);
