@@ -514,8 +514,9 @@ details.menu > summary::-webkit-details-marker { display: none; }
 .menu-item-danger { color: var(--danger); }
 .menu-item-danger:hover { background: color-mix(in srgb, var(--danger) 10%, var(--surface)); color: var(--danger); }
 
-/* Full-width contact search with a leading magnifier inside the field. */
-.book-search { display: flex; gap: var(--space-2); margin: var(--space-5) 0; }
+/* Full-width contact search with a leading magnifier inside the field. The extra
+   bottom margin sets the contact list's "Contacts (N)" heading clearly apart. */
+.book-search { display: flex; gap: var(--space-2); margin: var(--space-5) 0 var(--space-8); }
 .search-field { position: relative; flex: 1; display: block; }
 .search-field > svg { position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); width: 1.1rem; height: 1.1rem; color: var(--muted); pointer-events: none; }
 .search-field input { width: 100%; padding-left: 2.4rem; }
