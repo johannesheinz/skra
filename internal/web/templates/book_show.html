@@ -15,12 +15,12 @@
 </div>
 {{end}}
 
-<h2>{{t "book.contacts"}} <span class="muted">({{num .Total}})</span></h2>
-
 <div class="toolbar">
-  <form method="get" action="/books/{{.Book.PublicID}}" role="search">
-    <input type="search" name="q" value="{{.Query}}" placeholder="{{t "book.search_placeholder"}}" aria-label="{{t "book.search_placeholder"}}">
-    <button class="btn btn-secondary btn-icon" type="submit" aria-label="{{t "common.search"}}" title="{{t "common.search"}}">{{icon "search"}}</button>
+  <form method="get" action="/books/{{.Book.PublicID}}" role="search"
+        hx-get="/books/{{.Book.PublicID}}" hx-target="#book-results" hx-swap="innerHTML"
+        hx-trigger="input changed delay:300ms, search, submit" hx-push-url="true">
+    <input type="search" name="q" value="{{.Query}}" placeholder="{{t "book.search_placeholder"}}" aria-label="{{t "book.search_placeholder"}}" autocomplete="off">
+    <button class="btn btn-secondary btn-icon" type="submit" data-js-hide aria-label="{{t "common.search"}}" title="{{t "common.search"}}">{{icon "search"}}</button>
   </form>
   <div class="actions">
     {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">{{icon "plus"}} {{t "book.new_contact"}}</a>{{end}}
@@ -30,36 +30,7 @@
   </div>
 </div>
 
-{{if .Cards}}
-<form class="list-prefs" method="post" action="/account/list-prefs" data-autosubmit>
-  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <input type="hidden" name="return" value="{{.ListPrefsReturn}}">
-  <label>{{t "list.sort"}}
-    <span class="sort-control">
-      <select name="sort" data-autosubmit-control>
-        {{range .SortOptions}}<option value="{{.Key}}"{{if eq .Key $.Sort}} selected{{end}}>{{t (printf "sort.%s" .Key)}}</option>{{end}}
-      </select>
-      <button class="btn btn-secondary btn-icon" type="submit" name="dir" value="{{if .Desc}}asc{{else}}desc{{end}}"
-              aria-label="{{if .Desc}}{{t "list.sort_desc"}}{{else}}{{t "list.sort_asc"}}{{end}}"
-              title="{{if .Desc}}{{t "list.descending"}}{{else}}{{t "list.ascending"}}{{end}}">{{if .Desc}}{{icon "chevron-down"}}{{else}}{{icon "chevron-up"}}{{end}}</button>
-    </span>
-  </label>
-  <label>{{t "list.show"}}
-    <select name="size" data-autosubmit-control>
-      {{range .PageSizes}}<option value="{{.}}"{{if eq . $.SelectedSize}} selected{{end}}>{{if eq . -1}}{{t "list.all"}}{{else}}{{num .}}{{end}}</option>{{end}}
-    </select>
-  </label>
-  <button class="btn btn-secondary" type="submit" data-js-hide>{{t "common.apply"}}</button>
-</form>
-{{template "contact_cards" .Cards}}
-{{if or .ShowAll (gt .TotalPages 1)}}
-<nav class="pager" aria-label="Pagination">
-  {{if .PrevURL}}<a class="btn btn-secondary btn-icon" href="{{.PrevURL}}" aria-label="{{t "pager.previous"}}" title="{{t "pager.previous"}}">{{icon "chevron-left"}}</a>{{end}}
-  <span class="muted">{{if .ShowAll}}{{tf "pager.all" .Total}}{{else}}{{tf "pager.page" .Page}}{{end}}</span>
-  {{if .NextURL}}<a class="btn btn-secondary btn-icon" href="{{.NextURL}}" aria-label="{{t "pager.next"}}" title="{{t "pager.next"}}">{{icon "chevron-right"}}</a>{{end}}
-</nav>
-{{end}}
-{{else}}
-<p class="muted">{{if .Query}}{{tf "book.no_match" .Query}}{{else}}{{t "book.no_contacts"}}{{end}}</p>
-{{end}}
+<div id="book-results">
+  {{template "book_results" .}}
+</div>
 {{end}}

@@ -7,8 +7,10 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/johannesheinz/skra/internal/auth"
+	"github.com/johannesheinz/skra/internal/i18n"
 	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/rbac"
+	"github.com/johannesheinz/skra/internal/web/templates"
 )
 
 // BooksList shows the address books visible to the current user (GET /books).
@@ -124,6 +126,22 @@ func (h *Handlers) BookShow(w http.ResponseWriter, r *http.Request) {
 		if page < totalPages {
 			data["NextURL"] = bookContactsURL(book.PublicID, query, page+1)
 		}
+	}
+	// Live search swaps just the results region; the search box lives outside it
+	// and keeps focus. The list-prefs form inside needs a fresh CSRF token, which
+	// the full-page render would otherwise inject.
+	if r.Header.Get("HX-Request") != "" {
+		token, err := auth.IssueCSRF(w, h.CookieSecure)
+		if err != nil {
+			h.Logger.Error("issue csrf failed", "err", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		data["CSRFToken"] = token
+		if err := templates.RenderFragment(w, i18n.FromContext(r.Context()).Code, "book_results", data); err != nil {
+			h.Logger.Error("render book results fragment failed", "err", err)
+		}
+		return
 	}
 	h.render(w, r, http.StatusOK, "book_show.html", data)
 }
