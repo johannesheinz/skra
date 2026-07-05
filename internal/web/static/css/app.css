@@ -522,8 +522,9 @@ details.menu > summary::-webkit-details-marker { display: none; }
 .search-field input { width: 100%; padding-left: 2.4rem; }
 
 /* Controls row (primary add on the left, sort/size on the right) and footer (add + pager). */
-.book-controls { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
-.book-controls .list-prefs { margin-bottom: 0; }
+.book-controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); margin-bottom: var(--space-4); }
+/* Sort/size sit at the trailing edge whether or not the New contact button (which only managers see) is present. */
+.book-controls .list-prefs { margin-bottom: 0; margin-left: auto; }
 .book-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); }
 .book-foot .pager { margin-top: 0; }
 
