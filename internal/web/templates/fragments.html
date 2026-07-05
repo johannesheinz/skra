@@ -34,12 +34,11 @@
 {{end}}
 
 {{define "book_results"}}
-<div class="book-results-head">
-  <h2>{{t "book.contacts"}} <span class="muted">({{num .Total}})</span></h2>
+<h2>{{t "book.contacts"}} <span class="muted">({{num .Total}})</span></h2>
+<div class="book-controls">
   {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">{{icon "plus"}} {{t "book.new_contact"}}</a>{{end}}
-</div>
-{{if .Cards}}
-<form class="list-prefs" method="post" action="/account/list-prefs" data-autosubmit>
+  {{if .Cards}}
+  <form class="list-prefs" method="post" action="/account/list-prefs" data-autosubmit>
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
   <input type="hidden" name="return" value="{{.ListPrefsReturn}}">
   <label>{{t "list.sort"}}
@@ -59,6 +58,9 @@
   </label>
   <button class="btn btn-secondary" type="submit" data-js-hide>{{t "common.apply"}}</button>
 </form>
+  {{end}}
+</div>
+{{if .Cards}}
 {{template "contact_cards" .Cards}}
 <div class="book-foot">
   {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">{{icon "plus"}} {{t "book.new_contact"}}</a>{{else}}<span></span>{{end}}

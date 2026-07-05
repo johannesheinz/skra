@@ -519,9 +519,9 @@ details.menu > summary::-webkit-details-marker { display: none; }
 .search-field > svg { position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); width: 1.1rem; height: 1.1rem; color: var(--muted); pointer-events: none; }
 .search-field input { width: 100%; padding-left: 2.4rem; }
 
-/* Results header (count + primary add) and footer (add + pager). */
-.book-results-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
-.book-results-head h2 { margin-top: 0; }
+/* Controls row (primary add on the left, sort/size on the right) and footer (add + pager). */
+.book-controls { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.book-controls .list-prefs { margin-bottom: 0; }
 .book-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); }
 .book-foot .pager { margin-top: 0; }
 
