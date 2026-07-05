@@ -139,12 +139,18 @@ func IncrementShareFailure(ctx context.Context, d *db.DB, id int64) error {
 	return nil
 }
 
-// Usable reports whether the link may currently be served: not revoked, not expired, not uses-exhausted, and not locked by too many gate failures.
+// Usable reports whether the link may currently be served as a counted view: not revoked, not expired, not uses-exhausted, and not locked by too many gate failures.
 func (s ShareLink) Usable(now time.Time) bool {
-	if s.Revoked {
+	if s.MaxUses > 0 && s.UseCount >= s.MaxUses {
 		return false
 	}
-	if s.MaxUses > 0 && s.UseCount >= s.MaxUses {
+	return s.Servable(now)
+}
+
+// Servable reports whether a sub-resource of a served view (e.g. a contact photo) may be delivered: everything Usable checks except the uses-exhausted limit.
+// A max-uses limit caps page views, not the assets a counted view pulls in; without this the final counted view would render but its photo request — arriving after the view incremented use_count to the limit — would be refused.
+func (s ShareLink) Servable(now time.Time) bool {
+	if s.Revoked {
 		return false
 	}
 	if s.FailedCount >= sharing.GateMaxFailures {

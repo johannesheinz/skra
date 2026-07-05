@@ -106,7 +106,7 @@ func (h *Handlers) ShareContactInBook(w http.ResponseWriter, r *http.Request) {
 
 // ShareBookContactPhoto serves a contact's photo within a book share (GET /s/{token}/c/{contactPublicID}/photo).
 func (h *Handlers) ShareBookContactPhoto(w http.ResponseWriter, r *http.Request) {
-	_, contact, ok := h.resolveShareContact(w, r)
+	_, contact, ok := h.resolveShareContactAsset(w, r)
 	if !ok {
 		return
 	}
@@ -115,7 +115,7 @@ func (h *Handlers) ShareBookContactPhoto(w http.ResponseWriter, r *http.Request)
 
 // ShareContactPhoto serves the photo for a contact-scoped share (GET /s/{token}/photo).
 func (h *Handlers) ShareContactPhoto(w http.ResponseWriter, r *http.Request) {
-	link, ok := h.resolveShareForView(w, r)
+	link, ok := h.resolveShareForAsset(w, r)
 	if !ok {
 		return
 	}
@@ -234,7 +234,23 @@ func (h *Handlers) ShareGateSubmit(w http.ResponseWriter, r *http.Request) {
 
 // resolveShareForView resolves the share for the current request and enforces its mode.
 // It returns ok=false (having written a 404, a login redirect, or the gate page) when the caller must not proceed.
+// shareLive is the liveness test a resolver applies to a link: Usable for a
+// counted view, Servable for a sub-resource of one.
+type shareLive func(models.ShareLink, time.Time) bool
+
 func (h *Handlers) resolveShareForView(w http.ResponseWriter, r *http.Request) (models.ShareLink, bool) {
+	return h.resolveShare(w, r, models.ShareLink.Usable)
+}
+
+// resolveShareForAsset resolves a share for a sub-resource (e.g. a photo): it
+// still enforces revocation, expiry, the gate, and auth, but not the
+// uses-exhausted limit — the view that references the asset has already been
+// counted, so its photo must still load on the final permitted view.
+func (h *Handlers) resolveShareForAsset(w http.ResponseWriter, r *http.Request) (models.ShareLink, bool) {
+	return h.resolveShare(w, r, models.ShareLink.Servable)
+}
+
+func (h *Handlers) resolveShare(w http.ResponseWriter, r *http.Request, live shareLive) (models.ShareLink, bool) {
 	token := chi.URLParam(r, "token")
 	link, err := models.GetShareLinkByToken(r.Context(), h.DB, token)
 	if err != nil {
@@ -246,7 +262,7 @@ func (h *Handlers) resolveShareForView(w http.ResponseWriter, r *http.Request) (
 		http.NotFound(w, r)
 		return models.ShareLink{}, false
 	}
-	if !link.Usable(time.Now()) {
+	if !live(link, time.Now()) {
 		http.NotFound(w, r)
 		return models.ShareLink{}, false
 	}
@@ -274,7 +290,16 @@ func (h *Handlers) resolveShareForView(w http.ResponseWriter, r *http.Request) (
 
 // resolveShareContact resolves a book-scoped share and the {contactPublicID} within it, verifying the contact belongs to the shared book.
 func (h *Handlers) resolveShareContact(w http.ResponseWriter, r *http.Request) (models.ShareLink, models.Contact, bool) {
-	link, ok := h.resolveShareForView(w, r)
+	return h.resolveShareContactWith(w, r, models.ShareLink.Usable)
+}
+
+// resolveShareContactAsset resolves a contact within a book share for a photo request, exempt from the uses-exhausted limit (see resolveShareForAsset).
+func (h *Handlers) resolveShareContactAsset(w http.ResponseWriter, r *http.Request) (models.ShareLink, models.Contact, bool) {
+	return h.resolveShareContactWith(w, r, models.ShareLink.Servable)
+}
+
+func (h *Handlers) resolveShareContactWith(w http.ResponseWriter, r *http.Request, live shareLive) (models.ShareLink, models.Contact, bool) {
+	link, ok := h.resolveShare(w, r, live)
 	if !ok {
 		return models.ShareLink{}, models.Contact{}, false
 	}
