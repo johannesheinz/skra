@@ -269,3 +269,21 @@ func TestBookEditReturnsToOrigin(t *testing.T) {
 		t.Error("unsafe return should fall back to the book page")
 	}
 }
+
+func TestBookNewReturnsToOrigin(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
+	session := sessionCookieFor(t, d, owner.ID)
+
+	// Started from the dashboard: cancel returns home.
+	fromHome, _, _ := authedGet(t, router, session, "/books/new?return=/")
+	if !strings.Contains(fromHome.Body.String(), `href="/"`) {
+		t.Error("new book started from the dashboard should cancel back home")
+	}
+	// Started from the overview (no return): cancel returns to the overview.
+	fromOverview, _, _ := authedGet(t, router, session, "/books/new")
+	if !strings.Contains(fromOverview.Body.String(), `href="/books"`) {
+		t.Error("new book should default its cancel to the overview")
+	}
+}

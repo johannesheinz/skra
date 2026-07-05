@@ -43,10 +43,12 @@ func (h *Handlers) BooksList(w http.ResponseWriter, r *http.Request) {
 
 // BookNew renders the create form (GET /books/new).
 func (h *Handlers) BookNew(w http.ResponseWriter, r *http.Request) {
+	// Cancel returns to where creation was started (the dashboard or the overview); default to the overview.
+	ret := safeReturnOr(r.URL.Query().Get("return"), "/books")
 	h.render(w, r, http.StatusOK, "book_form.html", map[string]any{
 		"HeadingKey": "book_form.new",
 		"FormAction": "/books",
-		"CancelURL":  "/books",
+		"CancelURL":  ret,
 	})
 }
 
@@ -64,13 +66,14 @@ func (h *Handlers) BookCreate(w http.ResponseWriter, r *http.Request) {
 		h.render(w, r, http.StatusUnprocessableEntity, "book_form.html", map[string]any{
 			"HeadingKey":  "book_form.new",
 			"FormAction":  "/books",
-			"CancelURL":   "/books",
+			"CancelURL":   safeReturnOr(r.PostFormValue("return"), "/books"),
 			"Name":        name,
 			"Description": description,
 			"Error":       h.tr(r).T("msg.name_required"),
 		})
 		return
 	}
+	// On success go forward to the new (empty) book so contacts can be added.
 	http.Redirect(w, r, "/books/"+book.PublicID, http.StatusSeeOther)
 }
 
