@@ -223,11 +223,12 @@ type RecentContact struct {
 	HasPhoto     bool
 	BookName     string
 	BookPublicID string
+	BookColor    int
 }
 
 // RecentContactsForUser returns the most recently created contacts across the books a user may see (admins see all), newest first.
 func RecentContactsForUser(ctx context.Context, d *db.DB, user User, limit int) ([]RecentContact, error) {
-	const base = `SELECT c.public_id, c.full_name, c.has_photo, ab.name, ab.public_id
+	const base = `SELECT c.public_id, c.full_name, c.has_photo, ab.name, ab.public_id, ab.id
 		FROM contacts c JOIN address_books ab ON ab.id = c.address_book_id`
 	var (
 		rows *sql.Rows
@@ -249,11 +250,12 @@ func RecentContactsForUser(ctx context.Context, d *db.DB, user User, limit int) 
 	var out []RecentContact
 	for rows.Next() {
 		var rc RecentContact
-		var hasPhoto int64
-		if err := rows.Scan(&rc.PublicID, &rc.FullName, &hasPhoto, &rc.BookName, &rc.BookPublicID); err != nil {
+		var hasPhoto, bookID int64
+		if err := rows.Scan(&rc.PublicID, &rc.FullName, &hasPhoto, &rc.BookName, &rc.BookPublicID, &bookID); err != nil {
 			return nil, fmt.Errorf("models: scan recent contact: %w", err)
 		}
 		rc.HasPhoto = hasPhoto != 0
+		rc.BookColor = int(bookID % BookColorCount)
 		out = append(out, rc)
 	}
 	if err := rows.Err(); err != nil {
@@ -271,6 +273,7 @@ type SearchResult struct {
 	HasPhoto     bool
 	BookName     string
 	BookPublicID string
+	BookColor    int
 }
 
 // SearchContactsForUser finds contacts matching a case-insensitive substring across the structured columns, across every book the user may see (admins see all), ordered by name.
@@ -282,7 +285,7 @@ func SearchContactsForUser(ctx context.Context, d *db.DB, user User, query strin
 	}
 	like := "%" + q + "%"
 	// org and primary_email are nullable columns; coalesce so a NULL scans as "".
-	const cols = `SELECT c.public_id, c.full_name, COALESCE(c.org, ''), COALESCE(c.primary_email, ''), c.has_photo, ab.name, ab.public_id
+	const cols = `SELECT c.public_id, c.full_name, COALESCE(c.org, ''), COALESCE(c.primary_email, ''), c.has_photo, ab.name, ab.public_id, ab.id
 		FROM contacts c JOIN address_books ab ON ab.id = c.address_book_id`
 	const match = ` (c.full_name LIKE ? OR c.org LIKE ? OR c.primary_email LIKE ? OR c.primary_phone LIKE ?)`
 	const order = ` ORDER BY c.full_name COLLATE NOCASE, c.id LIMIT ?`
@@ -307,10 +310,11 @@ func SearchContactsForUser(ctx context.Context, d *db.DB, user User, query strin
 	var out []SearchResult
 	for rows.Next() {
 		var sr SearchResult
-		var hasPhoto int64
-		if err := rows.Scan(&sr.PublicID, &sr.FullName, &sr.Org, &sr.PrimaryEmail, &hasPhoto, &sr.BookName, &sr.BookPublicID); err != nil {
+		var hasPhoto, bookID int64
+		if err := rows.Scan(&sr.PublicID, &sr.FullName, &sr.Org, &sr.PrimaryEmail, &hasPhoto, &sr.BookName, &sr.BookPublicID, &bookID); err != nil {
 			return nil, fmt.Errorf("models: scan search result: %w", err)
 		}
+		sr.BookColor = int(bookID % BookColorCount)
 		sr.HasPhoto = hasPhoto != 0
 		out = append(out, sr)
 	}
@@ -377,6 +381,7 @@ type UpcomingBirthday struct {
 	HasPhoto     bool
 	BookName     string
 	BookPublicID string
+	BookColor    int
 	Month        time.Month
 	Day          int
 	Age          int // age reached on the upcoming birthday; only set when HasAge
@@ -410,7 +415,7 @@ func UpcomingBirthdaysForUser(ctx context.Context, d *db.DB, user User, limit in
 		THEN strftime('%Y','now') || substr(c.birthday, 5)
 		ELSE CAST(CAST(strftime('%Y','now') AS INTEGER) + 1 AS TEXT) || substr(c.birthday, 5)
 	END`
-	const base = `SELECT c.public_id, c.full_name, c.has_photo, ab.name, ab.public_id, c.birthday
+	const base = `SELECT c.public_id, c.full_name, c.has_photo, ab.name, ab.public_id, ab.id, c.birthday
 		FROM contacts c JOIN address_books ab ON ab.id = c.address_book_id
 		WHERE c.birthday IS NOT NULL AND length(c.birthday) = 10`
 	var (
@@ -434,14 +439,15 @@ func UpcomingBirthdaysForUser(ctx context.Context, d *db.DB, user User, limit in
 	var out []UpcomingBirthday
 	for rows.Next() {
 		var (
-			ub       UpcomingBirthday
-			hasPhoto int64
-			birthday string
+			ub               UpcomingBirthday
+			hasPhoto, bookID int64
+			birthday         string
 		)
-		if err := rows.Scan(&ub.PublicID, &ub.FullName, &hasPhoto, &ub.BookName, &ub.BookPublicID, &birthday); err != nil {
+		if err := rows.Scan(&ub.PublicID, &ub.FullName, &hasPhoto, &ub.BookName, &ub.BookPublicID, &bookID, &birthday); err != nil {
 			return nil, fmt.Errorf("models: scan upcoming birthday: %w", err)
 		}
 		ub.HasPhoto = hasPhoto != 0
+		ub.BookColor = int(bookID % BookColorCount)
 		year, month, day := atoi2(birthday[0:4]), atoi2(birthday[5:7]), atoi2(birthday[8:10])
 		ub.Month, ub.Day = time.Month(month), day
 		occYear := occurrenceYear(now, month, day)

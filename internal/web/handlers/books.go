@@ -139,6 +139,8 @@ func (h *Handlers) BookEdit(w http.ResponseWriter, r *http.Request) {
 		"FormAction":  "/books/" + book.PublicID + "/edit",
 		"Name":        book.Name,
 		"Description": book.Description,
+		"ShowColor":   true,
+		"BookColor":   book.Color(),
 	})
 }
 

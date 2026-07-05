@@ -1,7 +1,7 @@
 {{define "contact_cards"}}
 <ul class="card-grid">
   {{range .}}
-  <li class="contact-card{{if .BookName}} book-spine book-hue-{{bookHue .BookPublicID}}{{end}}">
+  <li class="contact-card{{if .BookName}} book-spine book-color-{{.BookColor}}{{end}}">
     <a class="contact-card-head" href="{{.URL}}">
       {{if .HasPhoto}}
       <img class="avatar avatar-sm" src="{{.PhotoURL}}" alt="" width="56" height="56">

@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"hash/fnv"
 	"html/template"
 	"net/http"
 	"strings"
@@ -38,20 +37,6 @@ func initial(s string) string {
 	return "?"
 }
 
-// bookHueCount is the size of the fixed book-colour palette; it must match the
-// number of .book-hue-N rules in app.css.
-const bookHueCount = 12
-
-// bookHue maps a book's stable public_id to a palette bucket, so contacts can
-// carry a consistent per-book colour cue. Derived from public_id (not the name,
-// which may collide or be renamed); the actual colours live in CSS classes
-// (book-hue-N), the only way to colour dynamically under the self-only CSP.
-func bookHue(publicID string) int {
-	h := fnv.New32a()
-	_, _ = h.Write([]byte(publicID))
-	return int(h.Sum32() % bookHueCount)
-}
-
 // localeFuncs builds the FuncMap for one locale: the locale-independent helpers plus the translator/formatter bound to that locale.
 func localeFuncs(tr *i18n.Translator) template.FuncMap {
 	return template.FuncMap{
@@ -59,7 +44,6 @@ func localeFuncs(tr *i18n.Translator) template.FuncMap {
 		"icon":             icons.Inline,
 		"initial":          initial,
 		"seq":              seq,
-		"bookHue":          bookHue,
 		"t":                tr.T,
 		"tf":               tr.Tf,
 		"tn":               tr.Plural,

@@ -10,6 +10,12 @@
   <label>{{t "book_form.description"}}
     <textarea name="description" rows="3">{{.Description}}</textarea>
   </label>
+  {{if .ShowColor}}
+  <div class="book-color-field">
+    <span class="eyebrow">{{t "book_form.color"}}</span>
+    <span class="book-swatch book-color-{{.BookColor}}" aria-hidden="true"></span>
+  </div>
+  {{end}}
   <div>
     <button class="btn" type="submit">{{t "common.save"}}</button>
     <a class="btn btn-secondary" href="/books">{{t "common.cancel"}}</a>

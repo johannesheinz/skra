@@ -34,6 +34,7 @@ type ContactCard struct {
 	BookName     string
 	BookURL      string
 	BookPublicID string
+	BookColor    int
 }
 
 // buildContactCards maps contacts to cards, deriving each card's detail and photo URL via the supplied functions (which differ per context).
@@ -67,6 +68,7 @@ func buildSearchCards(results []models.SearchResult) []ContactCard {
 			BookName:     s.BookName,
 			BookURL:      "/books/" + s.BookPublicID,
 			BookPublicID: s.BookPublicID,
+			BookColor:    s.BookColor,
 		})
 	}
 	return cards

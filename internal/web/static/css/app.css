@@ -142,55 +142,58 @@
 :root[data-accent="lavender"] { --accent: #c4b5fd; --accent-strong: #a78bfa; --accent-fg: #241a4a; }
 
 /* ---- Book colour cue ----
-   A small dot beside a book's name, tinting contacts by which book they belong to.
-   The bucket is chosen in Go (bookHue over the book's public_id) and emitted as a book-hue-N class; the colours live here because the self-only CSP forbids inline styles.
-   Twelve evenly spread hues, each with a brighter dark-mode value so the dot stays legible on the dark surface. */
+   A dot (and, on cards, a left spine) tinting contacts by which book they belong to.
+   The bucket comes from the book's sequential id (see AddressBook.Color) and is emitted as a book-color-N class; the colours live here because the self-only CSP forbids inline styles.
+   A vivid categorical palette ordered so consecutive buckets are maximally different, so books created back to back stay easy to tell apart; each colour has a brighter dark-mode value. */
 .book-dot {
   display: inline-block;
-  width: 0.62em;
-  height: 0.62em;
+  width: 0.7em;
+  height: 0.7em;
   border-radius: 50%;
   background: var(--book-color, var(--muted));
-  vertical-align: -0.04em;
+  vertical-align: -0.06em;
   flex: 0 0 auto;
 }
-.book-hue-0  { --book-color: #3f8a76; }
-.book-hue-1  { --book-color: #3f79a8; }
-.book-hue-2  { --book-color: #5b57c4; }
-.book-hue-3  { --book-color: #8a57b0; }
-.book-hue-4  { --book-color: #b0559a; }
-.book-hue-5  { --book-color: #b85570; }
-.book-hue-6  { --book-color: #b06a45; }
-.book-hue-7  { --book-color: #9a8630; }
-.book-hue-8  { --book-color: #6f9e3f; }
-.book-hue-9  { --book-color: #3f9e6a; }
-.book-hue-10 { --book-color: #3f9a9e; }
-.book-hue-11 { --book-color: #6f7f8a; }
-:root[data-theme="dark"] .book-hue-0  { --book-color: #63b9a3; }
-:root[data-theme="dark"] .book-hue-1  { --book-color: #6fb0e0; }
-:root[data-theme="dark"] .book-hue-2  { --book-color: #9a92f0; }
-:root[data-theme="dark"] .book-hue-3  { --book-color: #c4a0e0; }
-:root[data-theme="dark"] .book-hue-4  { --book-color: #e88fd0; }
-:root[data-theme="dark"] .book-hue-5  { --book-color: #f090a8; }
-:root[data-theme="dark"] .book-hue-6  { --book-color: #e0a075; }
-:root[data-theme="dark"] .book-hue-7  { --book-color: #d0bb60; }
-:root[data-theme="dark"] .book-hue-8  { --book-color: #a8d070; }
-:root[data-theme="dark"] .book-hue-9  { --book-color: #70d0a0; }
-:root[data-theme="dark"] .book-hue-10 { --book-color: #70cdd0; }
-:root[data-theme="dark"] .book-hue-11 { --book-color: #9aa8b4; }
+/* A larger read-only chip of the same colour, e.g. on the book edit page. */
+.book-color-field { display: flex; align-items: center; gap: var(--space-2); }
+.book-swatch { display: inline-block; width: 1.4rem; height: 1.4rem; border-radius: var(--radius-sm); background: var(--book-color, var(--muted)); border: 1px solid var(--border-strong); }
+.book-color-0  { --book-color: #2f6fd0; } /* blue    */
+.book-color-1  { --book-color: #ef7d1a; } /* orange  */
+.book-color-2  { --book-color: #2e9e46; } /* green   */
+.book-color-3  { --book-color: #e0403f; } /* red     */
+.book-color-4  { --book-color: #9b59c7; } /* purple  */
+.book-color-5  { --book-color: #caa213; } /* gold    */
+.book-color-6  { --book-color: #17a8bd; } /* cyan    */
+.book-color-7  { --book-color: #ec6aa8; } /* pink    */
+.book-color-8  { --book-color: #9c6b4a; } /* brown   */
+.book-color-9  { --book-color: #74b81f; } /* lime    */
+.book-color-10 { --book-color: #d43fb0; } /* magenta */
+.book-color-11 { --book-color: #647686; } /* slate   */
+:root[data-theme="dark"] .book-color-0  { --book-color: #6fa3e8; }
+:root[data-theme="dark"] .book-color-1  { --book-color: #ffa04d; }
+:root[data-theme="dark"] .book-color-2  { --book-color: #6ed474; }
+:root[data-theme="dark"] .book-color-3  { --book-color: #ff6f6b; }
+:root[data-theme="dark"] .book-color-4  { --book-color: #c48ae8; }
+:root[data-theme="dark"] .book-color-5  { --book-color: #f0d24a; }
+:root[data-theme="dark"] .book-color-6  { --book-color: #54d6e6; }
+:root[data-theme="dark"] .book-color-7  { --book-color: #ff97c8; }
+:root[data-theme="dark"] .book-color-8  { --book-color: #c99878; }
+:root[data-theme="dark"] .book-color-9  { --book-color: #a8de55; }
+:root[data-theme="dark"] .book-color-10 { --book-color: #f072d6; }
+:root[data-theme="dark"] .book-color-11 { --book-color: #9aa8b5; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .book-hue-0  { --book-color: #63b9a3; }
-  :root:not([data-theme="light"]) .book-hue-1  { --book-color: #6fb0e0; }
-  :root:not([data-theme="light"]) .book-hue-2  { --book-color: #9a92f0; }
-  :root:not([data-theme="light"]) .book-hue-3  { --book-color: #c4a0e0; }
-  :root:not([data-theme="light"]) .book-hue-4  { --book-color: #e88fd0; }
-  :root:not([data-theme="light"]) .book-hue-5  { --book-color: #f090a8; }
-  :root:not([data-theme="light"]) .book-hue-6  { --book-color: #e0a075; }
-  :root:not([data-theme="light"]) .book-hue-7  { --book-color: #d0bb60; }
-  :root:not([data-theme="light"]) .book-hue-8  { --book-color: #a8d070; }
-  :root:not([data-theme="light"]) .book-hue-9  { --book-color: #70d0a0; }
-  :root:not([data-theme="light"]) .book-hue-10 { --book-color: #70cdd0; }
-  :root:not([data-theme="light"]) .book-hue-11 { --book-color: #9aa8b4; }
+  :root:not([data-theme="light"]) .book-color-0  { --book-color: #6fa3e8; }
+  :root:not([data-theme="light"]) .book-color-1  { --book-color: #ffa04d; }
+  :root:not([data-theme="light"]) .book-color-2  { --book-color: #6ed474; }
+  :root:not([data-theme="light"]) .book-color-3  { --book-color: #ff6f6b; }
+  :root:not([data-theme="light"]) .book-color-4  { --book-color: #c48ae8; }
+  :root:not([data-theme="light"]) .book-color-5  { --book-color: #f0d24a; }
+  :root:not([data-theme="light"]) .book-color-6  { --book-color: #54d6e6; }
+  :root:not([data-theme="light"]) .book-color-7  { --book-color: #ff97c8; }
+  :root:not([data-theme="light"]) .book-color-8  { --book-color: #c99878; }
+  :root:not([data-theme="light"]) .book-color-9  { --book-color: #a8de55; }
+  :root:not([data-theme="light"]) .book-color-10 { --book-color: #f072d6; }
+  :root:not([data-theme="light"]) .book-color-11 { --book-color: #9aa8b5; }
 }
 
 /* ---- Reset & base ---- */
@@ -483,6 +486,8 @@ legend { padding: 0 var(--space-2); }
 /* Book tag on a cross-book card (global search): a quiet dotted label. */
 .card-book { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-1); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
 .card-book:hover { color: var(--accent); }
+/* Book name with its colour dot in the overview table. */
+.book-name { display: inline-flex; align-items: center; gap: var(--space-2); }
 
 /* ---- Contact header + photo control ---- */
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

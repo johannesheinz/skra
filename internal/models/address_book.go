@@ -23,6 +23,15 @@ type AddressBook struct {
 	OwnerID     int64
 }
 
+// BookColorCount is the size of the book-colour palette; it must match the number
+// of .book-color-N rules in the stylesheet. The colour is taken from the book's
+// sequential id (not a hash of public_id), so distinct books created in
+// sequence never share a colour up to this many books.
+const BookColorCount = 12
+
+// Color returns the book's colour-palette bucket for the per-book visual cue.
+func (b AddressBook) Color() int { return int(b.ID % BookColorCount) }
+
 // AddressBookListItem is an address book plus its contact count, for listings.
 type AddressBookListItem struct {
 	AddressBook

@@ -56,6 +56,7 @@
   "book_form.edit": "Edit address book",
   "book_form.name": "Name",
   "book_form.description": "Description",
+  "book_form.color": "Colour",
 
   "book.edit": "Edit book",
   "book.members": "Members",

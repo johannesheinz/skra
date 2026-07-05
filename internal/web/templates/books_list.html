@@ -8,7 +8,7 @@
   <tbody>
   {{range .Books}}
     <tr>
-      <td><a href="/books/{{.PublicID}}">{{.Name}}</a></td>
+      <td><a class="book-name" href="/books/{{.PublicID}}"><span class="book-dot book-color-{{.Color}}" aria-hidden="true"></span> {{.Name}}</a></td>
       <td>{{num .ContactCount}}</td>
     </tr>
   {{end}}
