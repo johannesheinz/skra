@@ -283,3 +283,27 @@ func TestRevokeRejectsAlreadyRevoked(t *testing.T) {
 		t.Errorf("second revoke = %d, want 404", rec.Code)
 	}
 }
+
+func TestSharesBackReturnsToOrigin(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Friends", "")
+	session := sessionCookieFor(t, d, owner.ID)
+	sharesURL := "/books/" + book.PublicID + "/shares"
+
+	// Opened from the overview: back returns to the overview, actions still target the book.
+	fromOverview, _, _ := authedGet(t, router, session, sharesURL+"?return=/books")
+	if !strings.Contains(fromOverview.Body.String(), `href="/books"`) {
+		t.Error("sharing opened from the overview should link back to it")
+	}
+	if !strings.Contains(fromOverview.Body.String(), `action="`+sharesURL+`"`) {
+		t.Error("create action should still target the book's shares endpoint")
+	}
+	// Default (from the book page): back returns to the book.
+	fromBook, _, _ := authedGet(t, router, session, sharesURL)
+	if !strings.Contains(fromBook.Body.String(), `href="/books/`+book.PublicID+`"`) {
+		t.Error("sharing should default its back link to the book")
+	}
+}

@@ -79,14 +79,17 @@ func (h *Handlers) ContactShareRevoke(w http.ResponseWriter, r *http.Request) {
 
 // --- Shared implementation ---
 
-func (h *Handlers) renderShares(w http.ResponseWriter, r *http.Request, status int, title, backURL, scope string, targetID int64, errMsg string) {
+func (h *Handlers) renderShares(w http.ResponseWriter, r *http.Request, status int, title, resourceURL, scope string, targetID int64, errMsg string) {
 	links, err := models.ListShareLinksForTarget(r.Context(), h.DB, scope, targetID)
 	if err != nil {
 		h.Logger.Error("list share links failed", "err", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	sharesURL := backURL + "/shares"
+	sharesURL := resourceURL + "/shares"
+	// The "back" link returns to where sharing was opened from (e.g. the overview
+	// or the resource itself); the create/revoke actions always target the resource.
+	backURL := safeReturnOr(r.URL.Query().Get("return"), resourceURL)
 	now := time.Now()
 	views := make([]shareView, 0, len(links))
 	for _, l := range links {
