@@ -2,18 +2,19 @@
 {{define "content"}}
 <h1>{{tf "home.welcome" .User.Username}}</h1>
 
-<form class="global-search" role="search" method="get" action="/"
-      hx-get="/" hx-target="#search-results" hx-swap="innerHTML"
-      hx-trigger="input changed delay:300ms, search, submit" hx-push-url="true">
-  <input type="search" name="q" value="{{.Query}}" placeholder="{{t "search.placeholder"}}" aria-label="{{t "search.placeholder"}}" autocomplete="off">
-  <button class="btn btn-secondary btn-icon" type="submit" data-js-hide aria-label="{{t "common.search"}}" title="{{t "common.search"}}">{{icon "search"}}</button>
-</form>
-<div id="search-results" aria-live="polite">{{if .Query}}{{template "search_results" .}}{{end}}</div>
-
-<div class="stats">
-  <div class="stat"><span class="stat-num">{{num .TotalContacts}}</span><span class="stat-label">{{t "home.contacts"}}</span></div>
-  <div class="stat"><span class="stat-num">{{num .BookCount}}</span><span class="stat-label">{{t "home.address_books"}}</span></div>
+<div class="dash-top">
+  <form class="global-search" role="search" method="get" action="/"
+        hx-get="/" hx-target="#search-results" hx-swap="innerHTML"
+        hx-trigger="input changed delay:300ms, search, submit" hx-push-url="true">
+    <input type="search" name="q" value="{{.Query}}" placeholder="{{t "search.placeholder"}}" aria-label="{{t "search.placeholder"}}" autocomplete="off">
+    <button class="btn btn-secondary btn-icon" type="submit" data-js-hide aria-label="{{t "common.search"}}" title="{{t "common.search"}}">{{icon "search"}}</button>
+  </form>
+  <div class="stats">
+    <div class="stat"><span class="stat-num">{{num .TotalContacts}}</span><span class="stat-label">{{t "home.contacts"}}</span></div>
+    <div class="stat"><span class="stat-num">{{num .BookCount}}</span><span class="stat-label">{{t "home.address_books"}}</span></div>
+  </div>
 </div>
+<div id="search-results" aria-live="polite">{{if .Query}}{{template "search_results" .}}{{end}}</div>
 
 <div class="actions">
   <a class="btn" href="/books/new">{{icon "plus"}} {{t "home.new_book"}}</a>
