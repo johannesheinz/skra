@@ -42,6 +42,7 @@
   "books.title": "Adressbücher",
   "books.col_name": "Name",
   "books.col_contacts": "Kontakte",
+  "books.col_role": "Rolle",
   "books.none": "Noch keine Adressbücher.",
   "books.import_heading": "In ein neues Adressbuch importieren",
   "books.import_desc": "Lade eine vCard-Datei (.vcf) hoch — auch mit vielen Kontakten — um ein neues Adressbuch zu erstellen und alle auf einmal zu importieren.",

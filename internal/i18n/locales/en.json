@@ -42,6 +42,7 @@
   "books.title": "Address books",
   "books.col_name": "Name",
   "books.col_contacts": "Contacts",
+  "books.col_role": "Role",
   "books.none": "No address books yet.",
   "books.import_heading": "Import into a new address book",
   "books.import_desc": "Upload a vCard (.vcf) file — including one with many contacts — to create a new address book and import them all at once.",

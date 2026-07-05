@@ -39,6 +39,9 @@ type AddressBookListItem struct {
 	AddressBook
 	ContactCount int
 	Manage       bool
+	// Access is the viewer's role on the book: "owner", "manager", "viewer", or
+	// "admin" (an admin who is neither owner nor member).
+	Access string
 }
 
 // CreateAddressBook creates a book and grants its owner a manager membership in one transaction, so the owner can immediately manage it via the normal RBAC path.
@@ -157,19 +160,19 @@ func ListAddressBooks(ctx context.Context, d *db.DB, user User) ([]AddressBookLi
 		rows *sql.Rows
 		err  error
 	)
+	// The viewer's grant level on each book (NULL when they hold none), used to derive Manage and Access.
+	levelExpr := `(SELECT access_level FROM address_book_members m4 WHERE m4.address_book_id = ab.id AND m4.user_id = ?)`
 	if user.Role == RoleAdmin {
 		rows, err = d.QueryContext(ctx,
-			`SELECT ab.id, ab.public_id, ab.name, ab.description, ab.owner_id, `+countExpr+`, 1
-			 FROM address_books ab ORDER BY ab.name COLLATE NOCASE`)
+			`SELECT ab.id, ab.public_id, ab.name, ab.description, ab.owner_id, `+countExpr+`, `+levelExpr+`
+			 FROM address_books ab ORDER BY ab.name COLLATE NOCASE`, user.ID)
 	} else {
-		// The last column is "may manage": owner, or a manager-level grant.
-		manageExpr := `(ab.owner_id = ? OR EXISTS (SELECT 1 FROM address_book_members m2 WHERE m2.address_book_id = ab.id AND m2.user_id = ? AND m2.access_level = ?))`
 		rows, err = d.QueryContext(ctx,
-			`SELECT ab.id, ab.public_id, ab.name, ab.description, ab.owner_id, `+countExpr+`, `+manageExpr+`
+			`SELECT ab.id, ab.public_id, ab.name, ab.description, ab.owner_id, `+countExpr+`, `+levelExpr+`
 			 FROM address_books ab
 			 WHERE ab.owner_id = ?
 			    OR EXISTS (SELECT 1 FROM address_book_members m WHERE m.address_book_id = ab.id AND m.user_id = ?)
-			 ORDER BY ab.name COLLATE NOCASE`, user.ID, user.ID, AccessManager, user.ID, user.ID)
+			 ORDER BY ab.name COLLATE NOCASE`, user.ID, user.ID, user.ID)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("models: list address books: %w", err)
@@ -179,13 +182,20 @@ func ListAddressBooks(ctx context.Context, d *db.DB, user User) ([]AddressBookLi
 	var items []AddressBookListItem
 	for rows.Next() {
 		var it AddressBookListItem
-		var description sql.NullString
-		var manage int64
-		if err := rows.Scan(&it.ID, &it.PublicID, &it.Name, &description, &it.OwnerID, &it.ContactCount, &manage); err != nil {
+		var description, myLevel sql.NullString
+		if err := rows.Scan(&it.ID, &it.PublicID, &it.Name, &description, &it.OwnerID, &it.ContactCount, &myLevel); err != nil {
 			return nil, fmt.Errorf("models: scan address book: %w", err)
 		}
 		it.Description = description.String
-		it.Manage = manage != 0
+		switch {
+		case it.OwnerID == user.ID:
+			it.Access = "owner"
+		case myLevel.Valid && myLevel.String != "":
+			it.Access = myLevel.String
+		case user.Role == RoleAdmin:
+			it.Access = "admin"
+		}
+		it.Manage = it.Access == "owner" || it.Access == AccessManager || user.Role == RoleAdmin
 		items = append(items, it)
 	}
 	if err := rows.Err(); err != nil {

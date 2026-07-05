@@ -13,12 +13,13 @@
 <p><a class="btn" href="/books/new">{{icon "plus"}} {{t "home.new_book"}}</a></p>
 {{if .Books}}
 <div class="table-wrap"><table>
-  <thead><tr><th>{{t "books.col_name"}}</th><th>{{t "books.col_contacts"}}</th><th></th></tr></thead>
+  <thead><tr><th>{{t "books.col_name"}}</th><th>{{t "books.col_contacts"}}</th><th>{{t "books.col_role"}}</th><th></th></tr></thead>
   <tbody>
   {{range .Books}}
     <tr>
       <td><a class="book-name" href="/books/{{.PublicID}}"><span class="book-dot book-color-{{.Color}}" aria-hidden="true"></span> {{.Name}}</a></td>
       <td>{{num .ContactCount}}</td>
+      <td class="muted book-role">{{if eq .Access "owner"}}{{t "members.owner"}}{{else if eq .Access "admin"}}{{t "role.admin"}}{{else if .Access}}{{t (printf "level.%s" .Access)}}{{end}}</td>
       <td>{{if .Manage}}
         <div class="row-actions">
           <a class="btn btn-ghost btn-icon" href="/books/{{.PublicID}}/edit" aria-label="{{t "book.edit"}}" title="{{t "book.edit"}}">{{icon "pencil"}}</a>
