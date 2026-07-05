@@ -34,7 +34,10 @@
 {{end}}
 
 {{define "book_results"}}
-<h2>{{t "book.contacts"}} <span class="muted">({{num .Total}})</span></h2>
+<div class="book-results-head">
+  <h2>{{t "book.contacts"}} <span class="muted">({{num .Total}})</span></h2>
+  {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">{{icon "plus"}} {{t "book.new_contact"}}</a>{{end}}
+</div>
 {{if .Cards}}
 <form class="list-prefs" method="post" action="/account/list-prefs" data-autosubmit>
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
@@ -57,13 +60,16 @@
   <button class="btn btn-secondary" type="submit" data-js-hide>{{t "common.apply"}}</button>
 </form>
 {{template "contact_cards" .Cards}}
-{{if or .ShowAll (gt .TotalPages 1)}}
-<nav class="pager" aria-label="Pagination">
-  {{if .PrevURL}}<a class="btn btn-secondary btn-icon" href="{{.PrevURL}}" aria-label="{{t "pager.previous"}}" title="{{t "pager.previous"}}">{{icon "chevron-left"}}</a>{{end}}
-  <span class="muted">{{if .ShowAll}}{{tf "pager.all" .Total}}{{else}}{{tf "pager.page" .Page}}{{end}}</span>
-  {{if .NextURL}}<a class="btn btn-secondary btn-icon" href="{{.NextURL}}" aria-label="{{t "pager.next"}}" title="{{t "pager.next"}}">{{icon "chevron-right"}}</a>{{end}}
-</nav>
-{{end}}
+<div class="book-foot">
+  {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">{{icon "plus"}} {{t "book.new_contact"}}</a>{{else}}<span></span>{{end}}
+  {{if or .ShowAll (gt .TotalPages 1)}}
+  <nav class="pager" aria-label="Pagination">
+    {{if .PrevURL}}<a class="btn btn-secondary btn-icon" href="{{.PrevURL}}" aria-label="{{t "pager.previous"}}" title="{{t "pager.previous"}}">{{icon "chevron-left"}}</a>{{end}}
+    <span class="muted">{{if .ShowAll}}{{tf "pager.all" .Total}}{{else}}{{tf "pager.page" .Page}}{{end}}</span>
+    {{if .NextURL}}<a class="btn btn-secondary btn-icon" href="{{.NextURL}}" aria-label="{{t "pager.next"}}" title="{{t "pager.next"}}">{{icon "chevron-right"}}</a>{{end}}
+  </nav>
+  {{end}}
+</div>
 {{else}}
 <p class="muted">{{if .Query}}{{tf "book.no_match" .Query}}{{else}}{{t "book.no_contacts"}}{{end}}</p>
 {{end}}

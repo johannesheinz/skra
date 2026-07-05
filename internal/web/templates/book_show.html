@@ -1,34 +1,39 @@
 {{define "title"}}{{.Book.Name}} · Skrá{{end}}
 {{define "content"}}
-<h1>{{.Book.Name}}</h1>
-{{if .Book.Description}}<p class="muted">{{.Book.Description}}</p>{{end}}
-
-{{if .CanManage}}
-<div class="actions">
-  <a class="btn btn-secondary" href="/books/{{.Book.PublicID}}/edit">{{icon "pencil"}} {{t "book.edit"}}</a>
-  <a class="btn btn-ghost" href="/books/{{.Book.PublicID}}/members">{{icon "users"}} {{t "book.members"}}</a>
-  <a class="btn btn-ghost" href="/books/{{.Book.PublicID}}/shares">{{icon "share-2"}} {{t "book.manage_sharing"}}</a>
-  <form method="post" action="/books/{{.Book.PublicID}}/delete" data-confirm="{{t "confirm.delete_book"}}">
-    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    <button class="btn btn-ghost btn-danger" type="submit">{{icon "trash-2"}} {{t "book.delete"}}</button>
-  </form>
-</div>
-{{end}}
-
-<div class="toolbar">
-  <form method="get" action="/books/{{.Book.PublicID}}" role="search"
-        hx-get="/books/{{.Book.PublicID}}" hx-target="#book-results" hx-swap="innerHTML"
-        hx-trigger="input changed delay:300ms, search, submit" hx-push-url="true">
-    <input type="search" name="q" value="{{.Query}}" placeholder="{{t "book.search_placeholder"}}" aria-label="{{t "book.search_placeholder"}}" autocomplete="off">
-    <button class="btn btn-secondary btn-icon" type="submit" data-js-hide aria-label="{{t "common.search"}}" title="{{t "common.search"}}">{{icon "search"}}</button>
-  </form>
-  <div class="actions">
-    {{if .CanManage}}<a class="btn" href="/books/{{.Book.PublicID}}/contacts/new">{{icon "plus"}} {{t "book.new_contact"}}</a>{{end}}
-    {{if .CanManage}}<a class="btn btn-ghost" href="/books/{{.Book.PublicID}}/import">{{icon "upload"}} {{t "book.import"}}</a>{{end}}
-    <a class="btn btn-ghost" href="/books/{{.Book.PublicID}}/export.vcf">{{icon "download"}} {{t "book.export_vcard"}}</a>
-    <a class="btn btn-ghost" href="/books/{{.Book.PublicID}}/export.csv">{{icon "download"}} {{t "book.export_csv"}}</a>
+<div class="book-header">
+  <div class="book-headings">
+    <h1>{{.Book.Name}}</h1>
+    {{if .Book.Description}}<p class="muted">{{.Book.Description}}</p>{{end}}
+  </div>
+  <div class="book-tools">
+    {{if .CanManage}}<a class="btn btn-secondary btn-icon" href="/books/{{.Book.PublicID}}/edit" aria-label="{{t "book.edit"}}" title="{{t "book.edit"}}">{{icon "pencil"}}</a>{{end}}
+    <details class="menu">
+      <summary class="btn btn-secondary btn-icon" aria-label="{{t "book.more_actions"}}" title="{{t "book.more_actions"}}">{{icon "ellipsis-vertical"}}</summary>
+      <div class="menu-panel">
+        {{if .CanManage}}
+        <a class="menu-item" href="/books/{{.Book.PublicID}}/members">{{icon "users"}} {{t "book.members"}}</a>
+        <a class="menu-item" href="/books/{{.Book.PublicID}}/shares">{{icon "share-2"}} {{t "book.manage_sharing"}}</a>
+        <a class="menu-item" href="/books/{{.Book.PublicID}}/import">{{icon "upload"}} {{t "book.import"}}</a>
+        {{end}}
+        <a class="menu-item" href="/books/{{.Book.PublicID}}/export.vcf">{{icon "download"}} {{t "book.export_vcard"}}</a>
+        <a class="menu-item" href="/books/{{.Book.PublicID}}/export.csv">{{icon "download"}} {{t "book.export_csv"}}</a>
+        {{if .CanManage}}
+        <form method="post" action="/books/{{.Book.PublicID}}/delete" data-confirm="{{t "confirm.delete_book"}}">
+          <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+          <button class="menu-item menu-item-danger" type="submit">{{icon "trash-2"}} {{t "book.delete"}}</button>
+        </form>
+        {{end}}
+      </div>
+    </details>
   </div>
 </div>
+
+<form class="book-search" role="search" method="get" action="/books/{{.Book.PublicID}}"
+      hx-get="/books/{{.Book.PublicID}}" hx-target="#book-results" hx-swap="innerHTML"
+      hx-trigger="input changed delay:300ms, search, submit" hx-push-url="true">
+  <span class="search-field">{{icon "search"}}<input type="search" name="q" value="{{.Query}}" placeholder="{{t "book.search_placeholder"}}" aria-label="{{t "book.search_placeholder"}}" autocomplete="off"></span>
+  <button class="btn btn-secondary btn-icon" type="submit" data-js-hide aria-label="{{t "common.search"}}" title="{{t "common.search"}}">{{icon "search"}}</button>
+</form>
 
 <div id="book-results">
   {{template "book_results" .}}
