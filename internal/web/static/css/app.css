@@ -545,6 +545,10 @@ details.menu > summary::-webkit-details-marker { display: none; }
   transition: border-color 0.12s ease, transform 0.12s ease;
 }
 .contact-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+/* "New address book" tile: a quiet dashed add-card as the last item of the book grid. */
+.book-add-card { display: flex; }
+.book-add-card a { display: flex; align-items: center; justify-content: center; gap: var(--space-2); width: 100%; min-height: 100%; padding: var(--space-4); border: 1px dashed var(--border-strong); border-radius: var(--radius); color: var(--muted); font-weight: 700; text-decoration: none; transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease; }
+.book-add-card a:hover { border-color: var(--accent); color: var(--accent); background: var(--surface); }
 .contact-card-head { display: flex; align-items: center; gap: var(--space-3); text-decoration: none; color: var(--ink); font-weight: 700; margin-bottom: var(--space-1); }
 .contact-card-head:hover { color: var(--accent); }
 .contact-card-name { overflow-wrap: anywhere; }

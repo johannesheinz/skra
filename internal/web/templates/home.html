@@ -16,12 +16,7 @@
 </div>
 <div id="search-results" aria-live="polite">{{if .Query}}{{template "search_results" .}}{{end}}</div>
 
-<div class="actions">
-  <a class="btn" href="/books/new">{{icon "plus"}} {{t "home.new_book"}}</a>
-</div>
-
 <h2 class="dash-heading">{{t "home.your_books"}}</h2>
-{{if .Books}}
 <ul class="card-grid">
   {{range .Books}}
   <li class="contact-card book-card book-spine book-color-{{.Color}}">
@@ -29,10 +24,8 @@
     <span class="muted">{{tn "contacts.count" .ContactCount}}</span>
   </li>
   {{end}}
+  <li class="book-add-card"><a href="/books/new">{{icon "plus"}} {{t "home.new_book"}}</a></li>
 </ul>
-{{else}}
-<p class="muted">{{t "home.no_books"}} <a href="/books/new">{{t "home.create_first"}}</a>.</p>
-{{end}}
 
 {{if .Birthdays}}
 <h2 class="dash-heading">{{t "home.upcoming_birthdays"}}</h2>
