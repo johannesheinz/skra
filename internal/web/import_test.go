@@ -85,21 +85,33 @@ func TestBookImportNewCreatesBookAndImports(t *testing.T) {
 	}
 }
 
-func TestBookImportNewForbiddenForNonAdmin(t *testing.T) {
+func TestBookImportNewAllowedForNonAdmin(t *testing.T) {
 	d := testutil.NewDB(t)
 	router := testRouter(t, d)
+	ctx := context.Background()
 	user := seedUser(t, d, "alice", "pw", models.RoleUser)
 	session := sessionCookieFor(t, d, user.ID)
 
-	// The overview does not offer the control to non-admins...
+	// Creating (and importing into) a book is open to any user, matching the
+	// open "New address book" action, so the overview offers the control...
 	page, token, csrf := authedGet(t, router, session, "/books")
-	if strings.Contains(page.Body.String(), "Import into a new address book") {
-		t.Error("non-admin should not see the create+import form")
+	if !strings.Contains(page.Body.String(), "Import into a new address book") {
+		t.Error("non-admin should see the create+import form")
 	}
-	// ...and the endpoint refuses them (404, not revealing the action).
-	rec := uploadNewBookVCF(t, router, session, csrf, token, "Sneaky", importVCF)
-	if rec.Code != http.StatusNotFound {
-		t.Errorf("non-admin create+import = %d, want 404", rec.Code)
+	// ...and the import succeeds, creating a book they own.
+	rec := uploadNewBookVCF(t, router, session, csrf, token, "Alice's Import", importVCF)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Imported 2 contacts") {
+		t.Fatalf("non-admin create+import = %d, body:\n%s", rec.Code, rec.Body.String())
+	}
+	books, _ := models.ListAddressBooks(ctx, d, user)
+	found := false
+	for i := range books {
+		if books[i].Name == "Alice's Import" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("imported book not created for non-admin; have %+v", books)
 	}
 }
 

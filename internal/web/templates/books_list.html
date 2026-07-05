@@ -37,7 +37,6 @@
 <p class="muted">{{t "books.none"}}</p>
 {{end}}
 
-{{if eq .User.Role "admin"}}
 <h2 class="dash-heading">{{t "books.import_heading"}}</h2>
 <p class="muted">{{t "books.import_desc"}}</p>
 <form class="stack" method="post" action="/books/import" enctype="multipart/form-data">
@@ -47,5 +46,4 @@
   <label>{{t "books.vcard_file"}} <input type="file" name="file" accept=".vcf,text/vcard" required></label>
   <button class="btn" type="submit">{{icon "upload"}} {{t "books.create_import"}}</button>
 </form>
-{{end}}
 {{end}}

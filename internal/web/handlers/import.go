@@ -219,10 +219,6 @@ func (h *Handlers) BookImportNew(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	if user.Role != models.RoleAdmin {
-		http.NotFound(w, r) // don't reveal the admin-only action
-		return
-	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
 	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
