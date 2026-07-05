@@ -4,6 +4,7 @@
 {{if .Error}}<p role="alert">{{.Error}}</p>{{end}}
 <form class="stack" method="post" action="{{.FormAction}}">
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  {{if .CancelURL}}<input type="hidden" name="return" value="{{.CancelURL}}">{{end}}
   <label>{{t "book_form.name"}}
     <input type="text" name="name" value="{{.Name}}" required autofocus>
   </label>

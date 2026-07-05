@@ -233,3 +233,39 @@ func TestBookEditCancelReturnsToBook(t *testing.T) {
 		t.Error("edit cancel should return to the book, not the overview")
 	}
 }
+
+func TestBookEditReturnsToOrigin(t *testing.T) {
+	d := testutil.NewDB(t)
+	router := testRouter(t, d)
+	ctx := context.Background()
+	owner := seedUser(t, d, "owner", "pw", models.RoleUser)
+	book, _ := models.CreateAddressBook(ctx, d, owner.ID, "Clients", "")
+	session := sessionCookieFor(t, d, owner.ID)
+
+	// The overview links its edit action back to itself.
+	overview := get(router, "/books", session)
+	if !strings.Contains(overview.Body.String(), "/edit?return=/books") {
+		t.Error("overview edit link should carry return=/books")
+	}
+
+	// Opened from the overview: cancel points back to the overview...
+	rec, token, csrf := authedGet(t, router, session, "/books/"+book.PublicID+"/edit?return=/books")
+	if !strings.Contains(rec.Body.String(), `href="/books"`) {
+		t.Error("cancel should return to the overview when opened from it")
+	}
+	// ...and saving redirects there too.
+	save := authedPostForm(router, session, csrf, "/books/"+book.PublicID+"/edit",
+		url.Values{auth.CSRFFormField: {token}, "name": {"Clients"}, "return": {"/books"}})
+	if save.Code != http.StatusSeeOther || save.Header().Get("Location") != "/books" {
+		t.Errorf("save redirect = %d %q, want 303 /books", save.Code, save.Header().Get("Location"))
+	}
+
+	// An unsafe (off-site) return is ignored: cancel falls back to the book's own page.
+	rec2, _, _ := authedGet(t, router, session, "/books/"+book.PublicID+"/edit?return=https://evil.test")
+	if strings.Contains(rec2.Body.String(), `href="https://evil.test"`) {
+		t.Error("unsafe return must not become the cancel target")
+	}
+	if !strings.Contains(rec2.Body.String(), `href="/books/`+book.PublicID+`"`) {
+		t.Error("unsafe return should fall back to the book page")
+	}
+}

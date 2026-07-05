@@ -170,10 +170,13 @@ func (h *Handlers) BookEdit(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	// Return to wherever the edit was opened from (the overview or the book's own
+	// page); default to the book so a bare link still behaves sensibly.
+	ret := safeReturnOr(r.URL.Query().Get("return"), "/books/"+book.PublicID)
 	h.render(w, r, http.StatusOK, "book_form.html", map[string]any{
 		"HeadingKey":  "book_form.edit",
 		"FormAction":  "/books/" + book.PublicID + "/edit",
-		"CancelURL":   "/books/" + book.PublicID,
+		"CancelURL":   ret,
 		"Name":        book.Name,
 		"Description": book.Description,
 		"ShowColor":   true,
@@ -192,19 +195,20 @@ func (h *Handlers) BookUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	name := r.PostFormValue("name")
 	description := r.PostFormValue("description")
+	ret := safeReturnOr(r.PostFormValue("return"), "/books/"+book.PublicID)
 
 	if err := models.UpdateAddressBook(r.Context(), h.DB, book.ID, name, description); err != nil {
 		h.render(w, r, http.StatusUnprocessableEntity, "book_form.html", map[string]any{
 			"HeadingKey":  "book_form.edit",
 			"FormAction":  "/books/" + book.PublicID + "/edit",
-			"CancelURL":   "/books/" + book.PublicID,
+			"CancelURL":   ret,
 			"Name":        name,
 			"Description": description,
 			"Error":       h.tr(r).T("msg.name_required"),
 		})
 		return
 	}
-	http.Redirect(w, r, "/books/"+book.PublicID, http.StatusSeeOther)
+	http.Redirect(w, r, ret, http.StatusSeeOther)
 }
 
 // BookDelete removes a book and its contents (POST /books/{publicID}/delete).

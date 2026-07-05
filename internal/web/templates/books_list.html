@@ -21,7 +21,7 @@
       <td class="muted book-role">{{if eq .Access "owner"}}{{t "members.owner"}}{{else if eq .Access "admin"}}{{t "role.admin"}}{{else if .Access}}{{t (printf "level.%s" .Access)}}{{end}}</td>
       <td>{{if .Manage}}
         <div class="row-actions">
-          <a class="btn btn-ghost btn-icon" href="/books/{{.PublicID}}/edit" aria-label="{{t "book.edit"}}" title="{{t "book.edit"}}">{{icon "pencil"}}</a>
+          <a class="btn btn-ghost btn-icon" href="/books/{{.PublicID}}/edit?return=/books" aria-label="{{t "book.edit"}}" title="{{t "book.edit"}}">{{icon "pencil"}}</a>
           <a class="btn btn-ghost btn-icon" href="/books/{{.PublicID}}/shares" aria-label="{{t "book.manage_sharing"}}" title="{{t "book.manage_sharing"}}">{{icon "share-2"}}</a>
           <form method="post" action="/books/{{.PublicID}}/delete" data-confirm="{{t "confirm.delete_book"}}">
             <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">

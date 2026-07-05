@@ -270,10 +270,17 @@ func (h *Handlers) AccountThemeToggle(w http.ResponseWriter, r *http.Request) {
 
 // safeReturnPath accepts only an absolute, non-protocol-relative path; anything else falls back to "/".
 func safeReturnPath(p string) string {
+	return safeReturnOr(p, "/")
+}
+
+// safeReturnOr is safeReturnPath with a caller-chosen fallback for when the return
+// path is missing or unsafe (e.g. the resource's own page). It rejects anything
+// that isn't a local absolute path, so it can't be used as an open redirect.
+func safeReturnOr(p, fallback string) string {
 	if strings.HasPrefix(p, "/") && !strings.HasPrefix(p, "//") {
 		return p
 	}
-	return "/"
+	return fallback
 }
 
 // renderAccount renders the settings page with the user's profile, memberships, and current theme; extra carries per-section notices/errors.
