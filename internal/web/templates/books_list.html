@@ -13,12 +13,22 @@
 <p><a class="btn" href="/books/new">{{icon "plus"}} {{t "home.new_book"}}</a></p>
 {{if .Books}}
 <div class="table-wrap"><table>
-  <thead><tr><th>{{t "books.col_name"}}</th><th>{{t "books.col_contacts"}}</th></tr></thead>
+  <thead><tr><th>{{t "books.col_name"}}</th><th>{{t "books.col_contacts"}}</th><th></th></tr></thead>
   <tbody>
   {{range .Books}}
     <tr>
       <td><a class="book-name" href="/books/{{.PublicID}}"><span class="book-dot book-color-{{.Color}}" aria-hidden="true"></span> {{.Name}}</a></td>
       <td>{{num .ContactCount}}</td>
+      <td>{{if .Manage}}
+        <div class="row-actions">
+          <a class="btn btn-ghost btn-icon" href="/books/{{.PublicID}}/edit" aria-label="{{t "book.edit"}}" title="{{t "book.edit"}}">{{icon "pencil"}}</a>
+          <a class="btn btn-ghost btn-icon" href="/books/{{.PublicID}}/shares" aria-label="{{t "book.manage_sharing"}}" title="{{t "book.manage_sharing"}}">{{icon "share-2"}}</a>
+          <form method="post" action="/books/{{.PublicID}}/delete" data-confirm="{{t "confirm.delete_book"}}">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+            <button class="btn btn-ghost btn-danger btn-icon" type="submit" aria-label="{{t "book.delete"}}" title="{{t "book.delete"}}">{{icon "trash-2"}}</button>
+          </form>
+        </div>
+      {{end}}</td>
     </tr>
   {{end}}
   </tbody>

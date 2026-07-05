@@ -557,6 +557,9 @@ details.menu > summary::-webkit-details-marker { display: none; }
 .card-book:hover { color: var(--accent); }
 /* Book name with its colour dot in the overview table. */
 .book-name { display: inline-flex; align-items: center; gap: var(--space-2); }
+/* Per-row manage actions in the overview table, aligned to the row's trailing edge. */
+.row-actions { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-1); }
+.row-actions form { margin: 0; }
 
 /* ---- Contact header + photo control ---- */
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
