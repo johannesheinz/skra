@@ -464,7 +464,8 @@ legend { padding: 0 var(--space-2); }
    third; both drop to a single column on narrow screens. */
 .dash-top { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-4); align-items: start; margin-bottom: var(--space-6); }
 .dash-top .global-search { max-width: none; margin: 0; }
-.dash-top .stats { flex-direction: column; justify-content: initial; gap: var(--space-3); margin: 0; }
+.dash-top .stats { justify-content: initial; gap: var(--space-3); margin: 0; }
+.dash-top .stat { flex: 1; min-width: 0; }
 @media (max-width: 40rem) { .dash-top { grid-template-columns: 1fr; } }
 
 /* ---- Address-book page header ---- */
