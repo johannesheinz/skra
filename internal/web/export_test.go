@@ -52,8 +52,11 @@ func TestBookExportVCardAndCSV(t *testing.T) {
 		t.Errorf("csv Content-Type = %q", ct)
 	}
 	csvBody := csv.Body.String()
-	if !strings.Contains(csvBody, "Full Name,Organization,Email,Phone") {
+	if !strings.Contains(csvBody, "Full Name,Given Name,Family Name,Organization,Title,Birthday,Emails,Phones,Addresses,Links,Note") {
 		t.Error("csv missing header")
+	}
+	if !strings.Contains(csvBody, "jane@acme.test") {
+		t.Errorf("csv missing the contact's email from the full record:\n%s", csvBody)
 	}
 	if !strings.Contains(csvBody, "'=cmd|formula") {
 		t.Errorf("csv did not sanitize formula injection:\n%s", csvBody)

@@ -191,10 +191,7 @@ func (h *Handlers) ShareExportCSV(w http.ResponseWriter, r *http.Request) {
 		h.exportError(w, "share csv list", err)
 		return
 	}
-	rows := make([]export.CSVRow, 0, len(contacts))
-	for _, c := range contacts {
-		rows = append(rows, export.CSVRow{FullName: c.FullName, Org: c.Org, Email: c.Email, Phone: c.Phone})
-	}
+	rows := h.csvRows(contacts)
 	h.setDownloadHeaders(w, export.CSVMIME, downloadFilename(book.Name, "csv"))
 	if err := export.WriteCSV(w, rows); err != nil {
 		h.Logger.Error("export: share csv write mid-stream", "err", err)

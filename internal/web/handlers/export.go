@@ -9,6 +9,7 @@ import (
 	"github.com/johannesheinz/skra/internal/export"
 	"github.com/johannesheinz/skra/internal/models"
 	"github.com/johannesheinz/skra/internal/rbac"
+	"github.com/johannesheinz/skra/internal/vcardio"
 )
 
 // BookExportVCard streams a book's contacts as a vCard download (GET /books/{publicID}/export.vcf).
@@ -62,16 +63,30 @@ func (h *Handlers) BookExportCSV(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows := make([]export.CSVRow, 0, len(contacts))
-	for _, c := range contacts {
-		rows = append(rows, export.CSVRow{FullName: c.FullName, Org: c.Org, Email: c.Email, Phone: c.Phone})
-	}
+	rows := h.csvRows(contacts)
 
 	// CSV rows carry no BLOBs, so stream straight to the response.
 	h.setDownloadHeaders(w, export.CSVMIME, downloadFilename(book.Name, "csv"))
 	if err := export.WriteCSV(w, rows); err != nil {
 		h.Logger.Error("export: write csv mid-stream", "err", err)
 	}
+}
+
+// csvRows flattens export contacts into full CSV rows, parsing each contact's
+// vCard for the complete field set. A card that fails to parse still exports its
+// cached primary fields rather than dropping the contact.
+func (h *Handlers) csvRows(contacts []models.ContactExport) []export.CSVRow {
+	rows := make([]export.CSVRow, 0, len(contacts))
+	for _, c := range contacts {
+		d, err := vcardio.Parse(c.VCardRaw)
+		if err != nil {
+			h.Logger.Error("export: parse contact for csv", "contact", c.ID, "err", err)
+			rows = append(rows, export.CSVRow{FullName: c.FullName, Org: c.Org, Emails: c.Email, Phones: c.Phone})
+			continue
+		}
+		rows = append(rows, export.CSVRowFromDetails(c.FullName, d))
+	}
+	return rows
 }
 
 // ContactExportVCard streams a single contact as a vCard download (GET /contacts/{publicID}/export.vcf).

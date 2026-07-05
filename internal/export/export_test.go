@@ -9,8 +9,8 @@ import (
 func TestWriteCSVSanitizesInjection(t *testing.T) {
 	var buf bytes.Buffer
 	err := WriteCSV(&buf, []CSVRow{
-		{FullName: "=cmd|' /C calc'!A0", Org: "+SUM(1)", Email: "-2+3", Phone: "@evil"},
-		{FullName: "Jane Doe", Org: "Acme", Email: "jane@acme.test", Phone: "+1 555"},
+		{FullName: "=cmd|' /C calc'!A0", Org: "+SUM(1)", Emails: "-2+3", Phones: "@evil"},
+		{FullName: "Jane Doe", Org: "Acme", Emails: "jane@acme.test", Phones: "+1 555"},
 	})
 	if err != nil {
 		t.Fatalf("WriteCSV: %v", err)
@@ -34,7 +34,7 @@ func TestWriteCSVHasHeader(t *testing.T) {
 	if err := WriteCSV(&buf, nil); err != nil {
 		t.Fatalf("WriteCSV: %v", err)
 	}
-	if !strings.HasPrefix(buf.String(), "Full Name,Organization,Email,Phone") {
+	if !strings.HasPrefix(buf.String(), "Full Name,Given Name,Family Name,Organization,Title,Birthday,Emails,Phones,Addresses,Links,Note") {
 		t.Errorf("missing/incorrect header: %q", buf.String())
 	}
 }
