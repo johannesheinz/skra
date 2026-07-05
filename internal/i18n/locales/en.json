@@ -295,7 +295,6 @@
   "status.locked": "locked",
   "status.exhausted": "exhausted",
   "status.expired": "expired",
-  "search.title": "Search",
   "search.placeholder": "Search all contacts",
   "search.prompt": "Search across all your address books.",
   "search.no_match": "No contacts match “%s”.",

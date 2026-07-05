@@ -96,7 +96,6 @@ func buildRouter(cfg config.Config, database *db.DB, logger *slog.Logger) (http.
 	r.Group(func(r chi.Router) {
 		r.Use(authenticator.RequireAuth)
 		r.Get("/", h.Home)
-		r.Get("/search", h.Search)
 
 		r.Get("/account", h.AccountPage)
 		r.Post("/account/profile", h.AccountProfileUpdate)

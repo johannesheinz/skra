@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/johannesheinz/skra/internal/auth"
 	"github.com/johannesheinz/skra/internal/models"
@@ -86,6 +87,9 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
+	if h.renderSearchFragment(w, r, user) {
+		return
+	}
 	books, err := models.ListAddressBooks(r.Context(), h.DB, user)
 	if err != nil {
 		h.Logger.Error("dashboard books failed", "err", err)
@@ -108,13 +112,27 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	h.render(w, r, http.StatusOK, "home.html", map[string]any{
+	data := map[string]any{
 		"Books":         books,
 		"BookCount":     len(books),
 		"TotalContacts": total,
 		"Recent":        recent,
 		"Birthdays":     birthdays,
-	})
+	}
+	// No-JS (or a reload of a pushed ?q= URL): render the dashboard with the
+	// search results inline. The htmx path is handled by renderSearchFragment above.
+	if q := strings.TrimSpace(r.URL.Query().Get("q")); q != "" {
+		sd, err := h.searchData(r, user, q)
+		if err != nil {
+			h.Logger.Error("dashboard search failed", "err", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		for k, v := range sd {
+			data[k] = v
+		}
+	}
+	h.render(w, r, http.StatusOK, "home.html", data)
 }
 
 func (h *Handlers) rehashIfNeeded(r *http.Request, user models.User, password string) {

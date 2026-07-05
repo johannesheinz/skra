@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -16,13 +17,28 @@ import (
 // BooksList shows the address books visible to the current user (GET /books).
 func (h *Handlers) BooksList(w http.ResponseWriter, r *http.Request) {
 	user, _ := auth.UserFromContext(r.Context())
+	if h.renderSearchFragment(w, r, user) {
+		return
+	}
 	books, err := models.ListAddressBooks(r.Context(), h.DB, user)
 	if err != nil {
 		h.Logger.Error("list address books failed", "err", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	h.render(w, r, http.StatusOK, "books_list.html", map[string]any{"Books": books})
+	data := map[string]any{"Books": books}
+	if q := strings.TrimSpace(r.URL.Query().Get("q")); q != "" {
+		sd, err := h.searchData(r, user, q)
+		if err != nil {
+			h.Logger.Error("books search failed", "err", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		for k, v := range sd {
+			data[k] = v
+		}
+	}
+	h.render(w, r, http.StatusOK, "books_list.html", data)
 }
 
 // BookNew renders the create form (GET /books/new).

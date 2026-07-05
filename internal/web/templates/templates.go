@@ -60,7 +60,6 @@ func localeFuncs(tr *i18n.Translator) template.FuncMap {
 var pageFiles = []string{
 	"login.html",
 	"home.html",
-	"search.html",
 	"books_list.html",
 	"book_form.html",
 	"book_show.html",

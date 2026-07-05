@@ -295,7 +295,6 @@
   "status.locked": "gesperrt",
   "status.exhausted": "aufgebraucht",
   "status.expired": "abgelaufen",
-  "search.title": "Suche",
   "search.placeholder": "Alle Kontakte durchsuchen",
   "search.prompt": "Durchsuche alle deine Adressbücher.",
   "search.no_match": "Keine Kontakte passen zu „%s“.",
