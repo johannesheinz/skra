@@ -213,6 +213,11 @@ func (h *Handlers) buildPreparedImports(records []importing.Record, usedUIDs map
 
 // BookImportNew (POST /books/import) lets an admin create a new address book and import a vCard file into it in one step, from the address-book overview.
 // It is admin-only; the target book starts empty, so there is no dedup/preview step.
+// BookImportForm renders the page for importing contacts into a new address book (GET /books/import).
+func (h *Handlers) BookImportForm(w http.ResponseWriter, r *http.Request) {
+	h.render(w, r, http.StatusOK, "books_import.html", map[string]any{})
+}
+
 func (h *Handlers) BookImportNew(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {
@@ -231,13 +236,14 @@ func (h *Handlers) BookImportNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name := strings.TrimSpace(r.PostFormValue("name"))
+	description := strings.TrimSpace(r.PostFormValue("description"))
 	if name == "" {
-		h.booksListError(w, r, h.tr(r).T("msg.enter_book_name"))
+		h.newBookImportError(w, r, name, description, h.tr(r).T("msg.enter_book_name"))
 		return
 	}
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		h.booksListError(w, r, h.tr(r).T("msg.choose_vcf"))
+		h.newBookImportError(w, r, name, description, h.tr(r).T("msg.choose_vcf"))
 		return
 	}
 	defer file.Close()
@@ -250,13 +256,13 @@ func (h *Handlers) BookImportNew(w http.ResponseWriter, r *http.Request) {
 
 	records, _ := importing.ParseVCards(data)
 	if len(records) == 0 {
-		h.booksListError(w, r, h.tr(r).T("msg.no_contacts_found"))
+		h.newBookImportError(w, r, name, description, h.tr(r).T("msg.no_contacts_found"))
 		return
 	}
 
-	book, err := models.CreateAddressBook(r.Context(), h.DB, user.ID, name, "")
+	book, err := models.CreateAddressBook(r.Context(), h.DB, user.ID, name, description)
 	if err != nil {
-		h.booksListError(w, r, h.tr(r).T("msg.book_create_failed"))
+		h.newBookImportError(w, r, name, description, h.tr(r).T("msg.book_create_failed"))
 		return
 	}
 	prepared, err := h.buildPreparedImports(records, map[string]bool{})
@@ -278,17 +284,11 @@ func (h *Handlers) BookImportNew(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// booksListError re-renders the address-book overview with an import error.
-func (h *Handlers) booksListError(w http.ResponseWriter, r *http.Request, msg string) {
-	user, _ := auth.UserFromContext(r.Context())
-	books, err := models.ListAddressBooks(r.Context(), h.DB, user)
-	if err != nil {
-		h.Logger.Error("list address books failed", "err", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-	h.render(w, r, http.StatusUnprocessableEntity, "books_list.html", map[string]any{
-		"Books":       books,
+// newBookImportError re-renders the import-into-a-new-book page with an error, preserving the entered name and description.
+func (h *Handlers) newBookImportError(w http.ResponseWriter, r *http.Request, name, description, msg string) {
+	h.render(w, r, http.StatusUnprocessableEntity, "books_import.html", map[string]any{
+		"Name":        name,
+		"Description": description,
 		"ImportError": msg,
 	})
 }

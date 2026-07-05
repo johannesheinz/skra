@@ -61,6 +61,7 @@ var pageFiles = []string{
 	"login.html",
 	"home.html",
 	"books_list.html",
+	"books_import.html",
 	"book_form.html",
 	"book_show.html",
 	"contact_form.html",

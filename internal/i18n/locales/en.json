@@ -49,6 +49,7 @@
   "books.book_name": "Address book name",
   "books.vcard_file": "vCard file",
   "books.create_import": "Create & import",
+  "books.import_book": "Import address book",
 
   "book_form.new": "New address book",
   "book_form.edit": "Edit address book",

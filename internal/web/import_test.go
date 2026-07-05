@@ -93,10 +93,14 @@ func TestBookImportNewAllowedForNonAdmin(t *testing.T) {
 	session := sessionCookieFor(t, d, user.ID)
 
 	// Creating (and importing into) a book is open to any user, matching the
-	// open "New address book" action, so the overview offers the control...
+	// open "New address book" action, so the overview links to the import page...
 	page, token, csrf := authedGet(t, router, session, "/books")
-	if !strings.Contains(page.Body.String(), "Import into a new address book") {
-		t.Error("non-admin should see the create+import form")
+	if !strings.Contains(page.Body.String(), `href="/books/import"`) {
+		t.Error("non-admin should see the import action on the overview")
+	}
+	// ...the import page renders for them...
+	if form := get(router, "/books/import", session); form.Code != http.StatusOK {
+		t.Errorf("import page for non-admin = %d, want 200", form.Code)
 	}
 	// ...and the import succeeds, creating a book they own.
 	rec := uploadNewBookVCF(t, router, session, csrf, token, "Alice's Import", importVCF)

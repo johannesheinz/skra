@@ -1,0 +1,17 @@
+{{define "title"}}{{t "books.import_heading"}} · Skrá{{end}}
+{{define "content"}}
+<p><a class="backlink" href="/books">{{icon "arrow-left"}} {{t "books.title"}}</a></p>
+<h1>{{t "books.import_heading"}}</h1>
+<p class="muted">{{t "books.import_desc"}}</p>
+{{if .ImportError}}<p role="alert">{{.ImportError}}</p>{{end}}
+<form class="stack" method="post" action="/books/import" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <label>{{t "books.book_name"}} <input type="text" name="name" value="{{.Name}}" required autofocus></label>
+  <label>{{t "book_form.description"}} <textarea name="description" rows="3">{{.Description}}</textarea></label>
+  <label>{{t "books.vcard_file"}} <input type="file" name="file" accept=".vcf,text/vcard" required></label>
+  <div class="actions">
+    <button class="btn" type="submit">{{icon "upload"}} {{t "books.create_import"}}</button>
+    <a class="btn btn-secondary" href="/books">{{t "common.cancel"}}</a>
+  </div>
+</form>
+{{end}}

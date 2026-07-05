@@ -49,6 +49,7 @@
   "books.book_name": "Name des Adressbuchs",
   "books.vcard_file": "vCard-Datei",
   "books.create_import": "Erstellen & importieren",
+  "books.import_book": "Adressbuch importieren",
 
   "book_form.new": "Neues Adressbuch",
   "book_form.edit": "Adressbuch bearbeiten",
