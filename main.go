@@ -19,7 +19,7 @@ import (
 )
 
 // Version is the release version of Skrá.
-const Version = "1.1.3"
+const Version = "1.1.4"
 
 func main() {
 	if err := run(os.Args); err != nil {
