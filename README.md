@@ -134,7 +134,7 @@ The binary files are refreshed by hand, but the recorded versions are watched au
 
 | Asset | Version | Source |
 |---|---|---|
-| htmx | 2.0.9 | https://github.com/bigskysoftware/htmx |
+| htmx | 2.0.10 | https://github.com/bigskysoftware/htmx |
 | Space Grotesk | 2.0.0 | https://github.com/floriankarsten/space-grotesk |
 | Lucide icons | 1.22.0 | https://github.com/lucide-icons/lucide (subset, inlined) |
 
