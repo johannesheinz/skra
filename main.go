@@ -73,7 +73,7 @@ func serve() error {
 	if err != nil {
 		return err
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 	logger.Info("database ready", "path", cfg.DBPath)
 
 	// One-time (idempotent) backfills of the denormalized columns for contacts that predate them; each is a no-op once every row has been visited.
@@ -119,7 +119,7 @@ func backup(args []string) error {
 	if err != nil {
 		return err
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 
 	if err := database.Snapshot(context.Background(), *out); err != nil {
 		return err
@@ -157,7 +157,7 @@ func createAdmin() error {
 	if err != nil {
 		return err
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 
 	ctx := context.Background()
 	count, err := models.CountUsers(ctx, database)

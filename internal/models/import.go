@@ -78,7 +78,7 @@ func ExistingContactKeys(ctx context.Context, d *db.DB, addressBookID int64) (ui
 	if err != nil {
 		return nil, nil, fmt.Errorf("models: existing contact keys: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	uids = make(map[string]bool)
 	emails = make(map[string]bool)

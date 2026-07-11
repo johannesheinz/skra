@@ -15,7 +15,7 @@ func openTestDB(t *testing.T) (*DB, string) {
 	if err != nil {
 		t.Fatalf("Open() error: %v", err)
 	}
-	t.Cleanup(func() { database.Close() })
+	t.Cleanup(func() { _ = database.Close() })
 	return database, path
 }
 
@@ -27,7 +27,7 @@ func TestOpenSetsAutoVacuumIncremental(t *testing.T) {
 	if err != nil {
 		t.Fatalf("bare open: %v", err)
 	}
-	defer bare.Close()
+	defer func() { _ = bare.Close() }()
 
 	var autoVacuum int
 	if err := bare.QueryRow("PRAGMA auto_vacuum").Scan(&autoVacuum); err != nil {
@@ -101,14 +101,14 @@ func TestMigrationsAreIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first Open() error: %v", err)
 	}
-	first.Close()
+	_ = first.Close()
 
 	// Re-opening an existing database must not re-run migrations or fail.
 	second, err := Open(path)
 	if err != nil {
 		t.Fatalf("second Open() error: %v", err)
 	}
-	defer second.Close()
+	defer func() { _ = second.Close() }()
 
 	var count int
 	if err := second.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
@@ -185,7 +185,7 @@ func TestSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open snapshot: %v", err)
 	}
-	defer snap.Close()
+	defer func() { _ = snap.Close() }()
 	var n int
 	if err := snap.QueryRow("SELECT COUNT(*) FROM users WHERE username='alice'").Scan(&n); err != nil {
 		t.Fatalf("query snapshot: %v", err)

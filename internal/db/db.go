@@ -64,22 +64,22 @@ func Open(path string) (*DB, error) {
 	pool.SetConnMaxIdleTime(5 * time.Minute)
 
 	if err := pool.Ping(); err != nil {
-		pool.Close()
+		_ = pool.Close()
 		return nil, fmt.Errorf("ping sqlite: %w", err)
 	}
 
 	if fresh {
 		if err := initAutoVacuum(pool); err != nil {
-			pool.Close()
+			_ = pool.Close()
 			return nil, err
 		}
 	} else if err := snapshotBeforeMigrations(pool, path); err != nil {
-		pool.Close()
+		_ = pool.Close()
 		return nil, err
 	}
 
 	if err := migrate(pool); err != nil {
-		pool.Close()
+		_ = pool.Close()
 		return nil, fmt.Errorf("migrate: %w", err)
 	}
 
@@ -96,7 +96,7 @@ func (d *DB) Snapshot(ctx context.Context, outPath string) error {
 	}
 	d.writeMu.Lock()
 	defer d.writeMu.Unlock()
-	if _, err := d.DB.ExecContext(ctx, vacuumIntoSQL(outPath)); err != nil {
+	if _, err := d.ExecContext(ctx, vacuumIntoSQL(outPath)); err != nil {
 		return fmt.Errorf("db: snapshot: %w", err)
 	}
 	return nil
@@ -127,7 +127,7 @@ func (d *DB) Write(ctx context.Context, fn func(*sql.Tx) error) error {
 	d.writeMu.Lock()
 	defer d.writeMu.Unlock()
 
-	tx, err := d.DB.BeginTx(ctx, nil)
+	tx, err := d.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin write tx: %w", err)
 	}
@@ -143,7 +143,7 @@ func (d *DB) Write(ctx context.Context, fn func(*sql.Tx) error) error {
 func (d *DB) ExecWrite(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	d.writeMu.Lock()
 	defer d.writeMu.Unlock()
-	return d.DB.ExecContext(ctx, query, args...)
+	return d.ExecContext(ctx, query, args...)
 }
 
 // IncrementalVacuum reclaims free pages from the (INCREMENTAL auto_vacuum) file so it shrinks after deletes.
@@ -164,7 +164,7 @@ func initAutoVacuum(pool *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("pin connection for auto_vacuum: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	if _, err := conn.ExecContext(ctx, "PRAGMA auto_vacuum = INCREMENTAL"); err != nil {
 		return fmt.Errorf("set auto_vacuum: %w", err)

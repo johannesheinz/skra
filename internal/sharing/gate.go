@@ -53,6 +53,6 @@ func (g GateSigner) Valid(value, token string, now time.Time) bool {
 
 func (g GateSigner) mac(token string, exp int64) string {
 	m := hmac.New(sha256.New, g.key)
-	fmt.Fprintf(m, "%s|%d", token, exp)
+	_, _ = fmt.Fprintf(m, "%s|%d", token, exp)
 	return base64.RawURLEncoding.EncodeToString(m.Sum(nil))
 }

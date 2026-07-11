@@ -55,7 +55,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 	ctx := context.Background()
 
 	existing, err := models.CountUsers(ctx, database)

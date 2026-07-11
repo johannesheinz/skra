@@ -163,7 +163,7 @@ func Parse(raw string) (Details, error) {
 			PostalCode: a.PostalCode, Country: a.Country,
 		}
 		if a.Field != nil {
-			addr.Type = a.Field.Params.Get(vcard.ParamType)
+			addr.Type = a.Params.Get(vcard.ParamType)
 		}
 		d.Addresses = append(d.Addresses, addr)
 	}

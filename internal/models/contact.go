@@ -245,7 +245,7 @@ func RecentContactsForUser(ctx context.Context, d *db.DB, user User, limit int) 
 	if err != nil {
 		return nil, fmt.Errorf("models: recent contacts: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var out []RecentContact
 	for rows.Next() {
@@ -305,7 +305,7 @@ func SearchContactsForUser(ctx context.Context, d *db.DB, user User, query strin
 	if err != nil {
 		return nil, fmt.Errorf("models: search contacts: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var out []SearchResult
 	for rows.Next() {
@@ -433,7 +433,7 @@ func UpcomingBirthdaysForUser(ctx context.Context, d *db.DB, user User, limit in
 	if err != nil {
 		return nil, fmt.Errorf("models: upcoming birthdays: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	now := time.Now()
 	var out []UpcomingBirthday
@@ -494,21 +494,21 @@ func BackfillBirthdays(ctx context.Context, d *db.DB) (int, error) {
 			vcardRaw string
 		)
 		if err := rows.Scan(&id, &vcardRaw); err != nil {
-			rows.Close()
+			_ = rows.Close()
 			return 0, fmt.Errorf("models: backfill birthdays row: %w", err)
 		}
 		details, err := vcardio.Parse(vcardRaw)
 		if err != nil {
-			rows.Close()
+			_ = rows.Close()
 			return 0, fmt.Errorf("models: backfill parse contact %d: %w", id, err)
 		}
 		todo = append(todo, pending{id: id, birthday: NormalizeBirthday(details.Birthday)})
 	}
 	if err := rows.Err(); err != nil {
-		rows.Close()
+		_ = rows.Close()
 		return 0, fmt.Errorf("models: backfill iterate: %w", err)
 	}
-	rows.Close()
+	_ = rows.Close()
 
 	for _, p := range todo {
 		if _, err := d.ExecWrite(ctx, `UPDATE contacts SET birthday = ? WHERE id = ?`, p.birthday, p.id); err != nil {
@@ -537,22 +537,22 @@ func BackfillSortKeys(ctx context.Context, d *db.DB) (int, error) {
 			vcardRaw string
 		)
 		if err := rows.Scan(&id, &vcardRaw); err != nil {
-			rows.Close()
+			_ = rows.Close()
 			return 0, fmt.Errorf("models: backfill sort keys row: %w", err)
 		}
 		details, err := vcardio.Parse(vcardRaw)
 		if err != nil {
-			rows.Close()
+			_ = rows.Close()
 			return 0, fmt.Errorf("models: backfill sort keys parse contact %d: %w", id, err)
 		}
 		g, f, p, c := sortKeysFromDetails(details)
 		todo = append(todo, pending{id: id, given: g, family: f, postal: p, country: c})
 	}
 	if err := rows.Err(); err != nil {
-		rows.Close()
+		_ = rows.Close()
 		return 0, fmt.Errorf("models: backfill sort keys iterate: %w", err)
 	}
-	rows.Close()
+	_ = rows.Close()
 
 	for _, p := range todo {
 		if _, err := d.ExecWrite(ctx,
@@ -622,7 +622,7 @@ func ListContacts(ctx context.Context, d *db.DB, addressBookID int64, query, sor
 	if err != nil {
 		return nil, 0, fmt.Errorf("models: list contacts: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var contacts []Contact
 	for rows.Next() {
@@ -657,7 +657,7 @@ func ListContactsForExport(ctx context.Context, d *db.DB, addressBookID int64) (
 	if err != nil {
 		return nil, fmt.Errorf("models: list contacts for export: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var out []ContactExport
 	for rows.Next() {

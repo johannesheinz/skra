@@ -177,7 +177,7 @@ func ListAddressBooks(ctx context.Context, d *db.DB, user User) ([]AddressBookLi
 	if err != nil {
 		return nil, fmt.Errorf("models: list address books: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var items []AddressBookListItem
 	for rows.Next() {

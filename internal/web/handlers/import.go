@@ -60,7 +60,7 @@ func (h *Handlers) ImportUpload(w http.ResponseWriter, r *http.Request) {
 		h.importFormError(w, r, book, h.tr(r).T("msg.choose_vcf"))
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	data, err := io.ReadAll(file)
 	if err != nil {
 		h.Logger.Error("read import upload failed", "err", err)
@@ -246,7 +246,7 @@ func (h *Handlers) BookImportNew(w http.ResponseWriter, r *http.Request) {
 		h.newBookImportError(w, r, name, description, h.tr(r).T("msg.choose_vcf"))
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	data, err := io.ReadAll(file)
 	if err != nil {
 		h.Logger.Error("read import upload failed", "err", err)

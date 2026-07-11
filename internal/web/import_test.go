@@ -25,7 +25,7 @@ func uploadVCF(t *testing.T, router http.Handler, session, csrf *http.Cookie, ur
 	_ = mw.WriteField(auth.CSRFFormField, token)
 	fw, _ := mw.CreateFormFile("file", "contacts.vcf")
 	_, _ = fw.Write([]byte(body))
-	mw.Close()
+	_ = mw.Close()
 
 	req := httptest.NewRequest(http.MethodPost, url_, &buf)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
@@ -44,7 +44,7 @@ func uploadNewBookVCF(t *testing.T, router http.Handler, session, csrf *http.Coo
 	_ = mw.WriteField("name", name)
 	fw, _ := mw.CreateFormFile("file", "contacts.vcf")
 	_, _ = fw.Write([]byte(body))
-	mw.Close()
+	_ = mw.Close()
 
 	req := httptest.NewRequest(http.MethodPost, "/books/import", &buf)
 	req.Header.Set("Content-Type", mw.FormDataContentType())

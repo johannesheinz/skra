@@ -53,7 +53,7 @@ func ListMembers(ctx context.Context, d *db.DB, addressBookID int64) ([]Member, 
 	if err != nil {
 		return nil, fmt.Errorf("models: list members: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var members []Member
 	for rows.Next() {

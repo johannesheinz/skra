@@ -99,7 +99,7 @@ func ListShareLinksForTarget(ctx context.Context, d *db.DB, scope string, target
 	if err != nil {
 		return nil, fmt.Errorf("models: list share links: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var links []ShareLink
 	for rows.Next() {

@@ -133,7 +133,7 @@ func ListMembershipsForUser(ctx context.Context, d *db.DB, userID int64) ([]Memb
 	if err != nil {
 		return nil, fmt.Errorf("models: list memberships: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var out []Membership
 	for rows.Next() {

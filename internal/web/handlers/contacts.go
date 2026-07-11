@@ -211,7 +211,7 @@ func (h *Handlers) ContactPhotoUpload(w http.ResponseWriter, r *http.Request) {
 		h.renderContactWithError(w, r, contact, book, user, "Choose an image file to upload.")
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	data, err := io.ReadAll(file)
 	if err != nil {

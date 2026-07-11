@@ -41,7 +41,7 @@ func TestContactPhotoUploadServeAndDelete(t *testing.T) {
 	if err := png.Encode(fw, image.NewRGBA(image.Rect(0, 0, 1000, 500))); err != nil {
 		t.Fatalf("encode png: %v", err)
 	}
-	mw.Close()
+	_ = mw.Close()
 
 	upReq := httptest.NewRequest(http.MethodPost, contactURL+"/photo", &body)
 	upReq.Header.Set("Content-Type", mw.FormDataContentType())
@@ -116,7 +116,7 @@ func TestContactPhotoUploadRejectsNonImage(t *testing.T) {
 	_ = mw.WriteField(auth.CSRFFormField, token)
 	fw, _ := mw.CreateFormFile("photo", "notes.txt")
 	_, _ = fw.Write([]byte("definitely not an image"))
-	mw.Close()
+	_ = mw.Close()
 
 	req := httptest.NewRequest(http.MethodPost, contactURL+"/photo", &body)
 	req.Header.Set("Content-Type", mw.FormDataContentType())

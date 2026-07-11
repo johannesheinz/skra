@@ -1,5 +1,10 @@
+version: "2"
+
 run:
   timeout: 5m
+  # Target language version explicitly, major.minor only, so patch bumps to the
+  # go.mod directive don't trip golangci-lint's build-Go vs target-Go check.
+  go: "1.26"
 
 linters:
   enable:
