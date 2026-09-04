@@ -136,7 +136,7 @@ The binary files are refreshed by hand, but the recorded versions are watched au
 |---|---|---|
 | htmx | 2.0.9 | https://github.com/bigskysoftware/htmx |
 | Space Grotesk | 2.0.0 | https://github.com/floriankarsten/space-grotesk |
-| Lucide icons | 1.22.0 | https://github.com/lucide-icons/lucide (subset, inlined) |
+| Lucide icons | 1.41.0 | https://github.com/lucide-icons/lucide (subset, inlined) |
 
 Renovate also watches Go modules, the SHA-pinned GitHub Actions, and the Dockerfile builder image.
 It is not automatic — enable it once (see [`docs/github-setup.md`](docs/github-setup.md)).
